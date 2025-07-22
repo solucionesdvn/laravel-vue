@@ -35,6 +35,8 @@ export interface User {
     updated_at: string;
 }
 
+ex
+
 export interface Employee {
   id: number;
   name: string;
@@ -42,6 +44,5 @@ export interface Employee {
   position: string;
   salary: number;
 }
-
 
 export type BreadcrumbItemType = BreadcrumbItem;

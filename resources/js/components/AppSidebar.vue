@@ -5,7 +5,17 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, User } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Notebook, User, Users, Blinds} from 'lucide-vue-next';
+
+
+import { usePage } from '@inertiajs/vue3';
+
+const page = usePage();
+
+const hasPermission = (perm: string): boolean => {
+  return page.props.auth.permissions?.includes(perm);
+};
+
 
 
 import AppLogo from './AppLogo.vue';
@@ -21,7 +31,43 @@ const mainNavItems: NavItem[] = [
         title: 'Employees',
         href: '/employees',
         icon: User ,
+        permission: 'employee.view',
+
     },   
+    {
+        title: 'Users',
+        href: '/users',
+        icon: Users ,
+        permission: 'users.view',
+
+    },  
+
+    {
+        title: 'Roles',
+        href: '/roles',
+        icon: Notebook,
+        permission: 'roles.view',
+    },
+
+    {
+        title: 'Empresas',
+        href: '/companies',
+        icon: Notebook,
+        permission: 'companies.view',
+    },
+    {
+        title: 'Categorias',
+        href: '/categories',
+        icon: Blinds,
+        permission: 'categories.view',
+    },
+
+    {
+        //title: 'Formato Carta renuncia',
+        //href: '/fresignations',
+        //icon: Notebook,
+        //permission: 'fresignations.view',
+    },
 ];
 
 const footerNavItems: NavItem[] = [
@@ -36,6 +82,11 @@ const footerNavItems: NavItem[] = [
         icon: BookOpen,
     },
 ];
+
+const visibleMainNavItems = mainNavItems.filter(item => {
+    return !item.permission || hasPermission(item.permission);
+});
+
 </script>
 
 <template>
@@ -53,7 +104,7 @@ const footerNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain :items="mainNavItems" />
+            <NavMain :items="visibleMainNavItems" />
         </SidebarContent>
 
         <SidebarFooter>

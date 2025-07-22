@@ -5,6 +5,8 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Employee, type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, usePage, Link, router } from '@inertiajs/vue3';
+import { can } from '@/lib/can';
+
 
 
 
@@ -16,13 +18,28 @@ interface EmployeePageProps extends SharedData {
   employees: Employee[];
 }
 
-const props = usePage<EmployeePageProps>();
-const employees = computed(()=>props.employees)
+const {props} = usePage<EmployeePageProps>();
+const employees = computed(()=>props.employees);
 
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Employees', href: '/employees' }];
 
 // método para eliminar
+
+const deleteEmployee = async (id: number) => {
+  if (!window.confirm('Are you sure you want to delete this employee?')) return;
+
+  router.delete(`/employees/${id}`, {
+    preserveScroll: true,
+    onSuccess: () => {
+      router.visit('/employees', { replace: true }); // 🔄 Redirige a la lista actualizada
+    },
+    onError: (errors) => {
+      console.error('Error deleting employee:', errors);
+    },
+  });
+};
+
 
 
 </script>
@@ -33,44 +50,51 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Employees', href: '/employees' 
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
         <div class="flex">
             <Button as-child size="sm" class="bg-indigo-500 text-white hover:bg-indigo-700">
-                <Link href="/employees/create"> <CirclePlus /> Create </Link>
+                <Link 
+                v-if="can('employee.create')"
+                :href="route('employees.create')"
+                href="/employees/create"> <CirclePlus /> Create </Link>
             </Button>
         </div>
+
+          <div class="relative min-h-[100vh] flex-1 rounded-xl border border-sidebar-border/70 dark:border-sidebar-border md:min-h-min">
+          <Table>
+              <TableCaption>Employee List.</TableCaption>
+              <TableHeader>
+                  <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Position</TableHead>
+                      <TableHead class="text-right">Salary</TableHead>
+                      <TableHead class="text-center">Actions</TableHead>
+                  </TableRow>
+              </TableHeader>
+              <TableBody>
+                  <TableRow v-for="employee in employees">
+                      <TableCell class="font-medium">{{ employee.name }}</TableCell>
+                      <TableCell>{{ employee.email ?? 'N/A' }}</TableCell>
+                      <TableCell>{{ employee.position }}</TableCell>
+                      <TableCell class="text-right">{{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(employee.salary) }} </TableCell>
+                      
+                      <TableCell class="flex justify-center gap-2">
+                          <Button as-child size="sm" class="bg-blue-500 text-white hover:bg-blue-700">
+                              <Link 
+                              v-if="can('employee.edit')"
+                              :href="`/employees/${employee.id}/edit`">
+                                  <Pencil />
+                              </Link>
+                          </Button>
+                          <Button size="sm" class="bg-rose-500 text-white hover:bg-rose-700" 
+                            v-if="can('employee.delete')"
+                            
+                            @click="deleteEmployee(employee.id)">
+                              <Trash />
+                          </Button>
+                      </TableCell>
+                  </TableRow>
+              </TableBody>
+          </Table>
+      </div>
     </div>
-
-
-    <div class="relative min-h-[100vh] flex-1 rounded-xl border border-sidebar-border/70 dark:border-sidebar-border md:min-h-min">
-        <Table>
-            <TableCaption>Employee List.</TableCaption>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Position</TableHead>
-                    <TableHead class="text-right">Salary</TableHead>
-                    <TableHead class="text-center">Actions</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                <TableRow v-for="employee in employees">
-                    <TableCell class="font-medium">{{ employee.name }}</TableCell>
-                    <TableCell>{{ employee.email ?? 'N/A' }}</TableCell>
-                    <TableCell>{{ employee.position }}</TableCell>
-                    <TableCell class="text-right">{{ new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(employee.salary) }} </TableCell>
-                    
-                    <TableCell class="flex justify-center gap-2">
-                        <Button as-child size="sm" class="bg-blue-500 text-white hover:bg-blue-700">
-                            <Link :href="`/employees/${employee.id}/edit`">
-                                <Pencil />
-                            </Link>
-                        </Button>
-                        <Button size="sm" class="bg-rose-500 text-white hover:bg-rose-700" @click="deleteEmployee(employee.id)">
-                            <Trash />
-                        </Button>
-                    </TableCell>
-                </TableRow>
-            </TableBody>
-        </Table>
-    </div>    
   </AppLayout>
 </template>
