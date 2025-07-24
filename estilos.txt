@@ -1,0 +1,16 @@
+
+Crear Modelo, controlador, migración y recursos del controlador
+
+php artisan make:model Supplier -mcr
+
+
+Añaddir lineas a web.php
+
+Route::resource('suppliers', SupplierController::class)->middleware(['auth']);
+
+
+Revertir migración
+php artisan migrate:rollback --path=database/migrations/2025_07_24_034021_create_suppliers_table.php
+
+
+

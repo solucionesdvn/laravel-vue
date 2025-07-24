@@ -40,13 +40,17 @@ class PermissionSeeder extends Seeder
             "fresignations.edit",
             "fresignations.delete",
 
-
             //Permios roles Inventario Ventas
 
             "categories.view",
             "categories.create",
             "categories.edit",
-            "categories.delete"
+            "categories.delete",
+
+            "suppliers.view",
+            "suppliers.create",
+            "suppliers.edit",
+            "suppliers.delete"
 
         ];
         //foreach ($permissions as $key => $value) {

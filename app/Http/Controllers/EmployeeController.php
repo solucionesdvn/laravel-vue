@@ -6,7 +6,6 @@ use App\Models\Employee;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-
 class EmployeeController extends Controller
 {
     /**

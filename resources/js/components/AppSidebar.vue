@@ -5,7 +5,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Notebook, User, Users, Blinds} from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Notebook, User, Users, Blinds, Bus} from 'lucide-vue-next';
 
 
 import { usePage } from '@inertiajs/vue3';
@@ -61,13 +61,20 @@ const mainNavItems: NavItem[] = [
         icon: Blinds,
         permission: 'categories.view',
     },
-
     {
-        //title: 'Formato Carta renuncia',
-        //href: '/fresignations',
-        //icon: Notebook,
-        //permission: 'fresignations.view',
+        title: 'Formato Carta renuncia',
+        href: '/fresignations',
+        icon: Notebook,
+        permission: 'fresignations.view',
     },
+        {
+        title: 'Proveedores',
+        href: '/suppliers',
+        icon: Bus,
+        //permission: 'supliers.view',
+    },
+
+
 ];
 
 const footerNavItems: NavItem[] = [
