@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Supplier;
+use App\Models\Company;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -13,8 +14,9 @@ class SupplierController extends Controller
      */
     public function index()
     {
+        $suppliers = Supplier::where('company_id', auth()->user()->company_id)->get();
         return Inertia::render('Suppliers/Index', [
-            'suppliers' => Supplier::all(),
+            'suppliers' => $suppliers,
         ]);
     }
 
