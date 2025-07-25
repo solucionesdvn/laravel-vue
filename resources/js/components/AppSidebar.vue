@@ -71,7 +71,7 @@ const mainNavItems: NavItem[] = [
         title: 'Proveedores',
         href: '/suppliers',
         icon: Bus,
-        //permission: 'supliers.view',
+        permission: 'suppliers.view',
     },
 
 

@@ -40,27 +40,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 // Segurridad empleados, pruebas
 
-Route::resource("employee", RoleController::class);
-
-Route::resource("employee", RoleController::class)
-    ->only(['create', 'store'])
-    ->middleware("permission:employee.create");
-
-Route::resource("employee", RoleController::class)
-    ->only(['edit', 'update'])
-    ->middleware("permission:employee.edit");
-
-Route::resource("employee", RoleController::class)
-    ->only(['destroy'])
-    ->middleware("permission:employee.delete");
-
-Route::resource("employee", RoleController::class)
-    ->only(['index', 'show'])
-    ->middleware("permission:employee.create|employee.edit|employee.delete|employee.view");
-
-
-
-
 //Users
 
 Route::resource("users", UserController::class)

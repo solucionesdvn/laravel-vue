@@ -12,11 +12,26 @@ class SupplierController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $suppliers = Supplier::where('company_id', auth()->user()->company_id)->get();
+        $user = auth()->user();
+
+        $query = Supplier::query()
+            ->where('company_id', $user->company_id); // 🔒 Filtro por la compañía
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                ->orWhere('contact_name', 'like', '%' . $request->search . '%')
+                ->orWhere('email', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $suppliers = $query->latest()->paginate(10)->withQueryString();
+
         return Inertia::render('Suppliers/Index', [
             'suppliers' => $suppliers,
+            'filters' => $request->only('search'),
         ]);
     }
 

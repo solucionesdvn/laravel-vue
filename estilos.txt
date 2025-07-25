@@ -1,3 +1,9 @@
+Script para chat GPT
+
+
+Hola, estoy haciendo un proyecto con el kit starter de laravel y vue, ya lo integre con spatie para roles y permisos, 
+
+
 
 Crear Modelo, controlador, migración y recursos del controlador
 
