@@ -1,7 +1,10 @@
 Script para chat GPT
 
 
-Hola, estoy haciendo un proyecto con el kit starter de laravel y vue, ya lo integre con spatie para roles y permisos, 
+Hola, estoy haciendo un proyecto con el kit starter de laravel y vue, ya lo integre con spatie para roles y permisos, por ahora el proyecto se trata de un sistema de inventatio
+nesesito que tenga productos, categorias, ventas, entradas, salidas y kardex, por favor dime sugerencias y un poco la logica de la cantidad de stock
+
+
 
 
 
@@ -18,5 +21,22 @@ Route::resource('suppliers', SupplierController::class)->middleware(['auth']);
 Revertir migración
 php artisan migrate:rollback --path=database/migrations/2025_07_24_034021_create_suppliers_table.php
 
+
+
+Tabla productos
+
+id
+sku
+nombre
+categoria ->llave foranea
+stock
+precio
+imagen
+company_id -> llave foranea
+
+
+//
+Pendientes 
+Arreglar categorias
 
 

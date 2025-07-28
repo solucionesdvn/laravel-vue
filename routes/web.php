@@ -35,8 +35,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     //Compañia
     Route::resource('companies', CompanyController::class);
-    Route::resource('categories', CategoryController::class);
-    Route::resource('suppliers', SupplierController::class);
+    //Route::resource('categories', CategoryController::class);
+    //Route::resource('suppliers', SupplierController::class);
     
 });
 // Segurridad empleados, pruebas
@@ -77,7 +77,62 @@ Route::resource("roles", RoleController::class)
 Route::resource("roles", RoleController::class)
     ->only(['index', 'show'])
     ->middleware("permission:roles.create|roles.edit|roles.delete|roles.view");
+    
+//Proveedores Suppliers
+Route::resource("suppliers", SupplierController::class);
 
+Route::resource("suppliers", SupplierController::class)
+    ->only(['create', 'store'])
+    ->middleware("permission:suppliers.create");
+
+Route::resource("suppliers", SupplierController::class)
+    ->only(['edit', 'update'])
+    ->middleware("permission:suppliers.edit");
+
+Route::resource("suppliers", SupplierController::class)
+    ->only(['destroy'])
+    ->middleware("permission:suppliers.delete");
+
+Route::resource("suppliers", SupplierController::class)
+    ->only(['index', 'show'])
+    ->middleware("permission:suppliers.create|suppliers.edit|suppliers.delete|suppliers.view");
+
+
+//Categorias -
+Route::resource("categories", CategoryController::class);
+
+Route::resource("categories", CategoryController::class)
+    ->only(['create', 'store'])
+    ->middleware("permission:categories.create");
+
+Route::resource("categories", CategoryController::class)
+    ->only(['edit', 'update'])
+    ->middleware("permission:categories.edit");
+
+Route::resource("categories", CategoryController::class)
+    ->only(['destroy'])
+    ->middleware("permission:categories.delete");
+
+Route::resource("categories", CategoryController::class)
+    ->only(['index', 'show'])
+    ->middleware("permission:categories.create|categories.edit|categories.delete|categories.view");
+
+
+
+
+
+
+
+
+
+
+
+
+
+//Rutas Formatos
+
+Route::resource('fresignations', FresignationController::class)->middleware(['auth', 'verified']);
+Route::put('/fresignations/{fresignation}', [FresignationController::class, 'update'])->name('fresignations.update');
 
 
 Route::resource("fresignations", RoleController::class);
@@ -97,11 +152,6 @@ Route::resource("fresignations", RoleController::class)
 Route::resource("fresignations", RoleController::class)
     ->only(['index', 'show'])
     ->middleware("permission:fresignations.create|fresignations.edit|fresignations.delete|fresignations.view");
-
-//Rutas Formatos
-
-Route::resource('fresignations', FresignationController::class)->middleware(['auth', 'verified']);
-Route::put('/fresignations/{fresignation}', [FresignationController::class, 'update'])->name('fresignations.update');
 
 
 require __DIR__.'/settings.php';
