@@ -31,12 +31,26 @@ nombre
 categoria ->llave foranea
 stock
 precio
+proveedor -> llave foranea
 imagen
 company_id -> llave foranea
+
+# Después de clonar el repo y correr las migraciones
+php artisan migrate
+php artisan storage:link
+
+
 
 
 //
 Pendientes 
 Arreglar categorias
+
+
+Nuevas versiones
+
+Exportar tablas requeridas a excel
+Agregar toast - alertas
+Agregar un loader/spinne
 
 

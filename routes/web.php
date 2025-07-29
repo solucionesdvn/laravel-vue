@@ -6,6 +6,8 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\ProductController;
+
 
 
 //Formatos
@@ -118,18 +120,38 @@ Route::resource("categories", CategoryController::class)
     ->middleware("permission:categories.create|categories.edit|categories.delete|categories.view");
 
 
+//Productos -
 
 
 
 
+Route::put('products/{product}/update-image', [ProductController::class, 'updateImage'])->name('products.updateImage');
+
+Route::resource("products", ProductController::class);
+
+Route::resource("products", ProductController::class)
+    ->only(['create', 'store'])
+    ->middleware("permission:products.create");
+
+Route::resource("products", ProductController::class)
+    ->only(['edit', 'update'])
+    ->middleware("permission:products.edit");
+
+Route::resource("products", ProductController::class)
+    ->only(['destroy'])
+    ->middleware("permission:products.delete");
+
+Route::resource("products", ProductController::class)
+    ->only(['index', 'show'])
+    ->middleware("permission:products.create|products.edit|products.delete|products.view");
+
+
+    
 
 
 
 
-
-
-
-//Rutas Formatos
+    //Rutas Formatos
 
 Route::resource('fresignations', FresignationController::class)->middleware(['auth', 'verified']);
 Route::put('/fresignations/{fresignation}', [FresignationController::class, 'update'])->name('fresignations.update');

@@ -50,7 +50,13 @@ class PermissionSeeder extends Seeder
             "suppliers.view",
             "suppliers.create",
             "suppliers.edit",
-            "suppliers.delete"
+            "suppliers.delete",
+
+            "products.view",
+            "products.create",
+            "products.edit",
+            "products.delete",
+            "products.updateImage"
 
         ];
         //foreach ($permissions as $key => $value) {

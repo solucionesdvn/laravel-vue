@@ -73,6 +73,12 @@ const mainNavItems: NavItem[] = [
         icon: Bus,
         permission: 'suppliers.view',
     },
+        {
+        title: 'Productos',
+        href: '/products',
+        icon: Bus,
+        //permission: 'suppliers.view',
+    },
 
 
 ];

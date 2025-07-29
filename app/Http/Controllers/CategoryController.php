@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 
 
@@ -14,14 +13,33 @@ class CategoryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    use AuthorizesRequests;
 
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::where('company_id', auth()->user()->company_id)->get();
+        $user = auth()->user();
 
+        // Filtro por búsqueda
+        $search = $request->input('search');
+
+        // Consulta con filtros y company_id
+        $categories = Category::query()
+            ->where('company_id', $user->company_id)
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('name')
+            ->paginate(10)
+            ->withQueryString(); // Conserva ?search en paginación
+
+        // Enviar datos a la vista
         return Inertia::render('Categories/Index', [
             'categories' => $categories,
+            'filters' => [
+                'search' => $search,
+            ],
         ]);
     }
 
@@ -40,7 +58,8 @@ class CategoryController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:1000',
+            'color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'], // color hex válido
         ]);
 
         $data['company_id'] = auth()->user()->company_id;
@@ -63,14 +82,14 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        // Asegúrate de que el usuario solo pueda editar su propia categoría
-        $this->authorize('update', $category);
+        //$this->authorize('update', $category);
 
         return Inertia::render('Categories/Edit', [
             'category' => [
                 'id' => $category->id,
                 'name' => $category->name,
                 'description' => $category->description,
+                'color' => $category->color,
             ],
         ]);
     }
@@ -80,12 +99,12 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
-        // Asegúrate de que el usuario solo pueda actualizar su propia categoría
-        $this->authorize('update', $category);
+        //$this->authorize('update', $category);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
+            'color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
         ]);
 
         $category->update($validated);
@@ -98,6 +117,13 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        //
+        if ($category->company_id !== auth()->user()->company_id) {
+            abort(403);
+        }
+
+        $category->delete();
+
+        return to_route('categories.index')->with('success', 'Categoría eliminada correctamente.');
+        
     }
 }
