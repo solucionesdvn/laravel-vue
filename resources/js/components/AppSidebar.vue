@@ -56,16 +56,16 @@ const mainNavItems: NavItem[] = [
         permission: 'companies.view',
     },
     {
+        //title: 'Formato Carta renuncia',
+        //href: '/fresignations',
+        //icon: Notebook,
+        //permission: 'fresignations.view',
+    },
+    {
         title: 'Categorias',
         href: '/categories',
         icon: Blinds,
         permission: 'categories.view',
-    },
-    {
-        title: 'Formato Carta renuncia',
-        href: '/fresignations',
-        icon: Notebook,
-        permission: 'fresignations.view',
     },
     {
         title: 'Proveedores',

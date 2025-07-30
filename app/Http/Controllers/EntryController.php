@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Entry;
 use App\Models\EntryItem;
 use App\Models\Product;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -20,8 +21,8 @@ class EntryController extends Controller
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
-                $q->whereHas('supplier', fn($s) => $s->where('name', 'like', "%{$request->search}%"))
-                ->orWhere('notes', 'like', "%{$request->search}%");
+                $q->whereHas('supplier', fn ($s) => $s->where('name', 'like', "%{$request->search}%"))
+                  ->orWhere('notes', 'like', "%{$request->search}%");
             });
         }
 
@@ -35,17 +36,28 @@ class EntryController extends Controller
         ]);
     }
 
+    public function create()
+    {
+        $companyId = auth()->user()->company_id;
+
+        return Inertia::render('Entries/Create', [
+            'suppliers' => Supplier::where('company_id', $companyId)->get(['id', 'name']),
+            'products' => Product::where('company_id', $companyId)->get(['id', 'name', 'supplier_id']),
+        ]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([
             'supplier_id' => 'nullable|exists:suppliers,id',
-            'date' => 'required|date',
-            'notes' => 'nullable|string',
-            'update_price' => 'nullable|boolean',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0',
+            'date'        => 'required|date',
+            'notes'       => 'nullable|string',
+            'items'       => 'required|array|min:1',
+            'items.*.product_id'      => 'required|exists:products,id',
+            'items.*.quantity'        => 'required|integer|min:1',
+            'items.*.purchase_price'  => 'required|numeric|min:0',
+            'items.*.update_price'    => 'nullable|boolean',
+            'items.*.margin'          => 'nullable|numeric|min:0|max:100',
         ]);
 
         DB::beginTransaction();
@@ -53,38 +65,40 @@ class EntryController extends Controller
         try {
             $companyId = auth()->user()->company_id;
             $userId = auth()->id();
-            $totalCost = collect($request->items)->sum(fn($item) => $item['quantity'] * $item['unit_price']);
 
-            // 1. Crear la entrada
+            $totalCost = collect($request->items)->sum(fn ($item) =>
+                $item['quantity'] * $item['purchase_price']
+            );
+
             $entry = Entry::create([
-                'company_id' => $companyId,
+                'company_id'  => $companyId,
                 'supplier_id' => $request->supplier_id,
-                'date' => $request->date,
-                'notes' => $request->notes,
-                'created_by' => $userId,
-                'total_cost' => $totalCost,
+                'date'        => $request->date,
+                'notes'       => $request->notes,
+                'created_by'  => $userId,
+                'total_cost'  => $totalCost,
             ]);
 
-            // 2. Crear los items y actualizar stock / precio
             foreach ($request->items as $item) {
                 $product = Product::where('id', $item['product_id'])
                     ->where('company_id', $companyId)
                     ->firstOrFail();
 
                 EntryItem::create([
-                    'entry_id' => $entry->id,
-                    'product_id' => $product->id,
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
-                    'subtotal' => $item['quantity'] * $item['unit_price'],
+                    'entry_id'    => $entry->id,
+                    'product_id'  => $product->id,
+                    'quantity'    => $item['quantity'],
+                    'unit_price'  => $item['purchase_price'],
+                    'subtotal'    => $item['quantity'] * $item['purchase_price'],
                 ]);
 
                 // Actualizar stock
                 $product->stock += $item['quantity'];
 
-                // (Opcional) actualizar precio de venta si se indicó
-                if ($request->update_price) {
-                    $product->price = $item['unit_price'] * 1.3; // margen 30%
+                // ✅ Actualizar precio de venta si se indicó
+                if (!empty($item['update_price']) && isset($item['margin'])) {
+                    $margin = floatval($item['margin']);
+                    $product->price = $item['purchase_price'] * (1 + $margin / 100);
                 }
 
                 $product->save();
@@ -92,17 +106,10 @@ class EntryController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('success', 'Entrada registrada correctamente.');
+            return redirect()->route('entries.index')->with('success', 'Entrada registrada correctamente.');
         } catch (\Throwable $e) {
             DB::rollBack();
             return redirect()->back()->withErrors('Error al registrar la entrada: ' . $e->getMessage());
         }
-    }
-
-    public function create()
-    {
-        return Inertia::render('Entries/Create', [
-            // Aquí podrías pasar: lista de productos, proveedores, etc.
-        ]);
     }
 }
