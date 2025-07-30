@@ -56,7 +56,12 @@ class PermissionSeeder extends Seeder
             "products.create",
             "products.edit",
             "products.delete",
-            "products.updateImage"
+            "products.updateImage",
+
+            "entries.view",
+            "entries.create",
+            "entries.edit",
+            "entries.delete"
 
         ];
         //foreach ($permissions as $key => $value) {

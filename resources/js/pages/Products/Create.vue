@@ -55,19 +55,6 @@ function submit() {
       <h1 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Crear Producto</h1>
 
       <form @submit.prevent="submit" class="space-y-6" enctype="multipart/form-data">
-        <!-- SKU -->
-        <div>
-          <label for="sku" class="block text-sm font-medium text-gray-700 dark:text-gray-200">SKU</label>
-          <input
-            id="sku"
-            v-model="form.sku"
-            type="text"
-            placeholder="Ej. PROD-001"
-            autofocus
-            class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-          />
-          <p v-if="form.errors.sku" class="text-sm text-red-600 mt-1">{{ form.errors.sku }}</p>
-        </div>
 
         <!-- Nombre -->
         <div>
@@ -137,6 +124,19 @@ function submit() {
             class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
           <p v-if="form.errors.price" class="text-sm text-red-600 mt-1">{{ form.errors.price }}</p>
+        </div>
+        <!-- SKU -->
+        <div>
+          <label for="sku" class="block text-sm font-medium text-gray-700 dark:text-gray-200">SKU</label>
+          <input
+            id="sku"
+            v-model="form.sku"
+            type="text"
+            placeholder="Ej. PROD-001"
+            autofocus
+            class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+          />
+          <p v-if="form.errors.sku" class="text-sm text-red-600 mt-1">{{ form.errors.sku }}</p>
         </div>
 
         <!-- Imagen -->

@@ -67,20 +67,24 @@ const mainNavItems: NavItem[] = [
         icon: Notebook,
         permission: 'fresignations.view',
     },
-        {
+    {
         title: 'Proveedores',
         href: '/suppliers',
         icon: Bus,
         permission: 'suppliers.view',
     },
-        {
+    {
         title: 'Productos',
         href: '/products',
         icon: Bus,
-        //permission: 'suppliers.view',
+        permission: 'products.view',
     },
-
-
+    {
+        title: 'Entradas',
+        href: '/entries',
+        icon: Bus,
+        permission: 'entries.view',
+    },
 ];
 
 const footerNavItems: NavItem[] = [

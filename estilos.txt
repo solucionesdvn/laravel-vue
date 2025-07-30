@@ -44,7 +44,8 @@ php artisan storage:link
 
 //
 Pendientes 
-Arreglar categorias
+Arreglar categorias ok
+Arreglar campo SKU en productos, ya que tenemos varias empresas se puede repetir el SKU y generar error al almacenar
 
 
 Nuevas versiones

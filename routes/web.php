@@ -7,6 +7,8 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\EntryController;
+
 
 
 
@@ -146,6 +148,24 @@ Route::resource("products", ProductController::class)
     ->middleware("permission:products.create|products.edit|products.delete|products.view");
 
 
+//Entradas -
+Route::resource("entries", EntryController::class);
+
+Route::resource("entries", EntryController::class)
+    ->only(['create', 'store'])
+    ->middleware("permission:entries.create");
+
+Route::resource("entries", EntryController::class)
+    ->only(['edit', 'update'])
+    ->middleware("permission:entries.edit");
+
+Route::resource("entries", EntryController::class)
+    ->only(['destroy'])
+    ->middleware("permission:entries.delete");
+
+Route::resource("entries", EntryController::class)
+    ->only(['index', 'show'])
+    ->middleware("permission:entries.create|entries.edit|entries.delete|entries.view");
     
 
 
