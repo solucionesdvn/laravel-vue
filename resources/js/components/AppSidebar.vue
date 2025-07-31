@@ -90,7 +90,7 @@ const mainNavItems: NavItem[] = [
         title: 'Salidas',
         href: '/product-exits',
         icon: Bus,
-        //permission: 'entries.view',
+        permission: 'product-exits.view',
     },
 ];
 
