@@ -8,8 +8,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\EntryController;
-
-
+use App\Http\Controllers\ProductExitController;
 
 
 //Formatos
@@ -168,6 +167,25 @@ Route::resource("entries", EntryController::class)
     ->middleware("permission:entries.create|entries.edit|entries.delete|entries.view");
     
 
+//Salidas
+
+Route::resource("product-exits", ProductExitController::class);
+
+Route::resource("product-exits", ProductExitController::class)
+    ->only(['create', 'store'])
+    ->middleware("permission:product-exits.create");
+
+Route::resource("product-exits", ProductExitController::class)
+    ->only(['edit', 'update'])
+    ->middleware("permission:product-exits.edit");
+
+Route::resource("product-exits", ProductExitController::class)
+    ->only(['destroy'])
+    ->middleware("permission:product-exits.delete");
+
+Route::resource("product-exits", ProductExitController::class)
+    ->only(['index', 'show'])
+    ->middleware("permission:product-exits.create|product-exits.edit|product-exits.delete|product-exits.view");
 
 
 

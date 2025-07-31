@@ -85,6 +85,13 @@ const mainNavItems: NavItem[] = [
         icon: Bus,
         permission: 'entries.view',
     },
+
+    {
+        title: 'Salidas',
+        href: '/product-exits',
+        icon: Bus,
+        //permission: 'entries.view',
+    },
 ];
 
 const footerNavItems: NavItem[] = [
