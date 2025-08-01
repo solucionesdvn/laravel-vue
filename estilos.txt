@@ -44,13 +44,27 @@ php artisan storage:link
 
 //
 Pendientes 
+VERIFICAR ELIMINACIONES DE EMPRESAS, NO PONER PARA ELIMINAR, SOLO INACTIVAR
+DASHBOARD - Importente
 Arreglar categorias ok
 Arreglar campo SKU en productos, ya que tenemos varias empresas se puede repetir el SKU y generar error al almacenar
+Pruebas
+Login
+FORMATO DE PESOSO COLOMBIANOS SIN DECIMALES
+
+
+Importar información desde excel a BD por proveedor 
+
+
+salidas: no se pudede descontar menos de lo que hay en existencia
+Entradas: No se puede agregar un producto 2 veces
 
 
 Nuevas versiones
 
+
 Exportar tablas requeridas a excel
+Importar información desde excel 
 Agregar toast - alertas
 Agregar un loader/spinne
 

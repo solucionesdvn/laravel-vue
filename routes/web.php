@@ -9,6 +9,8 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\EntryController;
 use App\Http\Controllers\ProductExitController;
+use App\Http\Controllers\CashRegisterController;
+use App\Http\Controllers\SaleController;
 
 
 //Formatos
@@ -187,6 +189,45 @@ Route::resource("product-exits", ProductExitController::class)
     ->only(['index', 'show'])
     ->middleware("permission:product-exits.create|product-exits.edit|product-exits.delete|product-exits.view");
 
+
+//CAJA
+Route::resource("cash-registers", CashRegisterController::class);
+
+Route::resource("cash-registers", CashRegisterController::class)
+    ->only(['create', 'store'])
+    ->middleware("permission:cash-registers.create");
+
+Route::resource("cash-registers", CashRegisterController::class)
+    ->only(['edit', 'update'])
+    ->middleware("permission:cash-registers.edit");
+
+Route::resource("cash-registers", CashRegisterController::class)
+    ->only(['destroy'])
+    ->middleware("permission:cash-registers.delete");
+
+Route::resource("cash-registers", CashRegisterController::class)
+    ->only(['index', 'show'])
+    ->middleware("permission:cash-registers.create|cash-registers.edit|cash-registers.delete|cash-registers.view");
+
+    
+ //VENTAS
+Route::resource("sales", SaleController::class);
+
+Route::resource("sales", SaleController::class)
+    ->only(['create', 'store'])
+    ->middleware("permission:sales.create");
+
+Route::resource("sales", SaleController::class)
+    ->only(['edit', 'update'])
+    ->middleware("permission:sales.edit");
+
+Route::resource("sales", SaleController::class)
+    ->only(['destroy'])
+    ->middleware("permission:sales.delete");
+
+Route::resource("sales", SaleController::class)
+    ->only(['index', 'show'])
+    ->middleware("permission:sales.create|sales.edit|sales.delete|sales.view");
 
 
     //Rutas Formatos

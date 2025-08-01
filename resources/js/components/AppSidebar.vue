@@ -92,6 +92,18 @@ const mainNavItems: NavItem[] = [
         icon: Bus,
         permission: 'product-exits.view',
     },
+    {
+        title: 'Caja',
+        href: '/cash-registers',
+        icon: Bus,
+        permission: 'cash-registers.view',
+    },
+    {
+        title: 'Ventas',
+        href: '/sales',
+        icon: Bus,
+        permission: 'sales.view',
+    },
 ];
 
 const footerNavItems: NavItem[] = [

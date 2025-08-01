@@ -51,5 +51,12 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Company::class);
     }
+    // app/Models/User.php
+
+    public function cashRegisters()
+    {
+        return $this->hasMany(CashRegister::class);
+    }
+
 
 }

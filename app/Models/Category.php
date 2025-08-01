@@ -25,6 +25,12 @@ class Category extends Model
     {
         return $this->belongsTo(Company::class);
     }
-    
+    // app/Models/Category.php
+
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
+
 }
 
