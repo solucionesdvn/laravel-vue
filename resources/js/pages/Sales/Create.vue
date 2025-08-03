@@ -8,6 +8,7 @@ const props = defineProps({
 })
 
 const selectedCategoryId = ref(null)
+const paymentMethod = ref('Efectivo') // Puedes inicializar con "Efectivo" o vacío
 const cart = ref([])
 
 const selectedCategory = computed(() => {
@@ -28,7 +29,7 @@ const addToCart = (product) => {
         product_id: product.id,
         name: product.name,
         quantity: 1,
-        price: Number(product.price || 0),
+        unit_price: Number(product.price || 0),
         stock: product.stock,
       })
     }
@@ -52,7 +53,7 @@ const decreaseQuantity = (item) => {
 }
 
 const total = computed(() =>
-  cart.value.reduce((sum, item) => sum + item.quantity * Number(item.price || 0), 0).toFixed(2)
+  cart.value.reduce((sum, item) => sum + item.quantity * Number(item.unit_price || 0), 0).toFixed(2)
 )
 
 const submit = () => {
@@ -62,8 +63,9 @@ const submit = () => {
     items: cart.value.map(item => ({
       product_id: item.product_id,
       quantity: item.quantity,
-      price: Number(item.price || 0),
+      unit_price: Number(item.unit_price || 0),
     })),
+    payment_method: paymentMethod.value,
   })
 }
 </script>
@@ -140,8 +142,8 @@ const submit = () => {
                   >+</button>
                 </div>
               </td>
-              <td>${{ Number(item.price).toFixed(2) }}</td>
-              <td>${{ (item.quantity * Number(item.price)).toFixed(2) }}</td>
+              <td>${{ Number(item.unit_price).toFixed(2) }}</td>
+              <td>${{ (item.quantity * Number(item.unit_price)).toFixed(2) }}</td>
               <td>
                 <button @click="removeFromCart(item.product_id)" class="text-red-500 hover:underline">
                   Quitar
@@ -151,8 +153,22 @@ const submit = () => {
           </tbody>
         </table>
 
-        <!-- Total -->
-        <div class="flex justify-end items-center gap-4 mt-4">
+        <!-- Método de pago -->
+        <div class="mt-4">
+          <label class="block font-medium text-sm text-gray-700 mb-1">Método de Pago</label>
+          <select
+            v-model="paymentMethod"
+            class="w-full border rounded-lg px-3 py-2 text-sm"
+          >
+            <option value="Efectivo">Efectivo</option>
+            <option value="Tarjeta">Tarjeta</option>
+            <option value="Transferencia">Transferencia</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+
+        <!-- Total y botón -->
+        <div class="flex justify-end items-center gap-4 mt-6">
           <div class="font-bold text-xl">Total: ${{ total }}</div>
           <button
             @click="submit"

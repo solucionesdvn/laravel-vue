@@ -1,5 +1,4 @@
 <?php
-// app/Models/CashRegister.php
 
 namespace App\Models;
 
@@ -15,14 +14,24 @@ class CashRegister extends Model
         'company_id',
         'opened_at',
         'closed_at',
-        'opening_balance',
-        'closing_balance',
+        'opening_amount',   // <- corregido: era "opening_balance"
+        'closing_amount',   // <- corregido: era "closing_balance"
         'total_sales',
+        'total_expenses',   // <- agregado si vas a registrar egresos
+        'status',           // <- nuevo campo para manejar estado
         'notes',
     ];
 
-    protected $dates = ['opened_at', 'closed_at'];
+    protected $casts = [
+        'opened_at' => 'datetime',
+        'closed_at' => 'datetime',
+        'opening_amount' => 'decimal:2',
+        'closing_amount' => 'decimal:2',
+        'total_sales' => 'decimal:2',
+        'total_expenses' => 'decimal:2',
+    ];
 
+    // Relaciones
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -36,5 +45,5 @@ class CashRegister extends Model
     public function sales()
     {
         return $this->hasMany(Sale::class);
-    }
+    }    
 }

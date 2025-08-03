@@ -19,7 +19,7 @@ class SaleController extends Controller
     public function index()
     {
         return Inertia::render('Sales/Index', [
-            // En el futuro puedes enviar listado de ventas
+            // Aquí luego puedes enviar historial de ventas
         ]);
     }
 
@@ -38,7 +38,7 @@ class SaleController extends Controller
                       ->where('stock', '>', 0)
                       ->select('id', 'name', 'stock', 'price', 'category_id');
             }])
-            ->get(['id', 'name', 'color']); // ← Incluimos el campo `color`
+            ->get(['id', 'name', 'color']);
 
         return Inertia::render('Sales/Create', [
             'categories' => $categories,
@@ -51,14 +51,15 @@ class SaleController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity'   => 'required|integer|min:1',
-            'items.*.price'      => 'required|numeric|min:0',
+            'items.*.unit_price' => 'required|numeric|min:0',
+            'payment_method'     => 'required|string|max:255',
         ]);
 
         $user = auth()->user();
         $companyId = $user->company_id;
 
         $cashRegister = CashRegister::where('company_id', $companyId)
-            ->whereNull('closed_at') // Consideramos que está abierta si no tiene fecha de cierre
+            ->whereNull('closed_at')
             ->latest('created_at')
             ->first();
 
@@ -69,9 +70,9 @@ class SaleController extends Controller
         DB::beginTransaction();
 
         try {
-            $total = collect($request->items)->sum(function ($item) {
-                return $item['quantity'] * $item['price'];
-            });
+            $total = collect($request->items)->sum(fn ($item) =>
+                $item['quantity'] * $item['unit_price']
+            );
 
             $sale = Sale::create([
                 'company_id'       => $companyId,
@@ -79,6 +80,7 @@ class SaleController extends Controller
                 'user_id'          => $user->id,
                 'total'            => $total,
                 'date'             => now(),
+                'payment_method'   => $request->payment_method,
             ]);
 
             foreach ($request->items as $item) {
@@ -95,8 +97,8 @@ class SaleController extends Controller
                     'sale_id'    => $sale->id,
                     'product_id' => $product->id,
                     'quantity'   => $item['quantity'],
-                    'price'      => $item['price'],
-                    'subtotal'   => $item['quantity'] * $item['price'],
+                    'unit_price' => $item['unit_price'],
+                    'subtotal'   => $item['quantity'] * $item['unit_price'],
                 ]);
 
                 $product->decrement('stock', $item['quantity']);

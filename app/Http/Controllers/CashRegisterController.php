@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\CashRegister;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class CashRegisterController extends Controller
@@ -31,25 +30,27 @@ class CashRegisterController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'initial_amount' => 'required|numeric|min:0',
+            'opening_amount' => ['required', 'numeric', 'min:0'],
+            'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $companyId = auth()->user()->company_id;
+        $user = auth()->user();
 
-        // Verificar si ya hay una caja abierta para esta compañía
-        $alreadyOpen = CashRegister::where('company_id', $companyId)
+        // Validar que no exista caja abierta para esta empresa
+        $hasOpenRegister = CashRegister::where('company_id', $user->company_id)
             ->whereNull('closed_at')
-            ->first();
+            ->exists();
 
-        if ($alreadyOpen) {
-            return redirect()->back()->withErrors(['error' => 'Ya existe una caja abierta.']);
+        if ($hasOpenRegister) {
+            return back()->withErrors(['opening_amount' => 'Ya existe una caja abierta.'])->withInput();
         }
 
         CashRegister::create([
-            'company_id'     => $companyId,
-            'user_id'        => auth()->id(),
-            'opened_at'      => now(),
-            'initial_amount' => $request->initial_amount,
+            'user_id' => $user->id,
+            'company_id' => $user->company_id,
+            'opened_at' => now(),
+            'opening_amount' => $request->opening_amount,
+            'notes' => $request->notes,
         ]);
 
         return redirect()->route('cash-registers.index')->with('success', 'Caja abierta correctamente.');
@@ -69,23 +70,47 @@ class CashRegisterController extends Controller
         ]);
     }
 
-    public function close(Request $request)
+    // Formulario para cerrar
+    public function close(CashRegister $cashRegister)
     {
-        $companyId = auth()->user()->company_id;
+        $this->authorizeCompany($cashRegister);
 
-        $register = CashRegister::where('company_id', $companyId)
-            ->whereNull('closed_at')
-            ->first();
-
-        if (!$register) {
-            return redirect()->back()->withErrors(['error' => 'No hay una caja abierta.']);
+        if ($cashRegister->closed_at) {
+            return redirect()->route('cash-registers.index')->with('error', 'La caja ya fue cerrada.');
         }
 
-        $register->update([
-            'closed_at'    => now(),
-            'final_amount' => $request->final_amount ?? $register->initial_amount,
+        return Inertia::render('CashRegisters/Close', [
+            'register' => $cashRegister,
+        ]);
+    }
+
+    // Procesar cierre
+    public function update(Request $request, CashRegister $cashRegister)
+    {
+        $this->authorizeCompany($cashRegister);
+
+        $request->validate([
+            'closing_amount' => 'nullable|numeric|min:0',
+        ]);
+
+        if ($cashRegister->closed_at) {
+            return redirect()->route('cash-registers.index')->with('error', 'La caja ya fue cerrada.');
+        }
+
+        $cashRegister->update([
+            'closed_at' => now(),
+            'closing_amount' => $request->closing_amount ?? (
+                $cashRegister->opening_amount + $cashRegister->total_sales - $cashRegister->total_expenses
+            ),
         ]);
 
         return redirect()->route('cash-registers.index')->with('success', 'Caja cerrada correctamente.');
+    }
+
+    protected function authorizeCompany(CashRegister $cashRegister)
+    {
+        if ($cashRegister->company_id !== auth()->user()->company_id) {
+            abort(403, 'No autorizado.');
+        }
     }
 }

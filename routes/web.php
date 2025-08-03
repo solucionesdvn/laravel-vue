@@ -205,9 +205,15 @@ Route::resource("cash-registers", CashRegisterController::class)
     ->only(['destroy'])
     ->middleware("permission:cash-registers.delete");
 
+Route::middleware('permission:cash-registers.close')->group(function () {
+    Route::get('cash-registers/{cash_register}/close', [CashRegisterController::class, 'close'])->name('cash-registers.close');
+    Route::put('cash-registers/{cash_register}/close', [CashRegisterController::class, 'closeStore'])->name('cash-registers.close.store');
+});
+
 Route::resource("cash-registers", CashRegisterController::class)
     ->only(['index', 'show'])
     ->middleware("permission:cash-registers.create|cash-registers.edit|cash-registers.delete|cash-registers.view");
+
 
     
  //VENTAS
@@ -230,29 +236,9 @@ Route::resource("sales", SaleController::class)
     ->middleware("permission:sales.create|sales.edit|sales.delete|sales.view");
 
 
-    //Rutas Formatos
-
-Route::resource('fresignations', FresignationController::class)->middleware(['auth', 'verified']);
-Route::put('/fresignations/{fresignation}', [FresignationController::class, 'update'])->name('fresignations.update');
+    //Rutas Formatos NUEVAMENE
 
 
-Route::resource("fresignations", RoleController::class);
-
-Route::resource("fresignations", RoleController::class)
-    ->only(['create', 'store'])
-    ->middleware("permission:fresignations.create");
-
-Route::resource("fresignations", RoleController::class)
-    ->only(['edit', 'update'])
-    ->middleware("permission:fresignations.edit");
-
-Route::resource("fresignations", RoleController::class)
-    ->only(['destroy'])
-    ->middleware("permission:fresignations.delete");
-
-Route::resource("fresignations", RoleController::class)
-    ->only(['index', 'show'])
-    ->middleware("permission:fresignations.create|fresignations.edit|fresignations.delete|fresignations.view");
 
 
 require __DIR__.'/settings.php';

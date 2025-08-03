@@ -1,52 +1,64 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Head, useForm, router } from '@inertiajs/vue3'
-import AppLayout from '@/layouts/AppLayout.vue'
-import { type BreadcrumbItem } from '@/types'
-import { Button } from '@/components/ui/button'
+import AppLayout from '@/layouts/AppLayout.vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { type BreadcrumbItem } from '@/types';
+import { Button } from '@/components/ui/button';
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Cajas', href: '/cash-registers' },
-  { title: 'Abrir Caja' },
-]
+  { title: 'Abrir Caja', href: '/cash-registers/create' },
+];
 
+// Formulario
 const form = useForm({
-  initial_amount: ''
-})
-
-function submit() {
-  form.post(route('cash-registers.store'), {
-    preserveScroll: true,
-  })
-}
+  opening_amount: '',
+  notes: '',
+});
 </script>
 
 <template>
-  <Head title="Abrir Caja" />
-
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="p-6 max-w-xl mx-auto space-y-6">
-      <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Abrir Caja</h1>
+    <Head title="Abrir Caja" />
 
-      <form @submit.prevent="submit" class="space-y-4">
+    <div class="max-w-2xl mx-auto p-6 bg-white shadow rounded-xl space-y-6">
+      <h1 class="text-2xl font-bold text-gray-800">Abrir Nueva Caja</h1>
+
+      <form @submit.prevent="form.post(route('cash-registers.store'))" class="space-y-5">
+        <!-- Monto Inicial -->
         <div>
-          <label for="initial_amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Monto Inicial</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Monto Inicial</label>
           <input
-            v-model="form.initial_amount"
             type="number"
             step="0.01"
-            id="initial_amount"
-            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white"
-            required
+            v-model="form.opening_amount"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-400"
+            :class="{ 'border-red-500': form.errors.opening_amount }"
           />
-          <div v-if="form.errors.initial_amount" class="text-sm text-red-500 mt-1">
-            {{ form.errors.initial_amount }}
-          </div>
+          <p v-if="form.errors.opening_amount" class="text-sm text-red-600 mt-1">
+            {{ form.errors.opening_amount }}
+          </p>
         </div>
 
-        <Button type="submit" :disabled="form.processing" class="bg-green-600 hover:bg-green-700 text-white">
-          Abrir Caja
-        </Button>
+        <!-- Notas -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Notas (opcional)</label>
+          <textarea
+            v-model="form.notes"
+            rows="3"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-400"
+            :class="{ 'border-red-500': form.errors.notes }"
+          ></textarea>
+          <p v-if="form.errors.notes" class="text-sm text-red-600 mt-1">
+            {{ form.errors.notes }}
+          </p>
+        </div>
+
+        <!-- Botón -->
+        <div class="flex justify-end">
+          <Button type="submit" class="bg-blue-600 text-white hover:bg-blue-700">
+            Abrir Caja
+          </Button>
+        </div>
       </form>
     </div>
   </AppLayout>

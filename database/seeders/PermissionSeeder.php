@@ -34,12 +34,7 @@ class PermissionSeeder extends Seeder
             "companies.create",
             "companies.edit",
             "companies.delete",
-
-            "fresignations.view",
-            "fresignations.create",
-            "fresignations.edit",
-            "fresignations.delete",
-
+            
             //Permios roles Inventario Ventas
 
             "categories.view",
@@ -72,6 +67,7 @@ class PermissionSeeder extends Seeder
             "cash-registers.create",
             "cash-registers.edit",
             "cash-registers.delete",
+            "cash-registers.close",            
             
             "sales.view",
             "sales.create",

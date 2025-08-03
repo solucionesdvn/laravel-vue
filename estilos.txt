@@ -1,9 +1,13 @@
-Script para chat GPT
+Script para chat GPT Inventario ventas
 
 
 Hola, estoy haciendo un proyecto con el kit starter de laravel y vue, ya lo integre con spatie para roles y permisos, por ahora el proyecto se trata de un sistema de inventatio
 nesesito que tenga productos, categorias, ventas, entradas, salidas y kardex, por favor dime sugerencias y un poco la logica de la cantidad de stock
 
+
+Script para chat GPT Formtatos
+
+Hola, estoy haciendo un proyecto con el kit starter de laravel y vue, ya lo integre con spatie para roles y permisos, ahora nesesito lo siguiente, de que se trata el proyecto?, es para una papeleria, entonces va a ser que son aproximadamente 20 formatos como lo son: carta de renuncia, carta de recomendación personal, entre otros, primero nesesito hacer almenos 5 modulos como demo que funcionen de la siguiente manera, debemos crear una tabla en una base de datos, porque?, quuiero meter informacion al formulario desde una ip publica, sino lo renderizaba desde la vista de vue unicamente, esta tabla debe tener una llave foranea company_id ya que vamos a tener varias papelerias y que cada una unicamente mire sus formatos, entonces nesesitamos un index para cada formato, aqui mostraremos los registros por si nesesitamos ver alguno, jaja bueno eso lo sabes, un create para cada formato, un edit y nesesito que el destroy se realize al pasar una hora de crear el registro, porque eliminar el registro al pasar una hora?, porque diaramente se realizarian varios formatos y no los nesesitamos ya que son de uno o 2 usos y eliminar manualmente no es viable, entonces quiero que funcione de la siguiente manera, en el create.vue de cada formato tendremos los campos del formato, por ejemplo de una carta de renuncia el  nombre, fecha y motivo, adicionalmente quiero que en este create haya un boton de compartir que cree un qr y un enlace a una pagina publica para que el cliente de la papeleria llene su informacion y le de enviar, ahi se realizaria un update al registro,  al realizar esto en nuestro index mostrar la información guardada por el usuario y poder imprimir o editar alguna información, entonces no crees codigo aun, primero dime como ves el alcance del proyecto, lo hacemos para ahorrar tiempo, lo otro que nesesito que me digas es si es posible realizar esto, por ahora lo veo escencialmete posible gracias a la flexibilidad de laravel y vue, lo otro que quiero que me digas es que tan viable es nuestro proyecto en el contexto colombiano, y por ultimo dame algunas: sugerencias, tips o recomendaciones para el desarrollo y presentación de deste proyecto. Muchas gracias! Por ultimo estoy trabajando el back en ingles, para  futuros proyectos trabajarlo asi, ya que me han dicho que es la mejor manera de trabajar
 
 
 

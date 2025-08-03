@@ -56,10 +56,10 @@ const mainNavItems: NavItem[] = [
         permission: 'companies.view',
     },
     {
-        //title: 'Formato Carta renuncia',
-        //href: '/fresignations',
-        //icon: Notebook,
-        //permission: 'fresignations.view',
+        //title: 'ESPACIO,
+        //href: '/ESPACIO',
+        //icon: ESPACIO,
+        //permission: 'ESPACIO',
     },
     {
         title: 'Categorias',
@@ -104,6 +104,19 @@ const mainNavItems: NavItem[] = [
         icon: Bus,
         permission: 'sales.view',
     },
+    {
+        //title: 'ESPACIO,
+        //href: '/ESPACIO',
+        //icon: ESPACIO,
+        //permission: 'ESPACIO',
+    },
+    {
+        title: 'Formatos',
+        href: '/formats',
+        icon: Bus,
+        //permission: 'cash-registers.view',
+    },
+    
 ];
 
 const footerNavItems: NavItem[] = [
