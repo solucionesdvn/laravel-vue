@@ -11,6 +11,7 @@ use App\Http\Controllers\EntryController;
 use App\Http\Controllers\ProductExitController;
 use App\Http\Controllers\CashRegisterController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\ResignationFormController;
 
 
 //Formatos
@@ -238,7 +239,29 @@ Route::resource("sales", SaleController::class)
 
     //Rutas Formatos NUEVAMENE
 
+Route::resource("resignation-forms", ResignationFormController::class);
 
+Route::resource("resignation-forms", ResignationFormController::class)
+    ->only(['create', 'store'])
+    ->middleware("permission:resignation-forms.create");
+
+Route::resource("resignation-forms", ResignationFormController::class)
+    ->only(['edit', 'update'])
+    ->middleware("permission:resignation-forms.edit");
+
+Route::resource("resignation-forms", ResignationFormController::class)
+    ->only(['destroy'])
+    ->middleware("permission:resignation-forms.delete");
+
+Route::resource("resignation-forms", ResignationFormController::class)
+    ->only(['index', 'show'])
+    ->middleware("permission:resignation-forms.create|resignation-forms.edit|resignation-forms.delete|resignation-forms.view");
+
+
+// Rutas publicas
+
+Route::get('/public/resignation/{token}', [ResignationFormController::class, 'publicEdit'])->name('resignation-forms.public.edit');
+Route::put('/public/resignation/{token}', [ResignationFormController::class, 'publicUpdate'])->name('resignation-forms.public.update');
 
 
 require __DIR__.'/settings.php';

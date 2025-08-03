@@ -114,7 +114,7 @@ const mainNavItems: NavItem[] = [
         title: 'Formatos',
         href: '/formats',
         icon: Bus,
-        //permission: 'cash-registers.view',
+        permission: 'resignation-forms.view',
     },
     
 ];

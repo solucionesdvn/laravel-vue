@@ -72,7 +72,13 @@ class PermissionSeeder extends Seeder
             "sales.view",
             "sales.create",
             "sales.edit",
-            "sales.delete"
+            "sales.delete",
+
+            //Permisos formatos 
+            "resignation-forms.view",
+            "resignation-forms.create",
+            "resignation-forms.edit",
+            "resignation-forms.delete",
 
             
 
