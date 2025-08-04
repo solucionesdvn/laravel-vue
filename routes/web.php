@@ -12,6 +12,8 @@ use App\Http\Controllers\ProductExitController;
 use App\Http\Controllers\CashRegisterController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\ResignationFormController;
+use App\Http\Controllers\Export\DocumentExportController;
+
 
 
 //Formatos
@@ -262,6 +264,20 @@ Route::resource("resignation-forms", ResignationFormController::class)
 
 Route::get('/public/resignation/{token}', [ResignationFormController::class, 'publicEdit'])->name('resignation-forms.public.edit');
 Route::put('/public/resignation/{token}', [ResignationFormController::class, 'publicUpdate'])->name('resignation-forms.public.update');
+
+
+//Rutas Exportar PDF
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/resignation-forms/{id}/export-pdf', [DocumentExportController::class, 'exportResignationPDF'])
+        ->name('resignation-forms.export.pdf');
+});
+
+
+// Rutas impresion
+Route::get('/public/resignation/{token}', [PublicResignationController::class, 'show']);
+
+
 
 
 require __DIR__.'/settings.php';

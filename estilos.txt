@@ -59,6 +59,7 @@ imagen
 company_id -> llave foranea
 
 # Después de clonar el repo y correr las migraciones
+
 php artisan migrate
 php artisan storage:link
 
@@ -91,6 +92,11 @@ Importar información desde excel
 Agregar toast - alertas
 Agregar un loader/spinne
 
+
+Librerias por si genera algo error
+
+DomPDF – Generación de PDFs en el backend Laravel.: composer require barryvdh/laravel-dompdf
+QRCode.vue – Componente Vue para generar códigos QR.
 
 
 Recomendaciones de venta:

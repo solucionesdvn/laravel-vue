@@ -4,6 +4,7 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, Link, router, useForm } from '@inertiajs/vue3'
 import { type BreadcrumbItem } from '@/types'
 import { can } from '@/lib/can'
+import QrcodeVue from 'qrcode.vue'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -16,7 +17,16 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-import { Pencil, Trash, CirclePlus, Search, Link2 } from 'lucide-vue-next'
+import {
+  Pencil,
+  Trash,
+  CirclePlus,
+  Search,
+  Link2,
+  Printer,
+  FileDown,
+  X,
+} from 'lucide-vue-next'
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Cartas de Renuncia', href: '/resignation-forms' },
@@ -33,7 +43,6 @@ const props = defineProps<{
   }
 }>()
 
-// Buscador
 const searchForm = useForm({
   search: props.filters?.search || '',
 })
@@ -45,18 +54,19 @@ function submitSearch() {
   })
 }
 
-// Copiar enlace público
-function copyPublicLink(token: string) {
-  const url = `${window.location.origin}/public/resignation/${token}`
-  navigator.clipboard.writeText(url)
-  alert('Enlace copiado al portapapeles:\n' + url)
-}
-
-// Eliminar
 function deleteForm(id: number) {
   if (confirm('¿Deseas eliminar este registro?')) {
     router.delete(route('resignation-forms.destroy', id))
   }
+}
+
+const activeQR = ref<number | null>(null)
+const origin = typeof window !== 'undefined' ? window.location.origin : ''
+
+function copyPublicLink(token: string) {
+  const url = `${origin}/public/resignation/${token}`
+  navigator.clipboard.writeText(url)
+  alert('Enlace copiado al portapapeles:\n' + url)
 }
 </script>
 
@@ -67,7 +77,9 @@ function deleteForm(id: number) {
     <div class="p-6 space-y-6">
       <!-- Encabezado -->
       <div class="flex items-center justify-between flex-wrap gap-4">
-        <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Lista de Cartas de Renuncia</h1>
+        <h1 class="text-3xl font-bold text-gray-800 dark:text-white">
+          Lista de Cartas de Renuncia
+        </h1>
         <div>
           <Button
             as-child
@@ -116,32 +128,86 @@ function deleteForm(id: number) {
               <TableCell class="px-6 py-4">{{ form.full_name }}</TableCell>
               <TableCell class="px-6 py-4">{{ form.resignation_date }}</TableCell>
               <TableCell class="px-6 py-4 truncate max-w-[200px]">{{ form.reason }}</TableCell>
-              <TableCell class="px-6 py-4 flex gap-2 flex-wrap">
-                <Button
-                  as-child
-                  size="sm"
-                  class="bg-blue-500 text-white hover:bg-blue-700"
-                  v-if="can('resignation-forms.edit')"
-                >
-                  <Link :href="`/resignation-forms/${form.id}/edit`">
-                    <Pencil class="w-4 h-4" />
-                  </Link>
-                </Button>
-                <Button
-                  size="sm"
-                  class="bg-rose-500 text-white hover:bg-rose-700"
-                  v-if="can('resignation-forms.delete')"
-                  @click="deleteForm(form.id)"
-                >
-                  <Trash class="w-4 h-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  class="bg-gray-500 text-white hover:bg-gray-700"
-                  @click="copyPublicLink(form.token)"
-                >
-                  <Link2 class="w-4 h-4" />
-                </Button>
+              <TableCell class="px-6 py-4 flex flex-col gap-2">
+                <div class="flex flex-wrap gap-2">
+                  <Button
+                    as-child
+                    size="sm"
+                    class="bg-blue-500 text-white hover:bg-blue-700"
+                    v-if="can('resignation-forms.edit')"
+                  >
+                    <Link :href="`/resignation-forms/${form.id}/edit`">
+                      <Pencil class="w-4 h-4" />
+                    </Link>
+                  </Button>
+                  <Button
+                    size="sm"
+                    class="bg-rose-500 text-white hover:bg-rose-700"
+                    v-if="can('resignation-forms.delete')"
+                    @click="deleteForm(form.id)"
+                  >
+                    <Trash class="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    class="bg-gray-500 text-white hover:bg-gray-700"
+                    @click="activeQR === form.id ? activeQR = null : activeQR = form.id"
+                  >
+                    <Link2 class="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <!-- Acciones al compartir -->
+                <div v-if="activeQR === form.id" class="mt-2">
+                  <QrcodeVue
+                    :value="`${origin}/public/resignation/${form.token}`"
+                    :size="128"
+                    level="M"
+                  />
+                  <div class="mt-2 flex gap-2 flex-wrap">
+                    <Button
+                      size="sm"
+                      class="bg-gray-300 text-gray-800 hover:bg-gray-400"
+                      @click="copyPublicLink(form.token)"
+                    >
+                      Copiar enlace
+                    </Button>
+                    <Button
+                      as="a"
+                      size="sm"
+                      class="bg-green-500 text-white hover:bg-green-600"
+                      :href="`https://wa.me/?text=${encodeURIComponent(`${origin}/public/resignation/${form.token}`)}`"
+                      target="_blank"
+                    >
+                      WhatsApp
+                    </Button>
+                    <Button
+                      as="a"
+                      size="sm"
+                      class="bg-cyan-600 text-white hover:bg-cyan-700"
+                      :href="`${origin}/public/resignation/${form.token}`"
+                      target="_blank"
+                    >
+                      <Printer class="w-4 h-4" /> Imprimir
+                    </Button>
+                    <Button
+                      as="a"
+                      size="sm"
+                      class="bg-purple-600 text-white hover:bg-purple-700"
+                      :href="route('resignation-forms.export.pdf', form.id)"
+                      target="_blank"
+                    >
+                      <FileDown class="w-4 h-4" /> Exportar PDF
+                    </Button>
+                    <Button
+                      size="sm"
+                      class="bg-rose-400 text-white hover:bg-rose-600"
+                      @click="activeQR = null"
+                    >
+                      <X class="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
               </TableCell>
             </TableRow>
           </TableBody>
