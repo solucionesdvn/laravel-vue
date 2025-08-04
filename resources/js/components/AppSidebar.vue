@@ -2,10 +2,11 @@
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
+import { SidebarSeparator } from '@/components/ui/sidebar';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Notebook, User, Users, Blinds, Bus} from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Notebook, User, Users, Blinds, Bus, Import} from 'lucide-vue-next';
 
 
 import { usePage } from '@inertiajs/vue3';
@@ -27,7 +28,7 @@ const mainNavItems: NavItem[] = [
         href: '/dashboard',
         icon: LayoutGrid,
     },
-     {
+    {
         title: 'Employees',
         href: '/employees',
         icon: User ,
@@ -39,16 +40,13 @@ const mainNavItems: NavItem[] = [
         href: '/users',
         icon: Users ,
         permission: 'users.view',
-
     },  
-
     {
         title: 'Roles',
         href: '/roles',
         icon: Notebook,
         permission: 'roles.view',
     },
-
     {
         title: 'Empresas',
         href: '/companies',
@@ -112,7 +110,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Formatos',
-        href: '/formats',
+        href: '/resignation-forms',
         icon: Bus,
         permission: 'resignation-forms.view',
     },
