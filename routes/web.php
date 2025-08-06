@@ -275,7 +275,11 @@ Route::middleware(['auth'])->group(function () {
 
 
 // Rutas impresion
-Route::get('/public/resignation/{token}', [PublicResignationController::class, 'show']);
+Route::get('/public/resignation/{token}', [ResignationFormController::class, 'show']);
+Route::get('/public/resignation/{token}', [ResignationFormController::class, 'publicPdf']);
+Route::get('/public/resignation/pdf/{token}', [ResignationFormController::class, 'publicPdf']);
+
+
 
 
 

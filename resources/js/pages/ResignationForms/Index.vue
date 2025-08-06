@@ -26,6 +26,7 @@ import {
   Printer,
   FileDown,
   X,
+  Eye,
 } from 'lucide-vue-next'
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -67,6 +68,15 @@ function copyPublicLink(token: string) {
   const url = `${origin}/public/resignation/${token}`
   navigator.clipboard.writeText(url)
   alert('Enlace copiado al portapapeles:\n' + url)
+}
+
+// 🌟 Modal Vista Previa PDF
+const showPdfModal = ref(false)
+const pdfUrl = ref('')
+
+function openPdfPreview(token: string) {
+  pdfUrl.value = `${origin}/public/resignation/pdf/${token}`
+  showPdfModal.value = true
 }
 </script>
 
@@ -191,6 +201,13 @@ function copyPublicLink(token: string) {
                       <Printer class="w-4 h-4" /> Imprimir
                     </Button>
                     <Button
+                      size="sm"
+                      class="bg-yellow-500 text-white hover:bg-yellow-600"
+                      @click="openPdfPreview(form.token)"
+                    >
+                      <Eye class="w-4 h-4" /> Vista previa
+                    </Button>
+                    <Button
                       as="a"
                       size="sm"
                       class="bg-purple-600 text-white hover:bg-purple-700"
@@ -235,4 +252,24 @@ function copyPublicLink(token: string) {
       </div>
     </div>
   </AppLayout>
+
+  <!-- Modal Vista Previa PDF -->
+  <div
+    v-if="showPdfModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg overflow-hidden shadow-xl w-full max-w-4xl h-[90vh] flex flex-col">
+      <div class="p-4 flex justify-between items-center border-b">
+        <h2 class="text-lg font-semibold">Vista previa de carta de renuncia</h2>
+        <Button
+          size="sm"
+          class="bg-red-500 text-white hover:bg-red-700"
+          @click="showPdfModal = false"
+        >
+          Cerrar
+        </Button>
+      </div>
+      <iframe :src="pdfUrl" class="flex-1 w-full" />
+    </div>
+  </div>
 </template>

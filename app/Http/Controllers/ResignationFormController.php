@@ -6,6 +6,7 @@ use App\Models\ResignationForm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ResignationFormController extends Controller
 {
@@ -75,16 +76,9 @@ class ResignationFormController extends Controller
     {
         $this->authorizeAccess($resignationForm);
 
-        $data = $request->validate([
-            'full_name' => 'required|string|max:255',
-            'resignation_date' => 'required|date',
-            'reason' => 'required|string',
-            'signature' => 'nullable|string',
+        return Inertia::render('ResignationForms/Edit', [
+            'formData' => $resignationForm->only(['id', 'full_name', 'resignation_date', 'reason', 'signature']),
         ]);
-
-        $resignationForm->update($data);
-
-        return redirect()->route('resignation-forms.index');
     }
 
     public function destroy(ResignationForm $resignationForm)
@@ -120,6 +114,18 @@ class ResignationFormController extends Controller
         $form->update($data);
 
         return Inertia::render('ResignationForms/PublicThanks');
+    }
+
+    // 🆕 Método para exportar o imprimir desde enlace público
+    public function publicPdf(string $token)
+    {
+        $form = ResignationForm::where('token', $token)->firstOrFail();
+
+        $pdf = Pdf::loadView('exports.resignations.pdf', [
+            'form' => $form,
+        ]);
+
+        return $pdf->stream('carta-renuncia.pdf'); // También puedes usar ->download('carta.pdf')
     }
 
     private function authorizeAccess(ResignationForm $form)
