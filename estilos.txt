@@ -72,6 +72,9 @@ VERIFICAR ELIMINACIONES DE EMPRESAS, NO PONER PARA ELIMINAR, SOLO INACTIVAR
 DASHBOARD - Importente
 Arreglar categorias ok
 Arreglar campo SKU en productos, ya que tenemos varias empresas se puede repetir el SKU y generar error al almacenar
+Arreglar campos proveedores
+Arreglar formatos Editar desde sesion privada o logeada
+
 Pruebas
 Login
 FORMATO DE PESOSO COLOMBIANOS SIN DECIMALES
@@ -97,6 +100,8 @@ Librerias por si genera algo error
 
 DomPDF – Generación de PDFs en el backend Laravel.: composer require barryvdh/laravel-dompdf
 QRCode.vue – Componente Vue para generar códigos QR.
+composer require maatwebsite/excel
+
 
 
 Recomendaciones de venta:

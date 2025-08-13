@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watch } from 'vue';
+import { ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
@@ -20,11 +20,11 @@ import { Pencil, Trash, CirclePlus, Search } from 'lucide-vue-next';
 import { debounce } from 'lodash';
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Categorías', href: route('categories.index') }
+  { title: 'Clientes', href: route('clients.index') }
 ];
 
 const props = defineProps<{
-  categories: {
+  clients: {
     data: Array<any>;
     links: Array<any>;
   };
@@ -42,37 +42,37 @@ const form = useForm({
 watch(
   () => form.search,
   debounce((newValue) => {
-    router.get(route('categories.index'), { search: newValue }, {
+    router.get(route('clients.index'), { search: newValue }, {
       preserveState: true,
       replace: true,
     });
   }, 300)
 );
 
-function deleteCategory(id: number) {
-  if (confirm("¿Está seguro de eliminar esta categoría?")) {
-    router.delete(route('categories.destroy', id));
+function deleteClient(id: number) {
+  if (confirm("¿Está seguro de eliminar este cliente?")) {
+    router.delete(route('clients.destroy', id));
   }
 }
 </script>
 
 <template>
-  <Head title="Categorías" />
+  <Head title="Clientes" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-4 sm:p-6 space-y-6">
       <!-- Título y botón -->
       <div class="flex items-center justify-between flex-wrap gap-4">
-        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">Lista de Categorías</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">Lista de Clientes</h1>
         <div>
           <Button
             as-child
             size="sm"
             class="bg-indigo-500 text-white hover:bg-indigo-700"
-            v-if="can('categories.create')"
+            v-if="can('clients.create')"
           >
-            <Link :href="route('categories.create')">
-              <CirclePlus class="mr-1 h-4 w-4" /> Nueva Categoría
+            <Link :href="route('clients.create')">
+              <CirclePlus class="mr-1 h-4 w-4" /> Nuevo Cliente
             </Link>
           </Button>
         </div>
@@ -85,7 +85,7 @@ function deleteCategory(id: number) {
           <Input
             type="search"
             v-model="form.search"
-            placeholder="Buscar por nombre o descripción..."
+            placeholder="Buscar por nombre o email..."
             class="w-full pl-8"
           />
         </div>
@@ -94,31 +94,22 @@ function deleteCategory(id: number) {
       <!-- Tabla -->
       <div class="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
         <Table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <TableCaption v-if="categories.data.length === 0">No hay categorías registradas.</TableCaption>
+          <TableCaption v-if="clients.data.length === 0">No hay clientes registrados.</TableCaption>
 
           <TableHeader class="bg-gray-50 dark:bg-gray-800">
             <TableRow>
               <TableHead class="px-6 py-3">Nombre</TableHead>
-              <TableHead class="px-6 py-3">Descripción</TableHead>
-              <TableHead class="px-6 py-3">Color</TableHead>
+              <TableHead class="px-6 py-3">Email</TableHead>
+              <TableHead class="px-6 py-3">Teléfono</TableHead>
               <TableHead class="px-6 py-3 text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-            <TableRow v-for="category in categories.data" :key="category.id">
-              <TableCell class="px-6 py-4 font-medium">{{ category.name }}</TableCell>
-              <TableCell class="px-6 py-4">{{ category.description }}</TableCell>
-              <TableCell class="px-6 py-4">
-                <div class="flex items-center gap-2">
-                  <span
-                    class="inline-block w-5 h-5 rounded-full border border-gray-300"
-                    :style="{ backgroundColor: category.color }"
-                    :title="category.color"
-                  ></span>
-                  <span class="text-sm text-gray-600 dark:text-gray-300">{{ category.color }}</span>
-                </div>
-              </TableCell>
+            <TableRow v-for="client in clients.data" :key="client.id">
+              <TableCell class="px-6 py-4 font-medium">{{ client.name }}</TableCell>
+              <TableCell class="px-6 py-4">{{ client.email }}</TableCell>
+              <TableCell class="px-6 py-4">{{ client.phone }}</TableCell>
               <TableCell class="px-6 py-4">
                 <div class="flex justify-end gap-2">
                   <Button
@@ -126,9 +117,9 @@ function deleteCategory(id: number) {
                     size="icon"
                     variant="outline"
                     class="bg-blue-500 text-white hover:bg-blue-700"
-                    v-if="can('categories.edit')"
+                    v-if="can('clients.edit')"
                   >
-                    <Link :href="route('categories.edit', category.id)">
+                    <Link :href="route('clients.edit', client.id)">
                       <Pencil class="h-4 w-4" />
                     </Link>
                   </Button>
@@ -136,8 +127,8 @@ function deleteCategory(id: number) {
                     size="icon"
                     variant="outline"
                     class="bg-rose-500 text-white hover:bg-rose-700"
-                    v-if="can('categories.delete')"
-                    @click="deleteCategory(category.id)"
+                    v-if="can('clients.delete')"
+                    @click="deleteClient(client.id)"
                   >
                     <Trash class="h-4 w-4" />
                   </Button>
@@ -149,9 +140,9 @@ function deleteCategory(id: number) {
       </div>
 
       <!-- Paginación -->
-      <div v-if="categories.data.length > 0" class="mt-4 flex justify-center space-x-2">
+      <div v-if="clients.data.length > 0" class="mt-4 flex justify-center space-x-2">
         <Link
-          v-for="(link, index) in categories.links"
+          v-for="(link, index) in clients.links"
           :key="index"
           :href="link.url || ''"
           v-html="link.label"

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Client;
 
 class Sale extends Model
 {
@@ -33,5 +34,10 @@ class Sale extends Model
     public function cashRegister()
     {
         return $this->belongsTo(CashRegister::class);
+    }
+
+    public function client()
+    {
+        return $this->belongsTo(Client::class);
     }
 }

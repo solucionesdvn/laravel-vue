@@ -13,6 +13,11 @@ use App\Http\Controllers\CashRegisterController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\ResignationFormController;
 use App\Http\Controllers\Export\DocumentExportController;
+use App\Http\Controllers\ClientController;
+
+
+use App\Exports\ProductsExport;
+
 
 
 
@@ -20,15 +25,14 @@ use App\Http\Controllers\Export\DocumentExportController;
 use App\Http\Controllers\FresignationController;
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
 use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
-Route::get('dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 
 
@@ -128,7 +132,10 @@ Route::resource("categories", CategoryController::class)
 
 //Productos -
 
+Route::get('/products/export', [ProductController::class, 'export'])->name('products.export');
 
+
+Route::resource('products', ProductController::class)->except(['show']);
 
 
 Route::put('products/{product}/update-image', [ProductController::class, 'updateImage'])->name('products.updateImage');
@@ -150,6 +157,8 @@ Route::resource("products", ProductController::class)
 Route::resource("products", ProductController::class)
     ->only(['index', 'show'])
     ->middleware("permission:products.create|products.edit|products.delete|products.view");
+
+
 
 
 //Entradas -
@@ -237,6 +246,26 @@ Route::resource("sales", SaleController::class)
 Route::resource("sales", SaleController::class)
     ->only(['index', 'show'])
     ->middleware("permission:sales.create|sales.edit|sales.delete|sales.view");
+
+//Clientes -
+Route::resource("clients", ClientController::class);
+
+Route::resource("clients", ClientController::class)
+    ->only(['create', 'store'])
+    ->middleware("permission:clients.create");
+
+Route::resource("clients", ClientController::class)
+    ->only(['edit', 'update'])
+    ->middleware("permission:clients.edit");
+
+Route::resource("clients", ClientController::class)
+    ->only(['destroy'])
+    ->middleware("permission:clients.delete");
+
+Route::resource("clients", ClientController::class)
+    ->only(['index', 'show'])
+    ->middleware("permission:clients.create|clients.edit|clients.delete|clients.view");
+
 
 
     //Rutas Formatos NUEVAMENE

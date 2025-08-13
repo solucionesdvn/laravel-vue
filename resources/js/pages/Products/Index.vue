@@ -95,6 +95,10 @@ function deleteProduct(id: number) {
     })
   }
 }
+
+function exportToExcel() {
+  window.location.href = route('products.export', { search: searchForm.search });
+}
 </script>
 
 <template>
@@ -110,6 +114,13 @@ function deleteProduct(id: number) {
             <CirclePlus class="mr-1" /> Nuevo producto
           </Link>
         </Button>
+          <Button
+            size="sm"
+            class="bg-green-600 text-white hover:bg-green-700"
+            @click="exportToExcel"
+          >
+            Exportar Excel
+          </Button>
       </div>
 
       <!-- Buscador -->

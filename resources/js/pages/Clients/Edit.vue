@@ -7,63 +7,78 @@ import { Label } from '@/components/ui/label';
 import { type BreadcrumbItem } from '@/types';
 
 const props = defineProps<{
-  company: {
+  client: {
     id: number;
     name: string;
-    nit: string;
+    email: string;
+    phone: string;
     address: string;
   };
 }>();
 
 const form = useForm({
-  name: props.company.name,
-  nit: props.company.nit,
-  address: props.company.address,
+  name: props.client.name,
+  email: props.client.email,
+  phone: props.client.phone,
+  address: props.client.address,
 });
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Empresas', href: route('companies.index') },
-  { title: 'Editar Empresa', href: route('companies.edit', props.company.id) },
+  { title: 'Clientes', href: route('clients.index') },
+  { title: 'Editar Cliente', href: route('clients.edit', props.client.id) },
 ];
 
 function submit() {
-  form.put(route('companies.update', props.company.id));
+  form.put(route('clients.update', props.client.id));
 }
 </script>
 
 <template>
-  <Head title="Editar Empresa" />
+  <Head title="Editar Cliente" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-4 sm:p-6 max-w-2xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-md">
-      <h1 class="text-xl sm:text-2xl font-bold mb-6 text-gray-800 dark:text-white">Editar Empresa</h1>
+      <h1 class="text-xl sm:text-2xl font-bold mb-6 text-gray-800 dark:text-white">Editar Cliente</h1>
 
       <form @submit.prevent="submit" class="space-y-6">
         <!-- Nombre -->
         <div>
-          <Label for="name">Nombre de la Empresa</Label>
+          <Label for="name">Nombre</Label>
           <Input
             id="name"
             v-model="form.name"
             type="text"
             autofocus
-            placeholder="Mi Empresa S.A.S."
+            placeholder="Nombre completo del cliente"
             :class="{ 'border-red-500': form.errors.name }"
           />
           <p v-if="form.errors.name" class="text-sm text-red-600 mt-1">{{ form.errors.name }}</p>
         </div>
 
-        <!-- NIT -->
+        <!-- Email -->
         <div>
-          <Label for="nit">NIT</Label>
+          <Label for="email">Correo Electrónico</Label>
           <Input
-            id="nit"
-            v-model="form.nit"
-            type="text"
-            placeholder="900.123.456-7"
-            :class="{ 'border-red-500': form.errors.nit }"
+            id="email"
+            v-model="form.email"
+            type="email"
+            placeholder="cliente@correo.com"
+            :class="{ 'border-red-500': form.errors.email }"
           />
-          <p v-if="form.errors.nit" class="text-sm text-red-600 mt-1">{{ form.errors.nit }}</p>
+          <p v-if="form.errors.email" class="text-sm text-red-600 mt-1">{{ form.errors.email }}</p>
+        </div>
+
+        <!-- Teléfono -->
+        <div>
+          <Label for="phone">Teléfono</Label>
+          <Input
+            id="phone"
+            v-model="form.phone"
+            type="text"
+            placeholder="300 123 4567"
+            :class="{ 'border-red-500': form.errors.phone }"
+          />
+          <p v-if="form.errors.phone" class="text-sm text-red-600 mt-1">{{ form.errors.phone }}</p>
         </div>
 
         <!-- Dirección -->
@@ -73,7 +88,7 @@ function submit() {
             id="address"
             v-model="form.address"
             type="text"
-            placeholder="Carrera 1 #2-3, Bogotá"
+            placeholder="Calle 123 #45-67, Ciudad"
             :class="{ 'border-red-500': form.errors.address }"
           />
           <p v-if="form.errors.address" class="text-sm text-red-600 mt-1">{{ form.errors.address }}</p>
@@ -82,11 +97,11 @@ function submit() {
         <!-- Botones -->
         <div class="flex justify-end gap-4 pt-4">
           <Button variant="ghost" as-child>
-            <Link :href="route('companies.index')">Cancelar</Link>
+            <Link :href="route('clients.index')">Cancelar</Link>
           </Button>
           <Button type="submit" :disabled="form.processing">
             <span v-if="form.processing">Actualizando...</span>
-            <span v-else>Actualizar Empresa</span>
+            <span v-else>Actualizar Cliente</span>
           </Button>
         </div>
       </form>

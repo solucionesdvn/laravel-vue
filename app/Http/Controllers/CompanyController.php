@@ -4,56 +4,45 @@ namespace App\Http\Controllers;
 
 use App\Models\Company;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
-
 
 class CompanyController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
+        $query = Company::query();
+
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $companies = $query->latest()->paginate(10)->withQueryString();
+
         return Inertia::render('Companies/Index', [
-            'companies' => Company::all(),
+            'companies' => $companies,
+            'filters' => $request->only('search'),
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return Inertia::render('Companies/Create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:companies,name',
             'nit' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:255',
         ]);
 
         Company::create($request->all());
 
-        return to_route('companies.index')->with('success', 'Empresa creada.');
-        }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Company $company)
-    {
-        //
+        return Redirect::route('companies.index')->with('success', 'Empresa creada correctamente.');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Company $company)
     {
         return Inertia::render('Companies/Edit', [
@@ -61,28 +50,22 @@ class CompanyController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Company $company)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:companies,name,' . $company->id,
             'nit' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:255',
         ]);
 
         $company->update($request->all());
 
-        return to_route('companies.index')->with('success', 'Empresa actualizada.');
-        }
+        return Redirect::route('companies.index')->with('success', 'Empresa actualizada correctamente.');
+    }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Company $company)
     {
         $company->delete();
-        Return to_route('companies.index')->with('success', 'Empresa eliminada.');
+        return Redirect::route('companies.index')->with('success', 'Empresa eliminada correctamente.');
     }
 }

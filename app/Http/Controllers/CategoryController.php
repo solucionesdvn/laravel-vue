@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 
 
@@ -66,7 +67,7 @@ class CategoryController extends Controller
 
         Category::create($data);
 
-        return to_route('categories.index')->with('success', 'Categoría creada correctamente.');
+        return Redirect::route('categories.index')->with('success', 'Categoría creada correctamente.'); // Cambio aquí
     }
 
     /**
@@ -99,8 +100,6 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
-        //$this->authorize('update', $category);
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
@@ -109,7 +108,7 @@ class CategoryController extends Controller
 
         $category->update($validated);
 
-        return to_route('categories.index')->with('success', 'Categoría actualizada correctamente.');
+        return Redirect::route('categories.index')->with('success', 'Categoría actualizada correctamente.'); // Cambio aquí
     }
 
     /**
@@ -123,7 +122,7 @@ class CategoryController extends Controller
 
         $category->delete();
 
-        return to_route('categories.index')->with('success', 'Categoría eliminada correctamente.');
+        return Redirect::route('categories.index')->with('success', 'Categoría eliminada correctamente.');
         
     }
 }

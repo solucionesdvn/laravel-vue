@@ -72,6 +72,12 @@ const mainNavItems: NavItem[] = [
         permission: 'suppliers.view',
     },
     {
+        title: 'Clientes',
+        href: '/clients',
+        icon: Bus,
+        permission: 'clients.view',
+    },
+    {
         title: 'Productos',
         href: '/products',
         icon: Bus,

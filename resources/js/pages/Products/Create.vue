@@ -3,6 +3,8 @@ import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { type BreadcrumbItem } from '@/types';
 
 const props = defineProps<{
@@ -12,12 +14,12 @@ const props = defineProps<{
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Productos', href: route('products.index') },
-  { title: 'Crear Producto', href: null },
+  { title: 'Crear Producto', href: route('products.create') },
 ];
 
 const form = useForm({
-  sku: '',
   name: '',
+  sku: '',
   category_id: null,
   supplier_id: null,
   stock: 0,
@@ -51,122 +53,69 @@ function submit() {
   <Head title="Crear Producto" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="p-6 max-w-2xl mx-auto">
-      <h1 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Crear Producto</h1>
+    <div class="p-4 sm:p-6 max-w-2xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-md">
+      <h1 class="text-xl sm:text-2xl font-bold mb-6 text-gray-800 dark:text-white">Crear Nuevo Producto</h1>
 
-      <form @submit.prevent="submit" class="space-y-6" enctype="multipart/form-data">
-
-        <!-- Nombre -->
+      <form @submit.prevent="submit" class="space-y-6">
+        
         <div>
-          <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Nombre</label>
-          <input
-            id="name"
-            v-model="form.name"
-            type="text"
-            placeholder="Ej. Lápiz HB"
-            class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-          />
+          <Label for="name">Nombre del Producto</Label>
+          <Input id="name" v-model="form.name" type="text" autofocus />
           <p v-if="form.errors.name" class="text-sm text-red-600 mt-1">{{ form.errors.name }}</p>
         </div>
 
-        <!-- Categoría -->
         <div>
-          <label for="category_id" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Categoría</label>
-          <select
-            id="category_id"
-            v-model="form.category_id"
-            class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-          >
-            <option disabled value="">Selecciona una categoría</option>
-            <option v-for="cat in props.categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-          </select>
-          <p v-if="form.errors.category_id" class="text-sm text-red-600 mt-1">{{ form.errors.category_id }}</p>
-        </div>
-
-        <!-- Proveedor -->
-        <div>
-          <label for="supplier_id" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Proveedor</label>
-          <select
-            id="supplier_id"
-            v-model="form.supplier_id"
-            class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-          >
-            <option disabled value="">Selecciona un proveedor</option>
-            <option v-for="prov in props.suppliers" :key="prov.id" :value="prov.id">{{ prov.name }}</option>
-          </select>
-          <p v-if="form.errors.supplier_id" class="text-sm text-red-600 mt-1">{{ form.errors.supplier_id }}</p>
-        </div>
-
-        <!-- Stock -->
-        <div>
-          <label for="stock" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Stock</label>
-          <input
-            id="stock"
-            v-model="form.stock"
-            type="number"
-            min="0"
-            placeholder="Ej. 50"
-            class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-          />
-          <p v-if="form.errors.stock" class="text-sm text-red-600 mt-1">{{ form.errors.stock }}</p>
-        </div>
-
-        <!-- Precio -->
-        <div>
-          <label for="price" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Precio</label>
-          <input
-            id="price"
-            v-model="form.price"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="Ej. 1500.00"
-            class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-          />
-          <p v-if="form.errors.price" class="text-sm text-red-600 mt-1">{{ form.errors.price }}</p>
-        </div>
-        <!-- SKU -->
-        <div>
-          <label for="sku" class="block text-sm font-medium text-gray-700 dark:text-gray-200">SKU</label>
-          <input
-            id="sku"
-            v-model="form.sku"
-            type="text"
-            placeholder="Ej. PROD-001"
-            autofocus
-            class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-          />
+          <Label for="sku">SKU (Código de producto)</Label>
+          <Input id="sku" v-model="form.sku" type="text" />
           <p v-if="form.errors.sku" class="text-sm text-red-600 mt-1">{{ form.errors.sku }}</p>
         </div>
 
-        <!-- Imagen -->
-        <div>
-          <label for="image" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Imagen</label>
-          <input
-            id="image"
-            type="file"
-            accept="image/*"
-            @change="handleImageChange"
-            class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
-              file:rounded-lg file:border-0
-              file:text-sm file:font-semibold
-              file:bg-indigo-50 file:text-indigo-700
-              hover:file:bg-indigo-100"
-          />
-          <p v-if="form.errors.image" class="text-sm text-red-600 mt-1">{{ form.errors.image }}</p>
-
-          <!-- Vista previa -->
-          <div v-if="previewUrl" class="mt-2">
-            <img :src="previewUrl" alt="Vista previa" class="w-24 h-24 object-cover rounded border" />
-          </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+                <Label for="category_id">Categoría</Label>
+                <select id="category_id" v-model="form.category_id" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                    <option :value="null" disabled>-- Seleccione --</option>
+                    <option v-for="cat in props.categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                </select>
+                <p v-if="form.errors.category_id" class="text-sm text-red-600 mt-1">{{ form.errors.category_id }}</p>
+            </div>
+            <div>
+                <Label for="supplier_id">Proveedor</Label>
+                <select id="supplier_id" v-model="form.supplier_id" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                    <option :value="null">-- Opcional --</option>
+                    <option v-for="sup in props.suppliers" :key="sup.id" :value="sup.id">{{ sup.name }}</option>
+                </select>
+                <p v-if="form.errors.supplier_id" class="text-sm text-red-600 mt-1">{{ form.errors.supplier_id }}</p>
+            </div>
         </div>
 
-        <!-- Botones -->
-        <div class="flex justify-end gap-4">
-          <Link :href="route('products.index')" class="text-gray-600 hover:underline">Cancelar</Link>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+                <Label for="price">Precio de Venta</Label>
+                <Input id="price" v-model="form.price" type="number" min="0" step="0.01" />
+                <p v-if="form.errors.price" class="text-sm text-red-600 mt-1">{{ form.errors.price }}</p>
+            </div>
+            <div>
+                <Label for="stock">Stock Inicial</Label>
+                <Input id="stock" v-model="form.stock" type="number" min="0" />
+                <p v-if="form.errors.stock" class="text-sm text-red-600 mt-1">{{ form.errors.stock }}</p>
+            </div>
+        </div>
+
+        <div>
+          <Label for="image">Imagen del Producto</Label>
+          <Input id="image" type="file" @change="handleImageChange" class="mt-1 block w-full" />
+          <p v-if="form.errors.image" class="text-sm text-red-600 mt-1">{{ form.errors.image }}</p>
+          <img v-if="previewUrl" :src="previewUrl" class="mt-2 h-24 w-24 object-cover rounded-md" />
+        </div>
+
+        <div class="flex justify-end gap-4 pt-4">
+          <Button variant="ghost" as-child>
+            <Link :href="route('products.index')">Cancelar</Link>
+          </Button>
           <Button type="submit" :disabled="form.processing">
             <span v-if="form.processing">Guardando...</span>
-            <span v-else>Guardar</span>
+            <span v-else>Guardar Producto</span>
           </Button>
         </div>
       </form>
