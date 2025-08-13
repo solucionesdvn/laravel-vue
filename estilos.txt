@@ -74,6 +74,7 @@ Arreglar categorias ok
 Arreglar campo SKU en productos, ya que tenemos varias empresas se puede repetir el SKU y generar error al almacenar
 Arreglar campos proveedores
 Arreglar formatos Editar desde sesion privada o logeada
+Realizar documentación 
 
 Pruebas
 Login
@@ -101,6 +102,8 @@ Librerias por si genera algo error
 DomPDF – Generación de PDFs en el backend Laravel.: composer require barryvdh/laravel-dompdf
 QRCode.vue – Componente Vue para generar códigos QR.
 composer require maatwebsite/excel
+composer require phpoffice/phpspreadsheet
+
 
 
 
