@@ -25,6 +25,7 @@ return new class extends Migration
             //$table->foreign('company_id')->references('id')->on('companies')->onDelete('restrict');
 
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

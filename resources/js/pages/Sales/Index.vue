@@ -1,12 +1,52 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3'
-import AppLayout from '@/layouts/AppLayout.vue'
-import { can } from '@/lib/can'
-import { type BreadcrumbItem } from '@/types'
+import AppLayout from '@/layouts/AppLayout.vue';
+import { type BreadcrumbItem } from '@/types';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { can } from '@/lib/can';
+
+import { Button } from '@/components/ui/button';
+import {
+    Table,
+    TableBody,
+    TableCaption,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+
+import { CirclePlus, Eye } from 'lucide-vue-next';
+import type { Sale } from '@/types'
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Ventas', href: '/sales' }
-]
+];
+
+defineProps<{
+    sales: {
+        data: Sale[]
+        links: {
+            url: string | null
+            label: string
+            active: boolean
+        }[]
+    }
+}>()
+
+const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+    }).format(value)
+}
+
+const formatDate = (value: string) => {
+    return new Date(value).toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    })
+}
 </script>
 
 <template>
@@ -14,19 +54,87 @@ const breadcrumbs: BreadcrumbItem[] = [
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-6 space-y-6">
-      <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Ventas</h1>
-        <Link
-          v-if="can('sales.create')"
-          :href="route('sales.create')"
-          class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition-colors"
-        >
-          + Nueva Venta
-        </Link>
+      <!-- Título y botón -->
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Lista de Ventas</h1>
+        <div>
+          <Button
+            as-child
+            size="sm"
+            class="bg-indigo-500 text-white hover:bg-indigo-700"
+            v-if="can('sales.create')"
+          >
+            <Link :href="route('sales.create')">
+              <CirclePlus class="mr-1" /> Nueva Venta
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      <div class="text-gray-600 dark:text-gray-300">
-        Aún no se ha implementado el listado de ventas. Usa el botón para registrar una nueva venta.
+      <!-- Tabla -->
+      <div class="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
+        <Table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <TableCaption>Tabla de ventas</TableCaption>
+
+          <TableHeader class="bg-gray-50 dark:bg-gray-800">
+            <TableRow>
+              <TableHead class="px-6 py-3">ID</TableHead>
+              <TableHead class="px-6 py-3">Cliente</TableHead>
+              <TableHead class="px-6 py-3">Vendedor</TableHead>
+              <TableHead class="px-6 py-3 text-right">Total</TableHead>
+              <TableHead class="px-6 py-3">Fecha</TableHead>
+              <TableHead class="px-6 py-3">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+
+          <TableBody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+            <TableRow v-if="sales.data.length === 0">
+                <TableCell colspan="6" class="text-center py-6 text-gray-500">
+                    No hay ventas registradas.
+                </TableCell>
+            </TableRow>
+            <TableRow v-for="sale in sales.data" :key="sale.id">
+              <TableCell class="px-6 py-4">{{ sale.id }}</TableCell>
+              <TableCell class="px-6 py-4">{{ sale.client?.name || 'N/A' }}</TableCell>
+              <TableCell class="px-6 py-4">{{ sale.user?.name || 'N/A' }}</TableCell>
+              <TableCell class="px-6 py-4 text-right">{{ formatCurrency(sale.total) }}</TableCell>
+              <TableCell class="px-6 py-4">{{ formatDate(sale.created_at) }}</TableCell>
+              <TableCell class="px-6 py-4 flex gap-2">
+                <Button
+                  as-child
+                  size="sm"
+                  class="bg-yellow-500 text-white hover:bg-yellow-700"
+                  v-if="can('sales.view')"
+                >
+                    <Link :href="route('sales.show', sale.id)">
+                        <Eye />
+                    </Link>
+                </Button>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+
+        <!-- Paginación -->
+        <div class="mt-4 flex justify-center space-x-2 p-4">
+          <template v-for="(link, index) in sales.links" :key="index">
+            <button
+              v-if="link.url"
+              :class="[ 'px-3 py-1 rounded text-sm',
+                link.active
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              ]"
+              @click="router.visit(link.url, { preserveScroll: true })"
+              v-html="link.label"
+            ></button>
+             <span
+                v-else
+                class="px-3 py-1 rounded text-sm text-gray-400 cursor-not-allowed"
+                v-html="link.label"
+            />
+          </template>
+        </div>
       </div>
     </div>
   </AppLayout>

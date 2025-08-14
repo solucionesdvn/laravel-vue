@@ -21,7 +21,8 @@ class ClientController extends Controller
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('email', 'like', '%' . $request->search . '%');
+                  ->orWhere('email', 'like', '%' . $request->search . '%')
+                  ->orWhere('identification', 'like', '%' . $request->search . '%');
             });
         }
 
@@ -58,6 +59,12 @@ class ClientController extends Controller
             ],
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:255',
+            'identification' => [
+                'nullable',
+                'string',
+                'max:50',
+                Rule::unique('clients')->where('company_id', $companyId)->whereNull('deleted_at')
+            ],
         ]);
 
         Client::create([
@@ -66,6 +73,7 @@ class ClientController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'address' => $request->address,
+            'identification' => $request->identification,
         ]);
 
         return Redirect::route('clients.index')->with('success', 'Cliente creado correctamente.');
@@ -101,9 +109,15 @@ class ClientController extends Controller
             ],
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:255',
+            'identification' => [
+                'nullable',
+                'string',
+                'max:50',
+                Rule::unique('clients')->where('company_id', $companyId)->ignore($client->id)->whereNull('deleted_at')
+            ],
         ]);
 
-        $client->update($request->only(['name', 'email', 'phone', 'address']));
+        $client->update($request->only(['name', 'email', 'phone', 'address', 'identification']));
 
         return Redirect::route('clients.index')->with('success', 'Cliente actualizado correctamente.');
     }

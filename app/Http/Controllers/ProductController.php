@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Exports\ProductsExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -46,17 +48,31 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        $companyId = auth()->user()->company_id;
+
         $validated = $request->validate([
-            'sku' => 'required|string|max:255|unique:products,sku',
+            'sku' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('products')->where('company_id', $companyId)->whereNull('deleted_at')
+            ],
             'name' => 'required|string|max:255',
             'category_id' => 'required|integer',
             'stock' => 'required|integer|min:0',
             'price' => 'required|numeric|min:0',
+            'cost_price' => 'required|numeric|min:0',
             'supplier_id' => 'nullable|integer',
-            'image' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-        $validated['company_id'] = auth()->user()->company_id;
+        $validated['company_id'] = $companyId;
+
+        if ($request->hasFile('image')) {
+            $validated['image'] = Storage::disk('public')->put('products', $request->file('image'));
+        } else {
+            $validated['image'] = null;
+        }
 
         Product::create($validated);
 
@@ -78,12 +94,20 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
+        $companyId = auth()->user()->company_id;
+
         $validated = $request->validate([
-            'sku' => 'required|string|max:255|unique:products,sku,' . $product->id,
+            'sku' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('products')->where('company_id', $companyId)->ignore($product->id)->whereNull('deleted_at')
+            ],
             'name' => 'required|string|max:255',
             'category_id' => 'required|integer',
             'stock' => 'required|integer|min:0',
             'price' => 'required|numeric|min:0',
+            'cost_price' => 'required|numeric|min:0',
             'supplier_id' => 'nullable|integer',
             'image' => 'nullable|string',
         ]);
@@ -93,8 +117,27 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Producto actualizado correctamente.');
     }
 
+    public function updateImage(Request $request, Product $product)
+    {
+        $validated = $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+        }
+
+        $path = Storage::disk('public')->put('products', $request->file('image'));
+        $product->update(['image' => $path]);
+
+        return back()->with('success', 'Imagen actualizada correctamente.');
+    }
+
     public function destroy(Product $product)
     {
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+        }
         $product->delete();
 
         return redirect()->route('products.index')->with('success', 'Producto eliminado correctamente.');

@@ -100,6 +100,7 @@ function deleteClient(id: number) {
             <TableRow>
               <TableHead class="px-6 py-3">Nombre</TableHead>
               <TableHead class="px-6 py-3">Email</TableHead>
+              <TableHead class="px-6 py-3">Identificación</TableHead>
               <TableHead class="px-6 py-3">Teléfono</TableHead>
               <TableHead class="px-6 py-3 text-right">Acciones</TableHead>
             </TableRow>
@@ -109,6 +110,7 @@ function deleteClient(id: number) {
             <TableRow v-for="client in clients.data" :key="client.id">
               <TableCell class="px-6 py-4 font-medium">{{ client.name }}</TableCell>
               <TableCell class="px-6 py-4">{{ client.email }}</TableCell>
+              <TableCell class="px-6 py-4">{{ client.identification }}</TableCell>
               <TableCell class="px-6 py-4">{{ client.phone }}</TableCell>
               <TableCell class="px-6 py-4">
                 <div class="flex justify-end gap-2">
@@ -141,19 +143,23 @@ function deleteClient(id: number) {
 
       <!-- Paginación -->
       <div v-if="clients.data.length > 0" class="mt-4 flex justify-center space-x-2">
-        <Link
-          v-for="(link, index) in clients.links"
-          :key="index"
-          :href="link.url || ''"
-          v-html="link.label"
-          class="px-3 py-1 rounded text-sm"
-          :class="{
-            'bg-indigo-600 text-white': link.active,
-            'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600': !link.active,
-            'cursor-not-allowed text-gray-400': !link.url
-          }"
-          :disabled="!link.url"
-        />
+        <template v-for="(link, index) in clients.links" :key="index">
+          <button
+            v-if="link.url"
+            :class="[ 'px-3 py-1 rounded text-sm',
+              link.active
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+            ]"
+            @click="router.visit(link.url, { preserveScroll: true })"
+            v-html="link.label"
+          ></button>
+          <span
+            v-else
+            class="px-3 py-1 rounded text-sm text-gray-400 cursor-not-allowed"
+            v-html="link.label"
+          />
+        </template>
       </div>
     </div>
   </AppLayout>

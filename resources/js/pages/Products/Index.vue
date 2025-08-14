@@ -51,7 +51,7 @@ function openImageModal(product: any) {
   selectedProduct.value = product
   showModal.value = true
   imageForm.value.image = null
-  previewUrl.value = product.image || null
+  previewUrl.value = product.image_url || null
   errors.value.image = undefined
 }
 
@@ -158,7 +158,7 @@ function exportToExcel() {
             <TableRow v-for="product in products.data" :key="product.id">
               <TableCell class="px-6 py-4">
                 <img
-                  :src="product.image || 'https://via.placeholder.com/50'"
+                  :src="product.image_url || 'https://via.placeholder.com/50'"
                   alt="Product Image"
                   class="w-12 h-12 rounded object-cover border shadow"
                 />

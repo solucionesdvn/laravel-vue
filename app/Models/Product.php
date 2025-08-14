@@ -3,9 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
+    use SoftDeletes;
+
+    protected $appends = ['image_url'];
+
     // Habilita asignación masiva
     protected $fillable = [
         'sku',
@@ -14,10 +20,16 @@ class Product extends Model
         'supplier_id',
         'stock',
         'price',
+        'cost_price',
         'image',
         'company_id',
     ];
     
+    // Accesor para obtener la URL completa de la imagen
+    public function getImageUrlAttribute()
+    {
+        return $this->image ? Storage::disk('public')->url($this->image) : null;
+    }
 
     // Relaciones
     public function category()

@@ -95,6 +95,7 @@ Exportar tablas requeridas a excel
 Importar información desde excel 
 Agregar toast - alertas
 Agregar un loader/spinne
+Deshacer ELIMINACIONES
 
 
 Librerias por si genera algo error
@@ -104,6 +105,7 @@ QRCode.vue – Componente Vue para generar códigos QR.
 composer require maatwebsite/excel
 composer require phpoffice/phpspreadsheet
 
+php artisan migrate:fresh --seed
 
 
 

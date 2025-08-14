@@ -18,8 +18,21 @@ class SaleController extends Controller
 
     public function index()
     {
-        return Inertia::render('Sales/Index', [
-            // Aquí luego puedes enviar historial de ventas
+        $sales = \App\Models\Sale::with(['client', 'user'])
+            ->latest()
+            ->paginate(10);
+
+        return inertia('Sales/Index', [
+            'sales' => $sales,
+        ]);
+    }
+
+    public function show(\App\Models\Sale $sale)
+    {
+        $sale->load(['client', 'user', 'items.product']);
+
+        return inertia('Sales/Show', [
+            'sale' => $sale,
         ]);
     }
 

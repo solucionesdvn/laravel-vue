@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import ShowSupplier from './Show.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { can } from '@/lib/can';
+import { debounce } from 'lodash';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -16,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
 
 import { Pencil, Trash, CirclePlus, Eye, Search } from 'lucide-vue-next';
 
@@ -48,16 +50,20 @@ function closeModal() {
 }
 
 // Formulario de búsqueda
-const searchForm = useForm({
+const form = useForm({
   search: props.filters.search || ''
 });
 
-function submitSearch() {
-  searchForm.get(route('suppliers.index'), {
-    preserveScroll: true,
-    preserveState: true
-  });
-}
+// Búsqueda con debounce al escribir
+watch(
+  () => form.search,
+  debounce((newValue) => {
+    router.get(route('suppliers.index'), { search: newValue }, {
+      preserveState: true,
+      replace: true,
+    });
+  }, 300)
+);
 
 function deleteSupplier(id: number) {
   if (confirm("¿Está seguro de eliminar este proveedor?")) {
@@ -90,17 +96,15 @@ function deleteSupplier(id: number) {
 
       <!-- Buscador -->
       <div class="w-full md:w-1/3">
-        <form @submit.prevent="submitSearch" class="flex items-center gap-2">
-          <input
-            type="text"
-            v-model="searchForm.search"
+        <div class="relative">
+          <Search class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            v-model="form.search"
             placeholder="Buscar proveedor..."
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+            class="w-full pl-8"
           />
-          <Button type="submit" class="bg-gray-200 hover:bg-gray-300 text-gray-700">
-            <Search class="w-4 h-4" />
-          </Button>
-        </form>
+        </div>
       </div>
 
       <!-- Tabla -->
@@ -113,8 +117,7 @@ function deleteSupplier(id: number) {
               <TableHead class="px-6 py-3">Nombre</TableHead>
               <TableHead class="px-6 py-3">Contacto</TableHead>
               <TableHead class="px-6 py-3">Correo</TableHead>
-              <TableHead class="px-6 py-3">Dirección</TableHead>
-              <TableHead class="px-6 py-3">NIT</TableHead>
+              <TableHead class="px-6 py-3">Teléfono</TableHead>
               <TableHead class="px-6 py-3">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -124,8 +127,7 @@ function deleteSupplier(id: number) {
               <TableCell class="px-6 py-4">{{ supplier.name }}</TableCell>
               <TableCell class="px-6 py-4">{{ supplier.contact_name }}</TableCell>
               <TableCell class="px-6 py-4">{{ supplier.email }}</TableCell>
-              <TableCell class="px-6 py-4">{{ supplier.address }}</TableCell>
-              <TableCell class="px-6 py-4">{{ supplier.nit }}</TableCell>
+              <TableCell class="px-6 py-4">{{ supplier.phone }}</TableCell>
               <TableCell class="px-6 py-4 flex gap-2">
                 <Button
                   size="sm"
@@ -167,11 +169,16 @@ function deleteSupplier(id: number) {
               :class="[ 'px-3 py-1 rounded text-sm',
                 link.active
                   ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
               ]"
               @click="router.visit(link.url, { preserveScroll: true })"
               v-html="link.label"
             ></button>
+            <span
+              v-else
+              class="px-3 py-1 rounded text-sm text-gray-400 cursor-not-allowed"
+              v-html="link.label"
+            />
           </template>
         </div>
 

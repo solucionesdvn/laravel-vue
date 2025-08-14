@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('color')->nullable(); // 🎨 Código de color para categoría
             $table->foreignId('company_id')->constrained()->onDelete('cascade'); // 🔗 Llave foránea COMPAÑIAS
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

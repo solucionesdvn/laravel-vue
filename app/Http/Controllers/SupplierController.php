@@ -50,6 +50,7 @@ class SupplierController extends Controller
             'name' => 'required|string|max:255',
             'contact_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
             'nit' => 'nullable|string|max:50',
             'notes' => 'nullable|string|max:255',
@@ -60,6 +61,7 @@ class SupplierController extends Controller
             'name' => $request->name,
             'contact_name' => $request->contact_name,
             'email' => $request->email,
+            'phone' => $request->phone,
             'address' => $request->address,
             'nit' => $request->nit,
             'notes' => $request->notes,
@@ -104,13 +106,14 @@ class SupplierController extends Controller
             'name' => 'required|string|max:255',
             'contact_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
             'nit' => 'nullable|string|max:50',
             'notes' => 'nullable|string|max:255',
         ]);
 
         $supplier->update($request->only([
-            'name', 'contact_name', 'email', 'address', 'nit', 'notes'
+            'name', 'contact_name', 'email', 'phone', 'address', 'nit', 'notes'
         ]));
 
         return redirect()->route('suppliers.index')->with('success', 'Proveedor actualizado correctamente.');
