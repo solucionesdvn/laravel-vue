@@ -108,6 +108,11 @@ composer require phpoffice/phpspreadsheet
 php artisan migrate:fresh --seed
 
 
+Cambios realizados con Agente GEMINI CLI:
+
+
+
+
 
 Recomendaciones de venta:
 

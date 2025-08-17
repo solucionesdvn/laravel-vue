@@ -2,25 +2,36 @@
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
-import { SidebarSeparator } from '@/components/ui/sidebar';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Notebook, User, Users, Blinds, Bus, Import} from 'lucide-vue-next';
+import { Link, usePage } from '@inertiajs/vue3';
+import {
+    BookOpen,
+    Building,
+    Contact,
+    FileText,
+    Files,
+    Folder,
+    LayoutGrid,
+    LogIn,
+    LogOut,
+    Package,
+    Shield,
+    ShoppingCart,
+    Tags,
+    Truck,
+    User,
+    Users,
+    Wallet,
+} from 'lucide-vue-next';
 
-
-import { usePage } from '@inertiajs/vue3';
+import AppLogo from './AppLogo.vue';
 
 const page = usePage();
 
 const hasPermission = (perm: string): boolean => {
-  return page.props.auth.permissions?.includes(perm);
+    return page.props.auth.permissions?.includes(perm);
 };
-
-
-
-import AppLogo from './AppLogo.vue';
-
 
 const mainNavItems: NavItem[] = [
     {
@@ -31,96 +42,134 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Employees',
         href: '/employees',
-        icon: User ,
+        icon: Users,
         permission: 'employee.view',
-
-    },   
+    },
     {
         title: 'Users',
         href: '/users',
-        icon: Users ,
+        icon: Users,
         permission: 'users.view',
-    },  
+    },
     {
         title: 'Roles',
         href: '/roles',
-        icon: Notebook,
+        icon: Shield,
         permission: 'roles.view',
     },
     {
         title: 'Empresas',
         href: '/companies',
-        icon: Notebook,
+        icon: Building,
         permission: 'companies.view',
     },
-    {
-        //title: 'ESPACIO,
-        //href: '/ESPACIO',
-        //icon: ESPACIO,
-        //permission: 'ESPACIO',
-    },
+    { type: 'separator', title: 'separator-1' },
     {
         title: 'Categorias',
         href: '/categories',
-        icon: Blinds,
+        icon: Tags,
         permission: 'categories.view',
     },
     {
         title: 'Proveedores',
         href: '/suppliers',
-        icon: Bus,
+        icon: Truck,
         permission: 'suppliers.view',
     },
     {
         title: 'Clientes',
         href: '/clients',
-        icon: Bus,
+        icon: Contact,
         permission: 'clients.view',
     },
     {
         title: 'Productos',
         href: '/products',
-        icon: Bus,
+        icon: Package,
         permission: 'products.view',
     },
     {
         title: 'Entradas',
         href: '/entries',
-        icon: Bus,
+        icon: LogIn,
         permission: 'entries.view',
     },
-
     {
         title: 'Salidas',
         href: '/product-exits',
-        icon: Bus,
+        icon: LogOut,
         permission: 'product-exits.view',
     },
     {
         title: 'Caja',
         href: '/cash-registers',
-        icon: Bus,
+        icon: Wallet,
         permission: 'cash-registers.view',
     },
     {
         title: 'Ventas',
         href: '/sales',
-        icon: Bus,
+        icon: ShoppingCart,
         permission: 'sales.view',
     },
     {
-        //title: 'ESPACIO,
-        //href: '/ESPACIO',
-        //icon: ESPACIO,
-        //permission: 'ESPACIO',
-    },
-    {
         title: 'Formatos',
-        href: '/resignation-forms',
-        icon: Bus,
+        icon: Files,
         permission: 'resignation-forms.view',
+        children: [
+            {
+                title: 'Formato 1',
+                href: '/resignation-forms',
+                icon: FileText,
+                permission: 'resignation-forms.view',
+            },
+            {
+                title: 'Formato 2',
+                href: '#',
+                icon: FileText,
+            },
+            {
+                title: 'Formato 3',
+                href: '#',
+                icon: FileText,
+            },
+            {
+                title: 'Formato 4',
+                href: '#',
+                icon: FileText,
+            },
+            {
+                title: 'Formato 5',
+                href: '#',
+                icon: FileText,
+            },
+            {
+                title: 'Formato 6',
+                href: '#',
+                icon: FileText,
+            },
+            {
+                title: 'Formato 7',
+                href: '#',
+                icon: FileText,
+            },
+            {
+                title: 'Formato 8',
+                href: '#',
+                icon: FileText,
+            },
+            {
+                title: 'Formato 9',
+                href: '#',
+                icon: FileText,
+            },
+            {
+                title: 'Formato 10',
+                href: '#',
+                icon: FileText,
+            },
+        ],
     },
-    
 ];
 
 const footerNavItems: NavItem[] = [
@@ -139,7 +188,6 @@ const footerNavItems: NavItem[] = [
 const visibleMainNavItems = mainNavItems.filter(item => {
     return !item.permission || hasPermission(item.permission);
 });
-
 </script>
 
 <template>

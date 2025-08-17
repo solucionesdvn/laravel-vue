@@ -62,18 +62,16 @@ class ProductExitController extends Controller
             $companyId = auth()->user()->company_id;
             $userId = auth()->id();
 
-            $total = collect($request->items)->sum(function ($item) {
-                return $item['quantity'] * ($item['unit_price'] ?? 0);
-            });
-
             $exit = ProductExit::create([
                 'company_id' => $companyId,
                 'user_id'    => $userId,
                 'date'       => $request->date,
                 'reason'     => $request->reason,
                 'notes'      => $request->notes,
-                'total'      => $total,
+                'total'      => 0, // Placeholder, will be updated after loop
             ]);
+
+            $totalValue = 0;
 
             foreach ($request->items as $item) {
                 $product = Product::where('id', $item['product_id'])
@@ -84,17 +82,25 @@ class ProductExitController extends Controller
                     throw new \Exception("Stock insuficiente para el producto {$product->name}.");
                 }
 
+                $subtotal = $item['quantity'] * $product->price;
+
                 ProductExitItem::create([
                     'product_exit_id' => $exit->id,
                     'product_id'      => $product->id,
                     'quantity'        => $item['quantity'],
                     'unit_price'      => $product->price,
-                    'subtotal'        => $item['quantity'] * $product->price,
+                    'subtotal'        => $subtotal,
                 ]);
+
+                $totalValue += $subtotal;
 
                 $product->stock -= $item['quantity'];
                 $product->save();
             }
+
+            // Update the exit with the correct total
+            $exit->total = $totalValue;
+            $exit->save();
 
             DB::commit();
 
@@ -103,5 +109,18 @@ class ProductExitController extends Controller
             DB::rollBack();
             return redirect()->back()->withErrors(['error' => 'Error al registrar la salida: ' . $e->getMessage()]);
         }
+    }
+
+    public function show(ProductExit $productExit)
+    {
+        if ($productExit->company_id !== auth()->user()->company_id) {
+            abort(403);
+        }
+
+        $productExit->load(['user', 'items.product']);
+
+        return Inertia::render('ProductExits/Show', [
+            'productExit' => $productExit,
+        ]);
     }
 }

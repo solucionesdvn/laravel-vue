@@ -18,13 +18,32 @@ class ProductsExport implements FromCollection, WithHeadings
 
     public function collection()
     {
-        return Product::where('company_id', Auth::user()->company_id)
-            ->when($this->search, function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%")
-                      ->orWhere('sku', 'like', "%{$search}%");
-            })
-            ->select('id', 'sku', 'name', 'category_id', 'stock', 'price', 'supplier_id', 'image', 'created_at')
-            ->get();
+        $companyId = Auth::user()->company_id;
+
+        $query = Product::query()
+            ->join('categories', 'products.category_id', '=', 'categories.id')
+            ->leftJoin('suppliers', 'products.supplier_id', '=', 'suppliers.id')
+            ->where('products.company_id', $companyId)
+            ->select(
+                'products.id',
+                'products.sku',
+                'products.name',
+                'categories.name as category_name',
+                'products.stock',
+                'products.price',
+                'suppliers.name as supplier_name',
+                'products.image',
+                'products.created_at'
+            );
+
+        if ($this->search) {
+            $query->where(function ($q) {
+                $q->where('products.name', 'like', "%{$this->search}%")
+                  ->orWhere('products.sku', 'like', "%{$this->search}%");
+            });
+        }
+
+        return $query->get();
     }
 
     public function headings(): array

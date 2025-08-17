@@ -74,36 +74,34 @@ function submit() {
               <p v-if="form.errors.sku" class="text-sm text-red-600 mt-1">{{ form.errors.sku }}</p>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                    <Label for="category_id">Categoría</Label>
-                    <select id="category_id" v-model="form.category_id" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                        <option :value="null" disabled>-- Seleccione --</option>
-                        <option v-for="cat in props.categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-                    </select>
-                    <p v-if="form.errors.category_id" class="text-sm text-red-600 mt-1">{{ form.errors.category_id }}</p>
-                </div>
-                <div>
-                    <Label for="supplier_id">Proveedor</Label>
-                    <select id="supplier_id" v-model="form.supplier_id" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                        <option :value="null">-- Opcional --</option>
-                        <option v-for="sup in props.suppliers" :key="sup.id" :value="sup.id">{{ sup.name }}</option>
-                    </select>
-                    <p v-if="form.errors.supplier_id" class="text-sm text-red-600 mt-1">{{ form.errors.supplier_id }}</p>
-                </div>
+            <div>
+                <Label for="category_id">Categoría</Label>
+                <select id="category_id" v-model="form.category_id" class="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                    <option :value="null" disabled>-- Seleccione --</option>
+                    <option v-for="cat in props.categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                </select>
+                <p v-if="form.errors.category_id" class="text-sm text-red-600 mt-1">{{ form.errors.category_id }}</p>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                    <Label for="price">Precio de Venta</Label>
-                    <Input id="price" v-model="form.price" type="number" min="0" step="0.01" />
-                    <p v-if="form.errors.price" class="text-sm text-red-600 mt-1">{{ form.errors.price }}</p>
-                </div>
-                <div>
-                    <Label for="cost_price">Precio de Costo</Label>
-                    <Input id="cost_price" v-model="form.cost_price" type="number" min="0" step="0.01" />
-                    <p v-if="form.errors.cost_price" class="text-sm text-red-600 mt-1">{{ form.errors.cost_price }}</p>
-                </div>
+            <div>
+                <Label for="supplier_id">Proveedor</Label>
+                <select id="supplier_id" v-model="form.supplier_id" class="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                    <option :value="null">-- Opcional --</option>
+                    <option v-for="sup in props.suppliers" :key="sup.id" :value="sup.id">{{ sup.name }}</option>
+                </select>
+                <p v-if="form.errors.supplier_id" class="text-sm text-red-600 mt-1">{{ form.errors.supplier_id }}</p>
+            </div>
+
+            <div>
+                <Label for="price">Precio de Venta</Label>
+                <Input id="price" v-model="form.price" type="number" min="0" step="0.01" />
+                <p v-if="form.errors.price" class="text-sm text-red-600 mt-1">{{ form.errors.price }}</p>
+            </div>
+
+            <div>
+                <Label for="cost_price">Precio de Costo</Label>
+                <Input id="cost_price" v-model="form.cost_price" type="number" min="0" step="0.01" />
+                <p v-if="form.errors.cost_price" class="text-sm text-red-600 mt-1">{{ form.errors.cost_price }}</p>
             </div>
 
             <div>

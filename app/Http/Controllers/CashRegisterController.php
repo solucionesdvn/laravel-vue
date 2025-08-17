@@ -12,13 +12,22 @@ class CashRegisterController extends Controller
     {
         $companyId = auth()->user()->company_id;
 
-        $registers = CashRegister::where('company_id', $companyId)
+        // Get the single currently open register
+        $openRegister = CashRegister::where('company_id', $companyId)
+            ->whereNull('closed_at')
+            ->with('user')
+            ->first();
+
+        // Get a paginated list of closed registers for history
+        $closedRegisters = CashRegister::where('company_id', $companyId)
+            ->whereNotNull('closed_at')
             ->with('user')
             ->latest()
-            ->get();
+            ->paginate(10);
 
         return Inertia::render('CashRegisters/Index', [
-            'registers' => $registers,
+            'openRegister' => $openRegister,
+            'closedRegisters' => $closedRegisters,
         ]);
     }
 

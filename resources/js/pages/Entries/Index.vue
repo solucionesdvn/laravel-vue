@@ -13,7 +13,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { CirclePlus, Search } from 'lucide-vue-next'
+import { CirclePlus, Search, Eye } from 'lucide-vue-next'
+import { can } from '@/lib/can';
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Entradas', href: '/entries' }
@@ -84,6 +85,7 @@ function submitSearch() {
               <TableHead class="px-6 py-3">Notas</TableHead>
               <TableHead class="px-6 py-3">Total</TableHead>
               <TableHead class="px-6 py-3">Registrado por</TableHead>
+              <TableHead class="px-6 py-3 text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -94,6 +96,18 @@ function submitSearch() {
               <TableCell class="px-6 py-4">{{ entry.notes || '-' }}</TableCell>
               <TableCell class="px-6 py-4">$ {{ entry.total_cost }}</TableCell>
               <TableCell class="px-6 py-4">{{ entry.user?.name || 'Sistema' }}</TableCell>
+              <TableCell class="px-6 py-4 text-right">
+                <Button
+                  as-child
+                  size="sm"
+                  class="bg-yellow-500 text-white hover:bg-yellow-700"
+                  v-if="can('entries.view')"
+                >
+                  <Link :href="route('entries.show', entry.id)">
+                    <Eye class="h-4 w-4" />
+                  </Link>
+                </Button>
+              </TableCell>
             </TableRow>
           </TableBody>
         </Table>

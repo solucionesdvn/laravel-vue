@@ -13,6 +13,7 @@ const props = defineProps<{
     sku: string;
     stock: number;
     price: number;
+    cost_price: number;
     category_id: number;
     supplier_id: number | null;
     image: string | null;
@@ -27,21 +28,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const form = useForm({
-  _method: 'PUT', // Importante para la subida de archivos
   name: props.product.name,
   sku: props.product.sku,
   category_id: props.product.category_id,
   supplier_id: props.product.supplier_id,
-  stock: props.product.stock,
   price: props.product.price,
   cost_price: props.product.cost_price,
-  image: null as File | null,
 });
 
 function submit() {
-  form.post(route('products.update', props.product.id), {
-    forceFormData: true,
-  });
+  form.put(route('products.update', props.product.id));
 }
 </script>
 
@@ -69,55 +65,34 @@ function submit() {
               <p v-if="form.errors.sku" class="text-sm text-red-600 mt-1">{{ form.errors.sku }}</p>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                    <Label for="category_id">Categoría</Label>
-                    <select id="category_id" v-model="form.category_id" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                        <option :value="null" disabled>-- Seleccione --</option>
-                        <option v-for="cat in props.categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-                    </select>
-                    <p v-if="form.errors.category_id" class="text-sm text-red-600 mt-1">{{ form.errors.category_id }}</p>
-                </div>
-                <div>
-                    <Label for="supplier_id">Proveedor</Label>
-                    <select id="supplier_id" v-model="form.supplier_id" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                        <option :value="null">-- Opcional --</option>
-                        <option v-for="sup in props.suppliers" :key="sup.id" :value="sup.id">{{ sup.name }}</option>
-                    </select>
-                    <p v-if="form.errors.supplier_id" class="text-sm text-red-600 mt-1">{{ form.errors.supplier_id }}</p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                    <Label for="price">Precio de Venta</Label>
-                    <Input id="price" v-model="form.price" type="number" min="0" step="0.01" />
-                    <p v-if="form.errors.price" class="text-sm text-red-600 mt-1">{{ form.errors.price }}</p>
-                </div>
-                <div>
-                    <Label for="cost_price">Precio de Costo</Label>
-                    <Input id="cost_price" v-model="form.cost_price" type="number" min="0" step="0.01" />
-                    <p v-if="form.errors.cost_price" class="text-sm text-red-600 mt-1">{{ form.errors.cost_price }}</p>
-                </div>
+            <div>
+                <Label for="category_id">Categoría</Label>
+                <select id="category_id" v-model="form.category_id" class="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                    <option :value="null" disabled>-- Seleccione --</option>
+                    <option v-for="cat in props.categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                </select>
+                <p v-if="form.errors.category_id" class="text-sm text-red-600 mt-1">{{ form.errors.category_id }}</p>
             </div>
 
             <div>
-                <Label for="stock">Stock</Label>
-                <Input id="stock" v-model="form.stock" type="number" min="0" />
-                <p v-if="form.errors.stock" class="text-sm text-red-600 mt-1">{{ form.errors.stock }}</p>
+                <Label for="supplier_id">Proveedor</Label>
+                <select id="supplier_id" v-model="form.supplier_id" class="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                    <option :value="null">-- Opcional --</option>
+                    <option v-for="sup in props.suppliers" :key="sup.id" :value="sup.id">{{ sup.name }}</option>
+                </select>
+                <p v-if="form.errors.supplier_id" class="text-sm text-red-600 mt-1">{{ form.errors.supplier_id }}</p>
             </div>
 
             <div>
-                <Label for="image">Imagen del Producto</Label>
-                <Input id="image" type="file" @change="handleImageChange" class="mt-1 block w-full" />
-                <p v-if="form.errors.image" class="text-sm text-red-600 mt-1">{{ form.errors.image }}</p>
-                
-                <div v-if="previewUrl" class="mt-2 flex items-center gap-2">
-                  <img :src="previewUrl" class="h-24 w-24 object-cover rounded-md border" alt="Vista previa" />
-                  <Button type="button" variant="destructive" size="sm" @click="removeImage">
-                    Eliminar Imagen
-                  </Button>
-                </div>
+                <Label for="price">Precio de Venta</Label>
+                <Input id="price" v-model="form.price" type="number" min="0" step="0.01" />
+                <p v-if="form.errors.price" class="text-sm text-red-600 mt-1">{{ form.errors.price }}</p>
+            </div>
+
+            <div>
+                <Label for="cost_price">Precio de Costo</Label>
+                <Input id="cost_price" v-model="form.cost_price" type="number" min="0" step="0.01" />
+                <p v-if="form.errors.cost_price" class="text-sm text-red-600 mt-1">{{ form.errors.cost_price }}</p>
             </div>
 
             <!-- Botones -->

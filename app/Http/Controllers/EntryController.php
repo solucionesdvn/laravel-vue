@@ -112,4 +112,17 @@ class EntryController extends Controller
             return redirect()->back()->withErrors('Error al registrar la entrada: ' . $e->getMessage());
         }
     }
+
+    public function show(Entry $entry)
+    {
+        if ($entry->company_id !== auth()->user()->company_id) {
+            abort(403);
+        }
+
+        $entry->load(['supplier', 'user', 'items.product']);
+
+        return Inertia::render('Entries/Show', [
+            'entry' => $entry,
+        ]);
+    }
 }
