@@ -1,31 +1,52 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { Head, Link, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import InputError from '@/components/InputError.vue'
+import { Label } from '@/components/ui/label'
+import { type BreadcrumbItem } from '@/types'
+import { Trash2 } from 'lucide-vue-next'
 
-const props = defineProps({
-  categories: Array,
+const props = defineProps<{
+  categories: Array<any>
+  clients: Array<{ id: number; name: string }>
+}>()
+
+const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'Ventas', href: route('sales.index') },
+  { title: 'Registrar Venta', href: null },
+]
+
+const selectedCategoryId = ref<number | null>(null)
+
+const form = useForm({
+  client_id: null as number | null,
+  payment_method: 'Efectivo',
+  items: [] as Array<{
+    product_id: number
+    name: string
+    quantity: number
+    unit_price: number
+    stock: number
+  }>,
 })
-
-const selectedCategoryId = ref(null)
-const paymentMethod = ref('Efectivo') // Puedes inicializar con "Efectivo" o vacío
-const cart = ref([])
 
 const selectedCategory = computed(() => {
   return props.categories.find(cat => cat.id === selectedCategoryId.value)
 })
 
-const addToCart = (product) => {
-  const existing = cart.value.find(item => item.product_id === product.id)
+const addToCart = (product: any) => {
+  const existing = form.items.find(item => item.product_id === product.id)
   if (existing) {
     if (existing.quantity < product.stock) {
       existing.quantity++
-    } else {
-      alert('No puedes añadir más de la cantidad disponible en stock.')
     }
   } else {
     if (product.stock > 0) {
-      cart.value.push({
+      form.items.push({
         product_id: product.id,
         name: product.name,
         quantity: 1,
@@ -36,147 +57,167 @@ const addToCart = (product) => {
   }
 }
 
-const removeFromCart = (productId) => {
-  cart.value = cart.value.filter(item => item.product_id !== productId)
+const removeFromCart = (productId: number) => {
+  form.items = form.items.filter(item => item.product_id !== productId)
 }
 
-const increaseQuantity = (item) => {
+const increaseQuantity = (item: any) => {
   if (item.quantity < item.stock) {
     item.quantity++
-  } else {
-    alert('Has alcanzado el límite de stock para este producto.')
   }
 }
 
-const decreaseQuantity = (item) => {
+const decreaseQuantity = (item: any) => {
   if (item.quantity > 1) item.quantity--
 }
 
 const total = computed(() =>
-  cart.value.reduce((sum, item) => sum + item.quantity * Number(item.unit_price || 0), 0).toFixed(2)
+  form.items.reduce((sum, item) => sum + item.quantity * Number(item.unit_price || 0), 0)
 )
 
-const submit = () => {
-  if (cart.value.length === 0) return
+const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(value);
+};
 
-  router.post('/sales', {
-    items: cart.value.map(item => ({
-      product_id: item.product_id,
-      quantity: item.quantity,
-      unit_price: Number(item.unit_price || 0),
-    })),
-    payment_method: paymentMethod.value,
-  })
+function submit() {
+  if (form.items.length === 0) return
+  form.post(route('sales.store'))
 }
+
+const inputClass = "mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+
 </script>
 
 <template>
-  <AppLayout title="Registrar Venta">
-    <div class="p-6 max-w-6xl mx-auto space-y-6">
-      <h1 class="text-2xl font-semibold text-gray-800">Registrar Venta</h1>
+  <pre class="bg-gray-800 text-white p-4 rounded-lg">{{ props }}</pre>
+  <Head title="Registrar Venta" />
+  <AppLayout :breadcrumbs="breadcrumbs">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4 sm:p-6">
+      <!-- Columna de Productos -->
+      <div class="lg:col-span-2 space-y-6">
+        <Card class="bg-white dark:bg-gray-900 rounded-lg shadow-md">
+            <CardHeader>
+                <CardTitle>Selección de Productos</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div class="flex flex-wrap gap-2">
+                    <Button 
+                        v-for="category in props.categories"
+                        :key="category.id"
+                        @click="selectedCategoryId = category.id"
+                        :style="{
+                            backgroundColor: selectedCategoryId === category.id ? category.color : 'transparent',
+                            borderColor: category.color,
+                            color: selectedCategoryId === category.id ? 'white' : category.color
+                        }"
+                        class="transition-colors duration-200"
+                    >
+                    {{ category.name }}
+                    </Button>
+                </div>
 
-      <!-- Categorías -->
-      <div class="flex flex-wrap gap-2">
-        <button
-          v-for="category in props.categories"
-          :key="category.id"
-          @click="selectedCategoryId = category.id"
-          :style="{ backgroundColor: selectedCategoryId === category.id ? category.color : 'white', borderColor: category.color, color: selectedCategoryId === category.id ? 'white' : 'black' }"
-          class="px-4 py-2 rounded-lg border transition"
-        >
-          {{ category.name }}
-        </button>
+                <div v-if="selectedCategory" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4 pt-4 border-t dark:border-gray-700">
+                    <button
+                        v-for="product in selectedCategory.products"
+                        :key="product.id"
+                        @click="addToCart(product)"
+                        class="relative p-3 bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md text-left transition-all hover:scale-105"
+                        :disabled="product.stock === 0"
+                        :class="{ 'opacity-50 cursor-not-allowed': product.stock === 0 }"
+                    >
+                        <div class="text-sm font-semibold">{{ product.name }}</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">{{ formatCurrency(product.price) }}</div>
+                        <span class="absolute top-1 right-1 text-xs px-2 py-0.5 rounded-full"
+                            :class="product.stock > 10 ? 'bg-green-100 text-green-800' : product.stock > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'"
+                        >
+                            Stock: {{ product.stock }}
+                        </span>
+                    </button>
+                </div>
+            </CardContent>
+        </Card>
       </div>
 
-      <!-- Productos -->
-      <div v-if="selectedCategory" class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
-        <button
-          v-for="product in selectedCategory.products"
-          :key="product.id"
-          @click="addToCart(product)"
-          class="relative p-4 bg-white border rounded-xl shadow hover:shadow-md text-left"
-          :disabled="product.stock === 0"
-          :style="{ borderColor: selectedCategory.color }"
-        >
-          <div class="text-sm font-semibold">{{ product.name }}</div>
-          <div class="text-xs text-gray-500">${{ Number(product.price || 0).toFixed(2) }}</div>
-          <span class="absolute top-1 right-1 bg-gray-200 text-xs px-2 py-0.5 rounded-full">
-            Stock: {{ product.stock }}
-          </span>
-        </button>
-      </div>
+      <!-- Columna de Carrito y Pago -->
+      <div class="lg:col-span-1">
+        <form @submit.prevent="submit">
+            <Card class="bg-white dark:bg-gray-900 rounded-lg shadow-md sticky top-6">
+                <CardHeader>
+                    <CardTitle>Resumen de Venta</CardTitle>
+                </CardHeader>
+                <CardContent class="space-y-4">
+                    <div>
+                        <Label for="client_id">Cliente</Label>
+                        <select id="client_id" v-model="form.client_id" :class="inputClass">
+                            <option :value="null">Consumidor Final</option>
+                            <option v-for="client in props.clients" :key="client.id" :value="client.id">
+                                {{ client.name }}
+                            </option>
+                        </select>
+                        <InputError :message="form.errors.client_id" />
+                    </div>
 
-      <!-- Carrito -->
-      <div v-if="cart.length" class="bg-gray-50 rounded-xl p-4 shadow space-y-2">
-        <h2 class="font-semibold text-lg">Carrito</h2>
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="text-left text-gray-600 border-b">
-              <th class="py-1">Producto</th>
-              <th>Cantidad</th>
-              <th>Precio</th>
-              <th>Subtotal</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="item in cart" :key="item.product_id">
-              <td class="py-1">
-                {{ item.name }}
-                <div class="text-xs text-gray-500">
-                  Disponible: {{ item.stock - item.quantity }}
-                </div>
-              </td>
-              <td>
-                <div class="flex items-center gap-1">
-                  <button
-                    class="px-2 bg-gray-200 rounded hover:bg-gray-300"
-                    @click="decreaseQuantity(item)"
-                  >−</button>
-                  <span class="w-6 text-center">{{ item.quantity }}</span>
-                  <button
-                    class="px-2 bg-gray-200 rounded hover:bg-gray-300"
-                    @click="increaseQuantity(item)"
-                    :disabled="item.quantity >= item.stock"
-                    :class="{ 'opacity-50 cursor-not-allowed': item.quantity >= item.stock }"
-                  >+</button>
-                </div>
-              </td>
-              <td>${{ Number(item.unit_price).toFixed(2) }}</td>
-              <td>${{ (item.quantity * Number(item.unit_price)).toFixed(2) }}</td>
-              <td>
-                <button @click="removeFromCart(item.product_id)" class="text-red-500 hover:underline">
-                  Quitar
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                    <div v-if="form.items.length === 0" class="text-center text-gray-500 py-8">
+                        El carrito está vacío.
+                    </div>
 
-        <!-- Método de pago -->
-        <div class="mt-4">
-          <label class="block font-medium text-sm text-gray-700 mb-1">Método de Pago</label>
-          <select
-            v-model="paymentMethod"
-            class="w-full border rounded-lg px-3 py-2 text-sm"
-          >
-            <option value="Efectivo">Efectivo</option>
-            <option value="Tarjeta">Tarjeta</option>
-            <option value="Transferencia">Transferencia</option>
-            <option value="Otro">Otro</option>
-          </select>
-        </div>
+                    <div v-else class="space-y-2">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Producto</TableHead>
+                                    <TableHead class="text-center">Cant.</TableHead>
+                                    <TableHead class="text-right">Subtotal</TableHead>
+                                    <TableHead></TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow v-for="item in form.items" :key="item.product_id">
+                                    <TableCell>
+                                        <p class="font-medium">{{ item.name }}</p>
+                                        <p class="text-xs text-gray-500">{{ formatCurrency(item.unit_price) }}</p>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div class="flex items-center justify-center gap-1">
+                                            <Button type="button" @click="decreaseQuantity(item)" variant="ghost" size="icon" class="h-6 w-6">-</Button>
+                                            <span>{{ item.quantity }}</span>
+                                            <Button type="button" @click="increaseQuantity(item)" :disabled="item.quantity >= item.stock" variant="ghost" size="icon" class="h-6 w-6">+</Button>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell class="text-right font-mono">{{ formatCurrency(item.quantity * item.unit_price) }}</TableCell>
+                                    <TableCell>
+                                        <Button type="button" @click="removeFromCart(item.product_id)" variant="destructive" size="icon" class="h-6 w-6">
+                                            <Trash2 class="h-3 w-3" />
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </div>
 
-        <!-- Total y botón -->
-        <div class="flex justify-end items-center gap-4 mt-6">
-          <div class="font-bold text-xl">Total: ${{ total }}</div>
-          <button
-            @click="submit"
-            class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
-          >
-            Registrar Venta
-          </button>
-        </div>
+                    <div>
+                        <Label for="payment_method">Método de Pago</Label>
+                        <select id="payment_method" v-model="form.payment_method" :class="inputClass">
+                            <option>Efectivo</option>
+                            <option>Tarjeta</option>
+                            <option>Transferencia</option>
+                            <option>Otro</option>
+                        </select>
+                        <InputError :message="form.errors.payment_method" />
+                    </div>
+                </CardContent>
+                <CardFooter class="flex flex-col gap-4 bg-gray-50 dark:bg-gray-800/50 p-4">
+                    <div class="w-full flex justify-between items-center text-xl font-bold">
+                        <span>Total:</span>
+                        <span class="font-mono">{{ formatCurrency(total) }}</span>
+                    </div>
+                    <Button type="submit" class="w-full" size="lg" :disabled="form.processing || form.items.length === 0">
+                        <span v-if="form.processing">Procesando...</span>
+                        <span v-else>Registrar Venta</span>
+                    </Button>
+                </CardFooter>
+            </Card>
+        </form>
       </div>
     </div>
   </AppLayout>

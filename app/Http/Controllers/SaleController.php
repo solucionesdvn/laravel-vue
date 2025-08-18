@@ -7,6 +7,7 @@ use App\Models\SaleItem;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\CashRegister;
+use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -52,15 +53,19 @@ class SaleController extends Controller
                       ->select('id', 'name', 'stock', 'price', 'category_id');
             }])
             ->get(['id', 'name', 'color']);
+        
+        $clients = Client::where('company_id', $companyId)->get(['id', 'name']);
 
         return Inertia::render('Sales/Create', [
             'categories' => $categories,
+            'clients' => $clients,
         ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
+            'client_id'          => 'nullable|exists:clients,id',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity'   => 'required|integer|min:1',
@@ -91,6 +96,7 @@ class SaleController extends Controller
                 'company_id'       => $companyId,
                 'cash_register_id' => $cashRegister->id,
                 'user_id'          => $user->id,
+                'client_id'        => $request->client_id,
                 'total'            => $total,
                 'date'             => now(),
                 'payment_method'   => $request->payment_method,
