@@ -23,6 +23,7 @@ import {
     User,
     Users,
     Wallet,
+    CircleDollarSign,
 } from 'lucide-vue-next';
 
 import AppLogo from './AppLogo.vue';
@@ -63,13 +64,13 @@ const mainNavItems: NavItem[] = [
         icon: Building,
         permission: 'companies.view',
     },
-    { type: 'separator', title: 'separator-1' },
     {
         title: 'Categorias',
         href: '/categories',
         icon: Tags,
         permission: 'categories.view',
     },
+    { type: 'separator', title: 'separator-1' },
     {
         title: 'Proveedores',
         href: '/suppliers',
@@ -106,6 +107,13 @@ const mainNavItems: NavItem[] = [
         icon: Wallet,
         permission: 'cash-registers.view',
     },
+    {
+        title: 'Metodos de pago',
+        href: '/payment-methods',
+        icon: CircleDollarSign,
+        permission: 'payment-methods.view',
+    },
+
     {
         title: 'Ventas',
         href: '/sales',

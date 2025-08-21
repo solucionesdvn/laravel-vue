@@ -82,6 +82,11 @@ class PermissionSeeder extends Seeder
             "clients.edit",
             "clients.delete",
 
+            "payment-methods.view",
+            "payment-methods.create",
+            "payment-methods.edit",
+            "payment-methods.delete",
+
             //Permisos formatos 
             "resignation-forms.view",
             "resignation-forms.create",

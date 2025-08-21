@@ -14,7 +14,7 @@ use App\Http\Controllers\SaleController;
 use App\Http\Controllers\ResignationFormController;
 use App\Http\Controllers\Export\DocumentExportController;
 use App\Http\Controllers\ClientController;
-
+use App\Http\Controllers\PaymentMethodController;
 
 use App\Exports\ProductsExport;
 
@@ -128,6 +128,25 @@ Route::resource("categories", CategoryController::class)
 Route::resource("categories", CategoryController::class)
     ->only(['index', 'show'])
     ->middleware("permission:categories.create|categories.edit|categories.delete|categories.view");
+
+// Métodos de Pago -
+Route::resource("payment-methods", PaymentMethodController::class)->except(['show']);
+
+Route::resource("payment-methods", PaymentMethodController::class)
+    ->only(['create', 'store'])
+    ->middleware("permission:payment-methods.create");
+
+Route::resource("payment-methods", PaymentMethodController::class)
+    ->only(['edit', 'update'])
+    ->middleware("permission:payment-methods.edit");
+
+Route::resource("payment-methods", PaymentMethodController::class)
+    ->only(['destroy'])
+    ->middleware("permission:payment-methods.delete");
+
+Route::resource("payment-methods", PaymentMethodController::class)
+    ->only(['index'])
+    ->middleware("permission:payment-methods.create|payment-methods.edit|payment-methods.delete|payment-methods.view");
 
 
 //Productos -
