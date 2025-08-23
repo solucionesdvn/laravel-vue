@@ -13,6 +13,7 @@ import { Trash2 } from 'lucide-vue-next'
 const props = defineProps<{
   categories: Array<any>
   clients: Array<{ id: number; name: string }>
+  paymentMethods: Array<{ id: number; name: string }>
 }>()
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -24,7 +25,7 @@ const selectedCategoryId = ref<number | null>(null)
 
 const form = useForm({
   client_id: null as number | null,
-  payment_method: 'Efectivo',
+  payment_method_id: props.paymentMethods[0]?.id || null,
   items: [] as Array<{
     product_id: number
     name: string
@@ -149,7 +150,7 @@ const inputClass = "mt-1 flex h-9 w-full rounded-md border border-input bg-trans
                     <div>
                         <Label for="client_id">Cliente</Label>
                         <select id="client_id" v-model="form.client_id" :class="inputClass">
-                            <option :value="null">Consumidor Final</option>
+                            <option :value="null" disabled>-- Seleccione un cliente --</option>
                             <option v-for="client in props.clients" :key="client.id" :value="client.id">
                                 {{ client.name }}
                             </option>
@@ -196,14 +197,13 @@ const inputClass = "mt-1 flex h-9 w-full rounded-md border border-input bg-trans
                     </div>
 
                     <div>
-                        <Label for="payment_method">Método de Pago</Label>
-                        <select id="payment_method" v-model="form.payment_method" :class="inputClass">
-                            <option>Efectivo</option>
-                            <option>Tarjeta</option>
-                            <option>Transferencia</option>
-                            <option>Otro</option>
+                        <Label for="payment_method_id">Método de Pago</Label>
+                        <select id="payment_method_id" v-model="form.payment_method_id" :class="inputClass">
+                            <option v-for="method in props.paymentMethods" :key="method.id" :value="method.id">
+                                {{ method.name }}
+                            </option>
                         </select>
-                        <InputError :message="form.errors.payment_method" />
+                        <InputError :message="form.errors.payment_method_id" />
                     </div>
                 </CardContent>
                 <CardFooter class="flex flex-col gap-4 bg-gray-50 dark:bg-gray-800/50 p-4">

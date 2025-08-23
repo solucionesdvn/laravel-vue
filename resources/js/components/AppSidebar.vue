@@ -64,13 +64,13 @@ const mainNavItems: NavItem[] = [
         icon: Building,
         permission: 'companies.view',
     },
+    { type: 'separator', title: 'separator-1' },
     {
         title: 'Categorias',
         href: '/categories',
         icon: Tags,
         permission: 'categories.view',
     },
-    { type: 'separator', title: 'separator-1' },
     {
         title: 'Proveedores',
         href: '/suppliers',

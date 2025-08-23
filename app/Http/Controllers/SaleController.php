@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\CashRegister;
 use App\Models\Client;
+use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -19,7 +20,10 @@ class SaleController extends Controller
 
     public function index()
     {
-        $sales = \App\Models\Sale::with(['client', 'user'])
+        $companyId = auth()->user()->company_id;
+
+        $sales = \App\Models\Sale::where('company_id', $companyId)
+            ->with(['client', 'user'])
             ->latest()
             ->paginate(10);
 
@@ -30,7 +34,11 @@ class SaleController extends Controller
 
     public function show(\App\Models\Sale $sale)
     {
-        $sale->load(['client', 'user', 'items.product']);
+        if ($sale->company_id !== auth()->user()->company_id) {
+            abort(403);
+        }
+
+        $sale->load(['client', 'user', 'paymentMethod', 'items.product']);
 
         return inertia('Sales/Show', [
             'sale' => $sale,
@@ -55,10 +63,12 @@ class SaleController extends Controller
             ->get(['id', 'name', 'color']);
         
         $clients = Client::where('company_id', $companyId)->get(['id', 'name']);
+        $paymentMethods = PaymentMethod::where('company_id', $companyId)->get(['id', 'name']);
 
         return Inertia::render('Sales/Create', [
             'categories' => $categories,
             'clients' => $clients,
+            'paymentMethods' => $paymentMethods,
         ]);
     }
 
@@ -70,7 +80,7 @@ class SaleController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity'   => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
-            'payment_method'     => 'required|string|max:255',
+            'payment_method_id'  => 'nullable|exists:payment_methods,id',
         ]);
 
         $user = auth()->user();
@@ -88,19 +98,8 @@ class SaleController extends Controller
         DB::beginTransaction();
 
         try {
-            $total = collect($request->items)->sum(fn ($item) =>
-                $item['quantity'] * $item['unit_price']
-            );
-
-            $sale = Sale::create([
-                'company_id'       => $companyId,
-                'cash_register_id' => $cashRegister->id,
-                'user_id'          => $user->id,
-                'client_id'        => $request->client_id,
-                'total'            => $total,
-                'date'             => now(),
-                'payment_method'   => $request->payment_method,
-            ]);
+            $realTotal = 0;
+            $saleItemsData = [];
 
             foreach ($request->items as $item) {
                 $product = Product::where('id', $item['product_id'])
@@ -112,18 +111,33 @@ class SaleController extends Controller
                     throw new \Exception("Stock insuficiente para el producto: {$product->name}");
                 }
 
-                SaleItem::create([
-                    'sale_id'    => $sale->id,
+                $authoritativePrice = $product->price;
+                $subtotal = $item['quantity'] * $authoritativePrice;
+                $realTotal += $subtotal;
+
+                $saleItemsData[] = [
                     'product_id' => $product->id,
                     'quantity'   => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
-                    'subtotal'   => $item['quantity'] * $item['unit_price'],
-                ]);
+                    'unit_price' => $authoritativePrice,
+                    'subtotal'   => $subtotal,
+                ];
 
                 $product->decrement('stock', $item['quantity']);
             }
 
-            $cashRegister->increment('total_sales', $total);
+            $sale = Sale::create([
+                'company_id'       => $companyId,
+                'cash_register_id' => $cashRegister->id,
+                'user_id'          => $user->id,
+                'client_id'        => $request->client_id,
+                'total'            => $realTotal,
+                'date'             => now(),
+                'payment_method_id'   => $request->payment_method_id,
+            ]);
+
+            $sale->items()->createMany($saleItemsData);
+
+            $cashRegister->increment('total_sales', $realTotal);
 
             DB::commit();
 
@@ -133,6 +147,53 @@ class SaleController extends Controller
 
             return back()->withErrors([
                 'error' => 'Error al registrar la venta: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function destroy(\App\Models\Sale $sale)
+    {
+        // Security check: Ensure the sale belongs to the authenticated user's company
+        if ($sale->company_id !== auth()->user()->company_id) {
+            abort(403); // Forbidden
+        }
+
+        // Start a database transaction
+        DB::beginTransaction();
+
+        try {
+            // 1. Return stock for each item in the sale
+            foreach ($sale->items as $item) {
+                $product = Product::where('id', $item->product_id)
+                    ->where('company_id', $sale->company_id)
+                    ->lockForUpdate() // Lock product row to prevent race conditions
+                    ->firstOrFail();
+
+                $product->increment('stock', $item->quantity);
+            }
+
+            // 2. Decrement total_sales from the cash register
+            $cashRegister = CashRegister::where('id', $sale->cash_register_id)
+                ->where('company_id', $sale->company_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $cashRegister->decrement('total_sales', $sale->total);
+
+            // 3. Soft delete the sale
+            $sale->delete();
+
+            // Commit the transaction
+            DB::commit();
+
+            return redirect()->route('sales.index')->with('success', 'Venta anulada correctamente.');
+
+        } catch (\Throwable $e) {
+            // Rollback the transaction if any error occurs
+            DB::rollBack();
+
+            return back()->withErrors([
+                'error' => 'Error al anular la venta: ' . $e->getMessage(),
             ]);
         }
     }

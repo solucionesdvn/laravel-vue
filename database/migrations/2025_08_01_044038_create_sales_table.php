@@ -16,9 +16,11 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('cash_register_id')->constrained()->cascadeOnDelete(); // Caja
+            $table->foreignId('client_id')->nullable(); // Constraint added in later migration
+            $table->foreignId('payment_method_id')->nullable(); // Constraint added in later migration
             $table->dateTime('date');
             $table->decimal('total', 12, 2)->default(0);
-            $table->string('payment_method'); // efectivo, tarjeta, etc.
+            $table->softDeletes();
             $table->timestamps();
         });
     }

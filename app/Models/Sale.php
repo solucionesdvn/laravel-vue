@@ -3,17 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Client;
 
 class Sale extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'company_id',
         'user_id',
         'cash_register_id',
+        'client_id',
+        'payment_method_id',
         'date',
         'total',
-        'payment_method',
     ];
 
     protected $casts = [
@@ -39,5 +42,10 @@ class Sale extends Model
     public function client()
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function paymentMethod()
+    {
+        return $this->belongsTo(PaymentMethod::class);
     }
 }
