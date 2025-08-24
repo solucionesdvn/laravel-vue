@@ -48,4 +48,27 @@ class Sale extends Model
     {
         return $this->belongsTo(PaymentMethod::class);
     }
+
+    protected static function booted()
+    {
+        static::deleting(function ($sale) {
+            if ($sale->isForceDeleting()) {
+                // Lógica para borrado permanente si es necesario
+            } else {
+                // Borrado suave en cascada para los items
+                $sale->items()->delete();
+            }
+        });
+    }
+
+    /**
+     * Verifica si la venta puede ser anulada.
+     * Una venta no es anulable si su caja registradora ya ha sido cerrada.
+     *
+     * @return bool
+     */
+    public function isAnnullable(): bool
+    {
+        return is_null($this->cashRegister?->closed_at);
+    }
 }

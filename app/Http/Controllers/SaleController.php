@@ -24,6 +24,7 @@ class SaleController extends Controller
 
         $sales = \App\Models\Sale::where('company_id', $companyId)
             ->with(['client', 'user'])
+            ->withTrashed()
             ->latest()
             ->paginate(10);
 
@@ -156,6 +157,13 @@ class SaleController extends Controller
         // Security check: Ensure the sale belongs to the authenticated user's company
         if ($sale->company_id !== auth()->user()->company_id) {
             abort(403); // Forbidden
+        }
+
+        // Elegant business rule check
+        if (!$sale->isAnnullable()) {
+            return back()->withErrors([
+                'error' => 'No se puede anular una venta que pertenece a una caja ya cerrada.',
+            ]);
         }
 
         // Start a database transaction

@@ -15,7 +15,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 
-import { CirclePlus, Eye } from 'lucide-vue-next';
+import { CirclePlus, Eye, Trash2 } from 'lucide-vue-next';
 import type { Sale } from '@/types'
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -32,6 +32,14 @@ defineProps<{
         }[]
     }
 }>()
+
+const annulSale = (saleId: number) => {
+    if (confirm('¿Estás seguro de que quieres anular esta venta? Esta acción no se puede deshacer.')) {
+        router.delete(route('sales.destroy', saleId), {
+            preserveScroll: true,
+        });
+    }
+}
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -83,22 +91,41 @@ const formatDate = (value: string) => {
               <TableHead class="px-6 py-3">Vendedor</TableHead>
               <TableHead class="px-6 py-3 text-right">Total</TableHead>
               <TableHead class="px-6 py-3">Fecha</TableHead>
+              <TableHead class="px-6 py-3">Estado</TableHead>
               <TableHead class="px-6 py-3">Acciones</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             <TableRow v-if="sales.data.length === 0">
-                <TableCell colspan="6" class="text-center py-6 text-gray-500">
+                <TableCell colspan="7" class="text-center py-6 text-gray-500">
                     No hay ventas registradas.
                 </TableCell>
             </TableRow>
-            <TableRow v-for="sale in sales.data" :key="sale.id">
+            <TableRow
+                v-for="sale in sales.data"
+                :key="sale.id"
+                :class="{ 'bg-red-50 dark:bg-red-900/20 opacity-60': sale.deleted_at }"
+            >
               <TableCell class="px-6 py-4">{{ sale.id }}</TableCell>
               <TableCell class="px-6 py-4">{{ sale.client?.name || 'N/A' }}</TableCell>
               <TableCell class="px-6 py-4">{{ sale.user?.name || 'N/A' }}</TableCell>
               <TableCell class="px-6 py-4 text-right">{{ formatCurrency(sale.total) }}</TableCell>
               <TableCell class="px-6 py-4">{{ formatDate(sale.created_at) }}</TableCell>
+              <TableCell class="px-6 py-4">
+                <span
+                    v-if="sale.deleted_at"
+                    class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full dark:bg-red-900 dark:text-red-200"
+                >
+                    Anulada
+                </span>
+                <span
+                    v-else
+                    class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full dark:bg-green-900 dark:text-green-200"
+                >
+                    Completada
+                </span>
+              </TableCell>
               <TableCell class="px-6 py-4 flex gap-2">
                 <Button
                   as-child
@@ -109,6 +136,15 @@ const formatDate = (value: string) => {
                     <Link :href="route('sales.show', sale.id)">
                         <Eye />
                     </Link>
+                </Button>
+                <Button
+                  v-if="!sale.deleted_at && can('sales.delete')"
+                  @click="annulSale(sale.id)"
+                  size="sm"
+                  variant="destructive"
+                  class="bg-red-600 text-white hover:bg-red-800"
+                >
+                    <Trash2 />
                 </Button>
               </TableCell>
             </TableRow>

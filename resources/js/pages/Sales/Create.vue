@@ -90,7 +90,6 @@ const inputClass = "mt-1 flex h-9 w-full rounded-md border border-input bg-trans
 </script>
 
 <template>
-  <pre class="bg-gray-800 text-white p-4 rounded-lg">{{ props }}</pre>
   <Head title="Registrar Venta" />
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4 sm:p-6">
