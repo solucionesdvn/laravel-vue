@@ -129,6 +129,18 @@ Route::resource("categories", CategoryController::class)
     ->only(['index', 'show'])
     ->middleware("permission:categories.create|categories.edit|categories.delete|categories.view");
 
+// Dynamic Forms - Form Definitions
+Route::resource("form-definitions", DynamicFormController::class)->middleware('auth');
+
+// Dynamic Forms - Form Definitions
+Route::resource("form-definitions", DynamicFormController::class)->middleware('auth');
+
+// Dynamic Forms - Form Definitions
+Route::resource("form-definitions", DynamicFormController::class)->middleware('auth');
+
+// Dynamic Forms - Form Definitions
+Route::resource("form-definitions", DynamicFormController::class)->middleware('auth');
+
 // Métodos de Pago -
 Route::resource("payment-methods", PaymentMethodController::class)->except(['show']);
 
@@ -152,6 +164,7 @@ Route::resource("payment-methods", PaymentMethodController::class)
 //Productos -
 
 Route::get('/products/export', [ProductController::class, 'export'])->name('products.export');
+Route::get('/products/search', [ProductController::class, 'search'])->name('products.search')->middleware('auth');
 
 
 Route::resource('products', ProductController::class)->except(['show']);
@@ -267,6 +280,7 @@ Route::resource("sales", SaleController::class)
     ->middleware("permission:sales.create|sales.edit|sales.delete|sales.view");
 
 //Clientes -
+Route::post('/clients/api-store', [ClientController::class, 'apiStore'])->name('clients.api.store')->middleware(['auth', 'permission:clients.create']);
 Route::resource("clients", ClientController::class);
 
 Route::resource("clients", ClientController::class)
@@ -288,6 +302,14 @@ Route::resource("clients", ClientController::class)
 
 
     //Rutas Formatos NUEVAMENE
+
+// Dynamic Forms - Form Data
+Route::resource("form-data", DynamicFormController::class)->middleware('auth');
+
+// Public Form Data Access
+Route::get('/public/form/{token}', [DynamicFormController::class, 'publicEdit'])->name('form.public.edit');
+Route::put('/public/form/{token}', [DynamicFormController::class, 'publicUpdate'])->name('form.public.update');
+Route::get('/public/form/pdf/{token}', [DynamicFormController::class, 'publicPdf'])->name('form.public.pdf');
 
 Route::resource("resignation-forms", ResignationFormController::class);
 

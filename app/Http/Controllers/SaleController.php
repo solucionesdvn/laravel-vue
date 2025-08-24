@@ -50,7 +50,20 @@ class SaleController extends Controller
     {
         $this->authorize('sales.create');
 
-        $companyId = auth()->user()->company_id;
+        $user = auth()->user();
+        $companyId = $user->company_id;
+        $company = $user->company;
+
+        // Verificar si hay una caja registradora abierta
+        $cashRegister = CashRegister::where('company_id', $companyId)
+            ->whereNull('closed_at')
+            ->latest('created_at')
+            ->first();
+
+        // Si no hay caja abierta, redirigir a la página de abrir caja con un error.
+        if (!$cashRegister) {
+            return redirect()->route('cash-registers.create')->withErrors(['error' => 'Primero debe abrir una caja para poder registrar ventas.']);
+        }
 
         $categories = Category::whereHas('products', function ($query) use ($companyId) {
                 $query->where('company_id', $companyId)
@@ -70,6 +83,7 @@ class SaleController extends Controller
             'categories' => $categories,
             'clients' => $clients,
             'paymentMethods' => $paymentMethods,
+            'company' => $company,
         ]);
     }
 
@@ -96,13 +110,26 @@ class SaleController extends Controller
             return back()->withErrors(['error' => 'No hay una caja abierta para registrar la venta.']);
         }
 
+        // --- NEW: Normalize items to prevent duplicate product ID submissions ---
+        $normalizedItems = [];
+        foreach ($request->items as $item) {
+            $productId = $item['product_id'];
+            if (isset($normalizedItems[$productId])) {
+                $normalizedItems[$productId]['quantity'] += $item['quantity'];
+            } else {
+                $normalizedItems[$productId] = $item;
+            }
+        }
+        // ---
+
         DB::beginTransaction();
 
         try {
             $realTotal = 0;
             $saleItemsData = [];
 
-            foreach ($request->items as $item) {
+            // Process the normalized items array
+            foreach ($normalizedItems as $item) {
                 $product = Product::where('id', $item['product_id'])
                     ->where('company_id', $companyId)
                     ->lockForUpdate()

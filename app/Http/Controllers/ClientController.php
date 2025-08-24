@@ -142,4 +142,45 @@ class ClientController extends Controller
             abort(403);
         }
     }
+
+    public function apiStore(Request $request)
+    {
+        $companyId = auth()->user()->company_id;
+
+        try {
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => [
+                    'nullable',
+                    'email',
+                    'max:255',
+                    Rule::unique('clients')->where('company_id', $companyId)
+                ],
+                'phone' => 'nullable|string|max:50',
+                'address' => 'nullable|string|max:255',
+                'identification' => [
+                    'nullable',
+                    'string',
+                    'max:50',
+                    Rule::unique('clients')->where('company_id', $companyId)->whereNull('deleted_at')
+                ],
+            ]);
+
+            $client = Client::create([
+                'company_id' => $companyId,
+                'name' => $validatedData['name'],
+                'email' => $validatedData['email'] ?? null,
+                'phone' => $validatedData['phone'] ?? null,
+                'address' => $validatedData['address'] ?? null,
+                'identification' => $validatedData['identification'] ?? null,
+            ]);
+
+            return response()->json($client, 201); // 201 Created
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422); // Unprocessable Entity
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'An unexpected error occurred.'], 500);
+        }
+    }
 }

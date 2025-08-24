@@ -150,4 +150,37 @@ class ProductController extends Controller
 
         return Excel::download(new ProductsExport($search), 'productos.xlsx');
     }
+
+    public function search(Request $request)
+    {
+        try {
+            $request->validate([
+                'term' => 'required|string|min:2',
+            ]);
+
+            if (!auth()->check()) {
+                return response()->json(['message' => 'No autenticado.'], 401);
+            }
+
+            $term = $request->input('term');
+            $companyId = auth()->user()->company_id;
+
+            $products = Product::where('company_id', $companyId)
+                ->where('stock', '>', 0)
+                ->where(function ($query) use ($term) {
+                    $query->where('name', 'like', "%{$term}%")
+                          ->orWhere('sku', 'like', "%{$term}%");
+                })
+                ->select('id', 'name', 'sku', 'price', 'stock')
+                ->limit(10)
+                ->get();
+
+            return response()->json($products);
+
+        } catch (\Throwable $e) {
+            // En un entorno de producción, esto se registraría en un log.
+            // Para depuración, devolvemos el mensaje de error exacto.
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
 }

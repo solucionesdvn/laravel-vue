@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('nit')->nullable();
             $table->string('address')->nullable();
             $table->string('phone')->nullable();
+            $table->string('currency', 10)->nullable()->default('COP');
+            $table->string('locale', 10)->nullable()->default('es-CO');
             $table->timestamps(); // created_at y updated_at
         });
     }
