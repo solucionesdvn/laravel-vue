@@ -93,11 +93,6 @@ class PermissionSeeder extends Seeder
             "resignation-forms.edit",
             "resignation-forms.delete",
 
-            // Permisos Formularios Dinámicos
-            "form-definitions.view",
-            "form-definitions.create",
-            "form-definitions.edit",
-            "form-definitions.delete",
 
         ];
         //foreach ($permissions as $key => $value) {

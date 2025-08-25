@@ -15,6 +15,7 @@ use App\Http\Controllers\ResignationFormController;
 use App\Http\Controllers\Export\DocumentExportController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\DynamicFormController;
 
 use App\Exports\ProductsExport;
 
@@ -188,7 +189,7 @@ Route::resource("products", ProductController::class)
 
 Route::resource("products", ProductController::class)
     ->only(['index', 'show'])
-    ->middleware("permission:products.create|products.edit|products.delete|products.view");
+    ->middleware("permission:products.create|products.edit|products.delete|users.view");
 
 
 
@@ -297,7 +298,7 @@ Route::resource("clients", ClientController::class)
 
 Route::resource("clients", ClientController::class)
     ->only(['index', 'show'])
-    ->middleware("permission:clients.create|clients.edit|clients.delete|clients.view");
+    ->middleware("permission:clients.create|clients.edit|users.delete|clients.view");
 
 
 
@@ -327,8 +328,12 @@ Route::resource("resignation-forms", ResignationFormController::class)
 
 Route::resource("resignation-forms", ResignationFormController::class)
     ->only(['index', 'show'])
-    ->middleware("permission:resignation-forms.create|resignation-forms.edit|resignation-forms.delete|resignation-forms.view");
+    ->middleware("permission:resignation-forms.create|resignation-forms.edit|delete|resignation-forms.view");
 
+
+Route::resource('form-definitions', DynamicFormController::class)->middleware(['auth']);
+Route::get('form-data/create', [DynamicFormController::class, 'dataCreate'])->name('form-data.create')->middleware(['auth']);
+Route::post('form-data', [DynamicFormController::class, 'formDataStore'])->name('form-data.store')->middleware(['auth']);
 
 // Rutas publicas
 

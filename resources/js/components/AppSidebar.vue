@@ -120,64 +120,14 @@ const mainNavItems: NavItem[] = [
         icon: ShoppingCart,
         permission: 'sales.view',
     },
+    { type: 'separator', title: 'separator-1' },
+
     {
-        title: 'Formatos',
+        title: 'Carta R',
+        href: '/resignation-forms',
         icon: Files,
         permission: 'resignation-forms.view',
-        children: [
-            {
-                title: 'Formato 1',
-                href: '/resignation-forms',
-                icon: FileText,
-                permission: 'resignation-forms.view',
-            },
-            {
-                title: 'Formato 2',
-                href: '#',
-                icon: FileText,
-            },
-            {
-                title: 'Formato 3',
-                href: '#',
-                icon: FileText,
-            },
-            {
-                title: 'Formato 4',
-                href: '#',
-                icon: FileText,
-            },
-            {
-                title: 'Formato 5',
-                href: '#',
-                icon: FileText,
-            },
-            {
-                title: 'Formato 6',
-                href: '#',
-                icon: FileText,
-            },
-            {
-                title: 'Formato 7',
-                href: '#',
-                icon: FileText,
-            },
-            {
-                title: 'Formato 8',
-                href: '#',
-                icon: FileText,
-            },
-            {
-                title: 'Formato 9',
-                href: '#',
-                icon: FileText,
-            },
-            {
-                title: 'Formato 10',
-                href: '#',
-                icon: FileText,
-            },
-        ],
-    },
+    },    
 ];
 
 const footerNavItems: NavItem[] = [

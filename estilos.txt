@@ -105,6 +105,8 @@ QRCode.vue – Componente Vue para generar códigos QR.
 composer require maatwebsite/excel
 composer require phpoffice/phpspreadsheet
 
+php artisan ziggy:generate
+
 php artisan migrate:fresh --seed
 
 
