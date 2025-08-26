@@ -15,7 +15,10 @@ use App\Http\Controllers\ResignationFormController;
 use App\Http\Controllers\Export\DocumentExportController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\PaymentMethodController;
-use App\Http\Controllers\DynamicFormController;
+use App\Http\Controllers\DocumentTemplateController;
+use App\Http\Controllers\SubmittedDocumentController;
+
+
 
 use App\Exports\ProductsExport;
 
@@ -130,19 +133,7 @@ Route::resource("categories", CategoryController::class)
     ->only(['index', 'show'])
     ->middleware("permission:categories.create|categories.edit|categories.delete|categories.view");
 
-// Dynamic Forms - Form Definitions
-Route::resource("form-definitions", DynamicFormController::class)->middleware('auth');
 
-// Dynamic Forms - Form Definitions
-Route::resource("form-definitions", DynamicFormController::class)->middleware('auth');
-
-// Dynamic Forms - Form Definitions
-Route::resource("form-definitions", DynamicFormController::class)->middleware('auth');
-
-// Dynamic Forms - Form Definitions
-Route::resource("form-definitions", DynamicFormController::class)->middleware('auth');
-
-// Métodos de Pago -
 Route::resource("payment-methods", PaymentMethodController::class)->except(['show']);
 
 Route::resource("payment-methods", PaymentMethodController::class)
@@ -304,14 +295,6 @@ Route::resource("clients", ClientController::class)
 
     //Rutas Formatos NUEVAMENE
 
-// Dynamic Forms - Form Data
-Route::resource("form-data", DynamicFormController::class)->middleware('auth');
-
-// Public Form Data Access
-Route::get('/public/form/{token}', [DynamicFormController::class, 'publicEdit'])->name('form.public.edit');
-Route::put('/public/form/{token}', [DynamicFormController::class, 'publicUpdate'])->name('form.public.update');
-Route::get('/public/form/pdf/{token}', [DynamicFormController::class, 'publicPdf'])->name('form.public.pdf');
-
 Route::resource("resignation-forms", ResignationFormController::class);
 
 Route::resource("resignation-forms", ResignationFormController::class)
@@ -330,10 +313,6 @@ Route::resource("resignation-forms", ResignationFormController::class)
     ->only(['index', 'show'])
     ->middleware("permission:resignation-forms.create|resignation-forms.edit|delete|resignation-forms.view");
 
-
-Route::resource('form-definitions', DynamicFormController::class)->middleware(['auth']);
-Route::get('form-data/create', [DynamicFormController::class, 'dataCreate'])->name('form-data.create')->middleware(['auth']);
-Route::post('form-data', [DynamicFormController::class, 'formDataStore'])->name('form-data.store')->middleware(['auth']);
 
 // Rutas publicas
 
@@ -356,6 +335,52 @@ Route::get('/public/resignation/pdf/{token}', [ResignationFormController::class,
 
 
 
+// Modulos de Documentos dinamicos Rutas
+
+Route::resource("document-templates", DocumentTemplateController::class);
+
+Route::resource("document-templates", DocumentTemplateController::class)
+    ->only(['create', 'store'])
+    ->middleware("permission:document-templates.create");
+
+Route::resource("document-templates", DocumentTemplateController::class)
+    ->only(['edit', 'update'])
+    ->middleware("permission:document-templates.edit");
+
+Route::resource("document-templates", DocumentTemplateController::class)
+    ->only(['destroy'])
+    ->middleware("permission:document-templates.delete");
+
+Route::resource("document-templates", DocumentTemplateController::class)
+    ->only(['index', 'show'])
+    ->middleware("permission:document-templates.create|document-templates.edit|document-templates.delete|document-templates.view");
+
+Route::resource('document-templates', DocumentTemplateController::class)->parameters([
+    'document-templates' => 'id'
+]);
+
+// Edicion docs
+Route::resource("submitted-documents", SubmittedDocumentController::class);
+
+Route::resource("submitted-documents", SubmittedDocumentController::class)
+    ->only(['create', 'store'])
+    ->middleware("permission:submitted-documents.create");
+
+Route::resource("submitted-documents", SubmittedDocumentController::class)
+    ->only(['edit', 'update'])
+    ->middleware("permission:submitted-documents.edit");
+
+Route::resource("submitted-documents", SubmittedDocumentController::class)
+    ->only(['destroy'])
+    ->middleware("permission:submitted-documents.delete");
+
+Route::resource("submitted-documents", SubmittedDocumentController::class)
+    ->only(['index', 'show'])
+    ->middleware("permission:submitted-documents.create|submitted-documents.edit|submitted-documents.delete|submitted-documents.view");
+
+Route::resource('submitted-documents', SubmittedDocumentController::class)->parameters([
+    'submitted-documents' => 'id'
+]);
 
 
 

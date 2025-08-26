@@ -93,7 +93,18 @@ class PermissionSeeder extends Seeder
             "resignation-forms.edit",
             "resignation-forms.delete",
 
+            // Docs Dinamicos
+            "document-templates.view",
+            "document-templates.create",
+            "document-templates.edit",
+            "document-templates.delete",       
 
+            "submitted-documents.view",
+            "submitted-documents.create",
+            "submitted-documents.edit",
+            "submitted-documents.delete",                   
+
+            
         ];
         //foreach ($permissions as $key => $value) {
             //Permission::create(["name" => $value]);

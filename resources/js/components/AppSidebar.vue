@@ -127,7 +127,21 @@ const mainNavItems: NavItem[] = [
         href: '/resignation-forms',
         icon: Files,
         permission: 'resignation-forms.view',
-    },    
+    },
+    {
+        title: 'Docs',
+        href: '/document-templates',
+        icon: Files,
+        permission: 'document-templates.view',
+    },
+
+    {
+        title: 'Llenar Docs',
+        href: '/submitted-documents',
+        icon: Files,
+        permission: 'submitted-documents.view',
+    },
+
 ];
 
 const footerNavItems: NavItem[] = [
