@@ -359,28 +359,22 @@ Route::resource('document-templates', DocumentTemplateController::class)->parame
     'document-templates' => 'id'
 ]);
 
-// Edicion docs
-Route::resource("submitted-documents", SubmittedDocumentController::class);
+// --- Rutas para Documentos Enviados (Submitted Documents) ---
+// Ruta 'create' personalizada para aceptar el ID de la plantilla
+Route::get('submitted-documents/create/{id}', [SubmittedDocumentController::class, 'create'])
+    ->name('submitted-documents.create')
+    ->middleware(['auth', 'permission:submitted-documents.create']);
 
-Route::resource("submitted-documents", SubmittedDocumentController::class)
-    ->only(['create', 'store'])
-    ->middleware("permission:submitted-documents.create");
+// Ruta 'store' personalizada para que también acepte el ID de la plantilla
+Route::post('submitted-documents/{id}', [SubmittedDocumentController::class, 'store'])
+    ->name('submitted-documents.store')
+    ->middleware(['auth', 'permission:submitted-documents.create']);
 
-Route::resource("submitted-documents", SubmittedDocumentController::class)
-    ->only(['edit', 'update'])
-    ->middleware("permission:submitted-documents.edit");
-
-Route::resource("submitted-documents", SubmittedDocumentController::class)
-    ->only(['destroy'])
-    ->middleware("permission:submitted-documents.delete");
-
-Route::resource("submitted-documents", SubmittedDocumentController::class)
-    ->only(['index', 'show'])
-    ->middleware("permission:submitted-documents.create|submitted-documents.edit|submitted-documents.delete|submitted-documents.view");
-
-Route::resource('submitted-documents', SubmittedDocumentController::class)->parameters([
-    'submitted-documents' => 'id'
-]);
+// Resto de las rutas del recurso, con sus permisos específicos
+Route::resource('submitted-documents', SubmittedDocumentController::class)
+    ->except(['create', 'store'])
+    ->parameters(['submitted-documents' => 'id'])
+    ->middleware(['auth', 'permission:submitted-documents.view|submitted-documents.edit|submitted-documents.delete']);
 
 
 

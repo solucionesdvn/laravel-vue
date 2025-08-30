@@ -99,6 +99,11 @@ function deleteTemplate(id: number) {
               <TableCell class="px-6 py-4">{{ template.name }}</TableCell>
               <TableCell class="px-6 py-4">{{ template.description }}</TableCell>
               <TableCell class="px-6 py-4 flex gap-2">
+                <Button as-child size="sm" class="bg-green-500 text-white hover:bg-green-700">
+                  <Link :href="route('submitted-documents.create', { id: template.id })">
+                    Llenar
+                  </Link>
+                </Button>
                 <Button as-child size="sm" class="bg-blue-500 text-white hover:bg-blue-700">
                   <Link :href="route('document-templates.edit', template.id)">
                     <Pencil />

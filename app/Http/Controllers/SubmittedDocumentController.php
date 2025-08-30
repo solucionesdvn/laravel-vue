@@ -2,62 +2,61 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SubmittedDocument;
 use App\Models\DocumentTemplate;
+use App\Models\SubmittedDocument;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class SubmittedDocumentController extends Controller
 {
     /**
-     * Mostrar listado de documentos enviados de la empresa.
+     * Muestra el formulario para crear un documento a partir de una plantilla.
      */
-    public function index()
+    public function create($id)
     {
-        $companyId = Auth::user()->company_id;
+        $template = DocumentTemplate::findOrFail($id);
 
-        $submittedDocuments = SubmittedDocument::with('documentTemplate')
-            ->where('company_id', $companyId)
-            ->latest()
-            ->get();
-
-        return Inertia::render('SubmittedDocuments/Index', [
-            'submittedDocuments' => $submittedDocuments,
-        ]);
-    }
-
-    /**
-     * Mostrar formulario para llenar una plantilla.
-     */
-    public function create(DocumentTemplate $documentTemplate)
-    {
         return Inertia::render('SubmittedDocuments/Create', [
-            'template' => $documentTemplate,
+            'template' => $template,
         ]);
     }
 
     /**
-     * Guardar el documento enviado.
+     * Guarda el documento rellenado.
      */
-    public function store(Request $request, DocumentTemplate $documentTemplate)
+    public function store(Request $request, $id)
     {
-        $companyId = Auth::user()->company_id;
+        $template = DocumentTemplate::findOrFail($id);
 
-        $request->validate([
+        // 🔹 Aceptamos cualquier campo dinámico de la plantilla y los hacemos requeridos
+        $validated = $request->validate([
             'data' => 'required|array',
+            'data.*' => 'required|string', // Hace que cada campo dentro de 'data' sea requerido
         ]);
 
-        $submittedDocument = SubmittedDocument::create([
-            'document_template_id' => $documentTemplate->id,
-            'company_id' => $companyId,
-            'submitted_by_user_id' => Auth::id(),
-            'data' => $request->input('data'),
-            'token' => Str::uuid(),
+        $submitted = SubmittedDocument::create([
+            'submitted_by_user_id' => auth()->id(),
+            'company_id'           => auth()->user()->company_id, // multiempresa
+            'document_template_id' => $template->id,
+            'data'                 => $validated['data'], // Guardamos solo el array 'data' en JSON
+            'token'                => Str::uuid(), // token único
         ]);
 
-        return redirect()->route('submitted-documents.index')
-            ->with('success', 'Documento enviado correctamente.');
+        return redirect()
+            ->route('submitted-documents.show', $submitted->id)
+            ->with('success', 'Documento creado exitosamente.');
+    }
+
+    /**
+     * Muestra un documento ya generado.
+     */
+    public function show($id)
+    {
+        $submitted = SubmittedDocument::with('template')->findOrFail($id);
+
+        return Inertia::render('SubmittedDocuments/Show', [
+            'submitted' => $submitted,
+        ]);
     }
 }

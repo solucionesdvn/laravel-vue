@@ -33,11 +33,11 @@ class SubmittedDocument extends Model
     ];
 
     /**
-     * Get the template for the submitted document.
+     * Get the document template for the submitted document.
      */
-    public function documentTemplate()
+    public function template()
     {
-        return $this->belongsTo(DocumentTemplate::class);
+        return $this->belongsTo(DocumentTemplate::class, 'document_template_id');
     }
 
     /**
@@ -51,7 +51,7 @@ class SubmittedDocument extends Model
     /**
      * Get the user who submitted the document.
      */
-    public function submittedByUser()
+    public function submittedBy()
     {
         return $this->belongsTo(User::class, 'submitted_by_user_id');
     }

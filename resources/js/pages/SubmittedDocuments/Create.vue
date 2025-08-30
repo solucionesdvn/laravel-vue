@@ -1,67 +1,95 @@
 <script setup lang="ts">
-import { Head, useForm } from "@inertiajs/vue3";
-import AppLayout from "@/layouts/AppLayout.vue";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { type BreadcrumbItem } from "@/types";
-import { ref } from "vue";
+import AppLayout from '@/Layouts/AppLayout.vue'
+import { useForm } from '@inertiajs/vue3'
+import { ref, computed } from 'vue'
+import type { DocumentTemplate } from '@/types'
 
-// Props
-const props = defineProps<{
-  template: {
-    id: number;
-    name: string;
-    fields: { name: string; type: string }[]; // ahora cada campo tiene tipo
-  };
-}>();
+// Props desde el backend
+const props = defineProps<{ template: DocumentTemplate }>()
 
-// Breadcrumbs
-const breadcrumbs: BreadcrumbItem[] = [
-  { title: "Plantillas", href: route("document-templates.index") },
-  { title: `Usar: ${props.template.name}`, href: null },
-];
+// Inicializamos los campos vacíos a partir de los placeholders de la plantilla
+const formFields = ref<Record<string, string>>({})
+const regex = /{{\s*(.*?)\s*}}/g
+let match
+while ((match = regex.exec(props.template.content ?? '')) !== null) {
+  const field = match[1]
+  if (!(field in formFields.value)) {
+    formFields.value[field] = ''
+  }
+}
 
-// Formulario
-const form = useForm({
-  data: {} as Record<string, any>,
-});
+// Creamos el formulario de Inertia con esos campos
+const form = useForm({ ...formFields.value })
 
-// Inicializar campos
-props.template.fields.forEach(field => {
-  form.data[field.name] = "";
-});
+// Vista previa en tiempo real
+const renderedContent = computed(() => {
+  let content = props.template.content ?? ''
+  for (const key in formFields.value) {
+    const regexField = new RegExp(`{{\\s*${key}\\s*}}`, 'g')
+    content = content.replace(
+      regexField,
+      formFields.value[key]?.trim()
+        ? formFields.value[key]
+        : `<span class="text-red-500 italic">${key}</span>`
+    )
+  }
+  return content
+})
 
-// Submit
-function submit() {
-  form.post(route("submitted-documents.store", props.template.id), {
-    preserveScroll: true,
-  });
+// Enviar datos al backend
+const submit = () => {
+  Object.assign(form, { ...formFields.value })
+  form.post(route('submitted-documents.store', props.template.id))
 }
 </script>
 
 <template>
-  <Head :title="`Usar plantilla: ${props.template.name}`" />
-  <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="p-4 sm:p-6 max-w-3xl mx-auto">
-      <h2 class="text-xl font-bold mb-4">Completa los campos</h2>
-      <form @submit.prevent="submit" class="space-y-4">
-        <div v-for="field in props.template.fields" :key="field.name" class="space-y-1">
-          <Label :for="field.name">{{ field.name }}</Label>
-          <component
-            :is="field.type === 'textarea' ? 'textarea' : 'input'"
-            v-model="form.data[field.name]"
-            :type="field.type !== 'textarea' ? field.type : undefined"
-            class="border rounded w-full px-2 py-1"
-            :placeholder="field.name"
-          />
+  <AppLayout title="Crear Documento">
+    <template #header>
+      <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+        Llenar Documento
+      </h2>
+    </template>
+
+    <div class="py-8">
+      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
+        
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
+          <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+            Complete los campos para la plantilla: {{ template.name }}
+          </h3>
+
+          <form @submit.prevent="submit">
+            <div v-for="(value, key) in formFields" :key="key" class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {{ key }}
+              </label>
+              <input
+                v-model="formFields[key]"
+                type="text"
+                class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+              />
+            </div>
+
+            <button
+              type="submit"
+              class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50"
+              :disabled="form.processing"
+            >
+              Guardar Documento
+            </button>
+          </form>
         </div>
 
-        <Button type="submit" :disabled="form.processing">
-          <span v-if="form.processing">Enviando...</span>
-          <span v-else>Enviar</span>
-        </Button>
-      </form>
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6 flex justify-center">
+          <div
+            id="document-content"
+            class="prose dark:prose-invert max-w-none p-4 border rounded-md min-h-[297mm]"
+            style="width: 210mm; min-height: 297mm; padding: 20mm;"
+            v-html="renderedContent"
+          ></div>
+        </div>
+      </div>
     </div>
   </AppLayout>
 </template>
