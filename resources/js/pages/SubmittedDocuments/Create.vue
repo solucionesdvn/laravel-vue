@@ -1,45 +1,56 @@
-<script setup lang="ts">
+<script setup lang="ts"> 
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { useForm } from '@inertiajs/vue3'
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import type { DocumentTemplate } from '@/types'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
-// Props desde el backend
-const props = defineProps<{ template: DocumentTemplate }>()
+// ✅ Props desde el backend
+const { template } = defineProps<{ template: DocumentTemplate }>()
 
-// Inicializamos los campos vacíos a partir de los placeholders de la plantilla
-const formFields = ref<Record<string, string>>({})
-const regex = /{{\s*(.*?)\s*}}/g
-let match
-while ((match = regex.exec(props.template.content ?? '')) !== null) {
-  const field = match[1]
-  if (!(field in formFields.value)) {
-    formFields.value[field] = ''
-  }
+// ✅ Inicializamos el formulario de Inertia con keys planos tipo "data.campo"
+const initialFormValues: Record<string, string> = {}
+if (Array.isArray(template.fields)) {
+  template.fields.forEach((field) => {
+    initialFormValues[`data.${field.name}`] = ''
+  })
+}
+const form = useForm(initialFormValues)
+
+// Helpers
+function escapeRegex(str: string) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+function escapeHtml(str: string) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
 }
 
-// Creamos el formulario de Inertia con esos campos
-const form = useForm({ ...formFields.value })
-
-// Vista previa en tiempo real
+// ✅ Vista previa en tiempo real
 const renderedContent = computed(() => {
-  let content = props.template.content ?? ''
-  for (const key in formFields.value) {
-    const regexField = new RegExp(`{{\\s*${key}\\s*}}`, 'g')
-    content = content.replace(
-      regexField,
-      formFields.value[key]?.trim()
-        ? formFields.value[key]
-        : `<span class="text-red-500 italic">${key}</span>`
-    )
+  let content = template.content ?? ''
+  if (Array.isArray(template.fields)) {
+    template.fields.forEach((field) => {
+      const key = `data.${field.name}`
+      const re = new RegExp(String.raw`{{\s*${escapeRegex(field.name)}\s*}}`, 'g')
+      const value = form[key]
+      const safe =
+        value?.trim()
+          ? escapeHtml(value)
+          : `<span class="text-red-500 italic">{{ ${escapeHtml(field.name)} }}</span>`
+      content = content.replace(re, safe)
+    })
   }
   return content
 })
 
-// Enviar datos al backend
+// ✅ Enviar datos al backend
 const submit = () => {
-  Object.assign(form, { ...formFields.value })
-  form.post(route('submitted-documents.store', props.template.id))
+  form.post(route('submitted-documents.store', template.id))
 }
 </script>
 
@@ -52,23 +63,47 @@ const submit = () => {
     </template>
 
     <div class="py-8">
-      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
-        
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
+      <div
+        class="max-w-7xl mx-auto sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-8"
+      >
+        <!-- Columna izquierda: formulario -->
+        <div
+          class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6"
+        >
           <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
             Complete los campos para la plantilla: {{ template.name }}
           </h3>
 
-          <form @submit.prevent="submit">
-            <div v-for="(value, key) in formFields" :key="key" class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {{ key }}
-              </label>
-              <input
-                v-model="formFields[key]"
-                type="text"
-                class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+          <form @submit.prevent="submit" class="space-y-4">
+            <div v-for="field in template.fields" :key="field.name">
+              <Label :for="field.name" class="capitalize">
+                {{ field.name.replace(/_/g, ' ') }}
+              </Label>
+
+              <!-- Input genérico -->
+              <Input
+                v-if="field.type !== 'textarea'"
+                :id="field.name"
+                v-model="form[`data.${field.name}`]"
+                :type="field.type"
+                class="w-full"
               />
+
+              <!-- Textarea -->
+              <textarea
+                v-else
+                :id="field.name"
+                v-model="form[`data.${field.name}`]"
+                class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+              ></textarea>
+
+              <!-- Errores -->
+              <div
+                v-if="form.errors[`data.${field.name}`]"
+                class="text-red-500 text-sm mt-1"
+              >
+                {{ form.errors[`data.${field.name}`] }}
+              </div>
             </div>
 
             <button
@@ -81,10 +116,13 @@ const submit = () => {
           </form>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6 flex justify-center">
+        <!-- Columna derecha: vista previa -->
+        <div
+          class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6 flex justify-center"
+        >
           <div
             id="document-content"
-            class="prose dark:prose-invert max-w-none p-4 border rounded-md min-h-[297mm]"
+            class="prose dark:prose-invert max-w-none border rounded-md"
             style="width: 210mm; min-height: 297mm; padding: 20mm;"
             v-html="renderedContent"
           ></div>

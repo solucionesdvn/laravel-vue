@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class SubmittedDocument extends Model
 {
@@ -31,6 +32,20 @@ class SubmittedDocument extends Model
     protected $casts = [
         'data' => 'array',
     ];
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($document) {
+            if (empty($document->token)) {
+                $document->token = (string) Str::uuid();
+            }
+        });
+    }
 
     /**
      * Get the document template for the submitted document.

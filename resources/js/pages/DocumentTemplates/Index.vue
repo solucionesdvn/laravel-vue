@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { CirclePlus, Pencil, Trash, Search } from 'lucide-vue-next'
+import { CirclePlus, Pencil, Trash, Search, Eye } from 'lucide-vue-next'
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Plantillas de Documentos', href: '/document-templates' }
@@ -99,9 +99,9 @@ function deleteTemplate(id: number) {
               <TableCell class="px-6 py-4">{{ template.name }}</TableCell>
               <TableCell class="px-6 py-4">{{ template.description }}</TableCell>
               <TableCell class="px-6 py-4 flex gap-2">
-                <Button as-child size="sm" class="bg-green-500 text-white hover:bg-green-700">
-                  <Link :href="route('submitted-documents.create', { id: template.id })">
-                    Llenar
+                <Button as-child size="sm" class="bg-yellow-500 text-white hover:bg-yellow-700">
+                  <Link :href="route('document-templates.show', template.id)">
+                    <Eye />
                   </Link>
                 </Button>
                 <Button as-child size="sm" class="bg-blue-500 text-white hover:bg-blue-700">

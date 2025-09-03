@@ -36,6 +36,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 // Formulario
 const form = useForm({
   name: "",
+  description: "",
   content: "",
   fields: [] as { name: string; type: string }[],
 });
@@ -68,17 +69,18 @@ function insertField(fieldName: string) {
 }
 
 // Tabla
-const tableSize = ref("2x2");
+const tableSize = ref({ rows: 2, cols: 2 });
 function insertTable() {
   if (!editor.value) return;
-  const [rows, cols] = tableSize.value.split("x").map(n => parseInt(n));
-  if (!rows || !cols) return;
+  const rows = tableSize.value.rows;
+  const cols = tableSize.value.cols;
+  if (!rows || !cols || rows < 1 || cols < 1) return; // Added validation for min 1
 
-  let tableHTML = `<table style="border-collapse: collapse;">`;
+  let tableHTML = `<table style="width: 100%; border-collapse: collapse; border: 1px solid #ccc;">`;
   for (let r = 0; r < rows; r++) {
     tableHTML += "<tr>";
     for (let c = 0; c < cols; c++) {
-      tableHTML += `<td style="border: 2px solid green; width: 100px; height: 50px;"></td>`;
+      tableHTML += `<td style="border: 1px solid #ccc; padding: 8px; min-width: 50px; min-height: 30px;"></td>`;
     }
     tableHTML += "</tr>";
   }
@@ -100,7 +102,7 @@ const editor = useEditor({
   content: "<p>Escribe aquí la plantilla y usa {{ variables }} donde quieras.</p>",
   editorProps: {
     attributes: {
-      class: "prose dark:prose-invert max-w-none p-6 focus:outline-none min-h-[297mm]",
+      class: "prose dark:prose-invert max-w-none p-6 focus:outline-none min-h-[297mm] break-words",
     },
   },
 });
@@ -149,54 +151,74 @@ function submit() {
                 <InputError :message="form.errors.name" />
               </div>
 
+              <div>
+                <Label for="description">Descripción</Label>
+                <textarea id="description" v-model="form.description" placeholder="Añade una breve descripción de la plantilla" rows="3" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"></textarea>
+                <InputError :message="form.errors.description" />
+              </div>
+
               <!-- Toolbar -->
               <div v-if="editor" class="flex flex-wrap items-center gap-2 border p-2 rounded-md bg-gray-50 dark:bg-gray-800 sticky top-0 z-10">
-                <!-- Botones y selects del editor (igual que antes) -->
-                <Button size="sm" type="button" @click="editor.chain().focus().toggleBold().run()" :variant="editor?.isActive('bold') ? 'default' : 'outline'">B</Button>
-                <Button size="sm" type="button" @click="editor.chain().focus().toggleItalic().run()" :variant="editor?.isActive('italic') ? 'default' : 'outline'">I</Button>
-                <Button size="sm" type="button" @click="editor.chain().focus().toggleUnderline().run()" :variant="editor?.isActive('underline') ? 'default' : 'outline'">U</Button>
-                <Button size="sm" type="button" @click="editor.chain().focus().toggleStrike().run()" :variant="editor?.isActive('strike') ? 'default' : 'outline'">S</Button>
+                <!-- Text Formatting -->
+                <div class="flex items-center gap-2 border-r pr-2">
+                  <Button size="sm" type="button" @click="editor.chain().focus().toggleBold().run()" :variant="editor?.isActive('bold') ? 'default' : 'outline'">B</Button>
+                  <Button size="sm" type="button" @click="editor.chain().focus().toggleItalic().run()" :variant="editor?.isActive('italic') ? 'default' : 'outline'">I</Button>
+                  <Button size="sm" type="button" @click="editor.chain().focus().toggleUnderline().run()" :variant="editor?.isActive('underline') ? 'default' : 'outline'">U</Button>
+                  <Button size="sm" type="button" @click="editor.chain().focus().toggleStrike().run()" :variant="editor?.isActive('strike') ? 'default' : 'outline'">S</Button>
+                </div>
 
-                <select class="ml-2 border rounded px-2 py-1 text-sm" @change="editor.chain().focus().toggleHeading({ level: parseInt($event.target.value) }).run()">
+                <!-- Headings -->
+                <select class="border rounded px-2 py-1 text-sm" @change="editor.chain().focus().toggleHeading({ level: parseInt($event.target.value) }).run()">
                   <option value="0">Párrafo</option>
                   <option value="1">Título 1</option>
                   <option value="2">Título 2</option>
                   <option value="3">Título 3</option>
                 </select>
 
-                <Button size="sm" type="button" @click="editor.chain().focus().toggleBulletList().run()" :variant="editor?.isActive('bulletList') ? 'default' : 'outline'">• Lista</Button>
-                <Button size="sm" type="button" @click="editor.chain().focus().toggleOrderedList().run()" :variant="editor?.isActive('orderedList') ? 'default' : 'outline'">1. Lista</Button>
-                <Button size="sm" type="button" @click="editor.chain().focus().toggleBlockquote().run()" :variant="editor?.isActive('blockquote') ? 'default' : 'outline'">❝</Button>
+                <!-- Lists & Blockquote -->
+                <div class="flex items-center gap-2 border-r pr-2">
+                  <Button size="sm" type="button" @click="editor.chain().focus().toggleBulletList().run()" :variant="editor?.isActive('bulletList') ? 'default' : 'outline'">• Lista</Button>
+                  <Button size="sm" type="button" @click="editor.chain().focus().toggleOrderedList().run()" :variant="editor?.isActive('orderedList') ? 'default' : 'outline'">1. Lista</Button>
+                  <Button size="sm" type="button" @click="editor.chain().focus().toggleBlockquote().run()" :variant="editor?.isActive('blockquote') ? 'default' : 'outline'">❝</Button>
+                </div>
 
-                <Button size="sm" type="button" @click="editor.chain().focus().setTextAlign('left').run()" :variant="editor?.isActive({ textAlign: 'left' }) ? 'default' : 'outline'">⬅</Button>
-                <Button size="sm" type="button" @click="editor.chain().focus().setTextAlign('center').run()" :variant="editor?.isActive({ textAlign: 'center' }) ? 'default' : 'outline'">⬍</Button>
-                <Button size="sm" type="button" @click="editor.chain().focus().setTextAlign('right').run()" :variant="editor?.isActive({ textAlign: 'right' }) ? 'default' : 'outline'">➡</Button>
+                <!-- Text Alignment -->
+                <div class="flex items-center gap-2 border-r pr-2">
+                  <Button size="sm" type="button" @click="editor.chain().focus().setTextAlign('left').run()" :variant="editor?.isActive({ textAlign: 'left' }) ? 'default' : 'outline'">⬅</Button>
+                  <Button size="sm" type="button" @click="editor.chain().focus().setTextAlign('center').run()" :variant="editor?.isActive({ textAlign: 'center' }) ? 'default' : 'outline'">⬍</Button>
+                  <Button size="sm" type="button" @click="editor.chain().focus().setTextAlign('right').run()" :variant="editor?.isActive({ textAlign: 'right' }) ? 'default' : 'outline'">➡</Button>
+                </div>
 
-                <input type="color" @input="editor.chain().focus().setColor($event.target.value).run()" class="ml-2 w-8 h-8 border rounded cursor-pointer" />
+                <!-- Color & Font -->
+                <div class="flex items-center gap-2 border-r pr-2">
+                  <input type="color" @input="editor.chain().focus().setColor($event.target.value).run()" class="w-8 h-8 border rounded cursor-pointer" />
+                  <select class="border rounded px-2 py-1 text-sm" @change="editor.chain().focus().setFontFamily($event.target.value).run()">
+                    <option value="Arial">Arial</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Verdana">Verdana</option>
+                  </select>
+                  <select class="border rounded px-2 py-1 text-sm" @change="editor.chain().focus().setMark('textStyle', { fontSize: $event.target.value }).run()">
+                    <option value="12px">12</option>
+                    <option value="14px">14</option>
+                    <option value="16px">16</option>
+                    <option value="18px">18</option>
+                    <option value="24px">24</option>
+                    <option value="32px">32</option>
+                  </select>
+                </div>
 
-                <select class="ml-2 border rounded px-2 py-1 text-sm" @change="editor.chain().focus().setFontFamily($event.target.value).run()">
-                  <option value="Arial">Arial</option>
-                  <option value="Georgia">Georgia</option>
-                  <option value="Times New Roman">Times New Roman</option>
-                  <option value="Courier New">Courier New</option>
-                  <option value="Verdana">Verdana</option>
-                </select>
-
-                <select class="ml-2 border rounded px-2 py-1 text-sm" @change="editor.chain().focus().setMark('textStyle', { fontSize: $event.target.value }).run()">
-                  <option value="12px">12</option>
-                  <option value="14px">14</option>
-                  <option value="16px">16</option>
-                  <option value="18px">18</option>
-                  <option value="24px">24</option>
-                  <option value="32px">32</option>
-                </select>
-
-                <div class="flex items-center gap-2 ml-2">
-                  <input type="text" v-model="tableSize" placeholder="2x2" class="border rounded px-2 py-1 text-sm w-16" />
+                <!-- Table -->
+                <div class="flex items-center gap-2 border-r pr-2">
+                  <input type="number" v-model="tableSize.rows" placeholder="Filas" class="border rounded px-2 py-1 text-sm w-16" min="1" />
+                  <span class="text-gray-500">x</span>
+                  <input type="number" v-model="tableSize.cols" placeholder="Columnas" class="border rounded px-2 py-1 text-sm w-16" min="1" />
                   <Button size="sm" type="button" @click="insertTable">Tabla</Button>
                 </div>
 
-                <div class="flex items-center gap-2 ml-2">
+                <!-- Page & Image -->
+                <div class="flex items-center gap-2">
                   <Button size="sm" type="button" @click="addPage">Añadir Hoja</Button>
                   <Input v-model="imageUrl" placeholder="URL imagen" class="w-32" />
                   <Button size="sm" type="button" @click="insertImage(imageUrl.value)">Insertar Imagen</Button>
@@ -226,7 +248,7 @@ function submit() {
               <ul class="space-y-2">
                 <li v-for="field in form.fields" :key="field.name" class="flex items-center justify-between bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-md">
                   <div>
-                    <span v-html="'{{ ' + field.name + ' }}'"></span> — <em>{{ field.type }}</em>
+                    <span v-html="'{{ ' + field.name + ' }}'" :title="'Esta variable se reemplazará con su valor al generar el documento.'"></span> — <em>{{ field.type }}</em>
                   </div>
                   <div class="flex gap-2">
                     <Button variant="outline" size="sm" type="button" @click="insertField(field.name)">Insertar</Button>

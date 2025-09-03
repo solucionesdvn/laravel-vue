@@ -13,7 +13,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import InputError from "@/components/InputError.vue";
-import { type BreadcrumbItem } from "@/types";
+import { type BreadcrumbItem, type DocumentTemplate } from "@/types";
 
 import { ref } from "vue";
 
@@ -29,12 +29,7 @@ import Image from "@tiptap/extension-image";
 
 // Props
 const props = defineProps<{
-  template: {
-    id: number;
-    name: string;
-    content: string;
-    fields: { name: string; type: string }[] | string[];
-  };
+  template: DocumentTemplate;
 }>();
 
 // Breadcrumbs
@@ -55,10 +50,9 @@ const fieldTypes = [
 // Formulario
 const form = useForm({
   name: props.template.name,
+  description: props.template.description ?? '',
   content: props.template.content,
-  fields: Array.isArray(props.template.fields)
-    ? props.template.fields.map(f => typeof f === "string" ? { name: f, type: "text" } : f)
-    : [],
+  fields: props.template.fields ?? [],
 });
 
 // Variables dinámicas
@@ -168,6 +162,12 @@ function submit() {
                 <InputError :message="form.errors.name" />
               </div>
 
+              <div>
+                <Label for="description">Descripción</Label>
+                <textarea id="description" v-model="form.description" placeholder="Añade una breve descripción de la plantilla" rows="3" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"></textarea>
+                <InputError :message="form.errors.description" />
+              </div>
+
               <!-- Toolbar igual que en Create.vue -->
               <div v-if="editor" class="flex flex-wrap items-center gap-2 border p-2 rounded-md bg-gray-50 dark:bg-gray-800 sticky top-0 z-10">
                 <!-- Botones y selects del editor (igual que antes) -->
@@ -224,7 +224,7 @@ function submit() {
 
               <!-- Editor Hoja -->
               <div class="flex justify-center bg-gray-200 dark:bg-gray-900 p-6">
-                <div class="bg-white dark:bg-gray-800 shadow-md border rounded-md w-[210mm] min-h-[297mm] p-10">
+                <div class="bg-white dark:bg-gray-800 shadow-md border rounded-md w-[210mm] min-h-[297mm] p-10 break-words">
                   <EditorContent :editor="editor" />
                 </div>
               </div>
