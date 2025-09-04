@@ -376,6 +376,11 @@ Route::resource('submitted-documents', SubmittedDocumentController::class)
     ->parameters(['submitted-documents' => 'id'])
     ->middleware(['auth', 'permission:submitted-documents.view|submitted-documents.edit|submitted-documents.delete']);
 
+// Ruta para exportar un documento enviado a PDF
+Route::get('submitted-documents/{id}/export-pdf', [SubmittedDocumentController::class, 'exportPdf'])
+    ->name('submitted-documents.export.pdf')
+    ->middleware(['auth', 'permission:submitted-documents.view']);
+
 
 
 require __DIR__.'/settings.php';

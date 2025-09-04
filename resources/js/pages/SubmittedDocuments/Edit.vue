@@ -1,31 +1,36 @@
-<script setup lang="ts"> 
+
+<script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { useForm, Head } from '@inertiajs/vue3'
 import { computed } from 'vue'
-import type { DocumentTemplate, BreadcrumbItem } from '@/types'
+import type { SubmittedDocument, BreadcrumbItem } from '@/types'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-// ✅ Props desde el backend
-const { template } = defineProps<{ template: DocumentTemplate }>()
+// ✅ Props: Recibimos el documento enviado, que incluye la plantilla y los datos
+const { submittedDocument } = defineProps<{ submittedDocument: SubmittedDocument }>()
 
+const template = submittedDocument.document_template;
+
+// ✅ Breadcrumbs para la página de edición
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Documentos Enviados', href: route('submitted-documents.index') },
-    { title: `Llenar: ${template.name}`, href: route('submitted-documents.create', template.id) }
+    { title: `Editar: ${template.name}`, href: route('submitted-documents.edit', submittedDocument.id) }
 ];
 
-// ✅ Inicializamos el formulario de Inertia con keys planos tipo "data.campo"
-const initialFormValues: Record<string, string> = {}
+// ✅ Inicializamos el formulario con los datos existentes
+const initialFormValues: Record<string, any> = {};
 if (Array.isArray(template.fields)) {
   template.fields.forEach((field) => {
-    initialFormValues[`data.${field.name}`] = ''
-  })
+    // Usamos los datos de submittedDocument.data, con un fallback a ''
+    initialFormValues[`data.${field.name}`] = submittedDocument.data[field.name] || '';
+  });
 }
-const form = useForm(initialFormValues)
+const form = useForm(initialFormValues);
 
-// Helpers
+// Helpers (sin cambios)
 function escapeRegex(str: string) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return str.replace(/[.*+?^${}()|[\\]/g, '\$&')
 }
 function escapeHtml(str: string) {
   return String(str)
@@ -35,13 +40,13 @@ function escapeHtml(str: string) {
     .replace(/>/g, '&gt;')
 }
 
-// ✅ Vista previa en tiempo real
+// ✅ Vista previa en tiempo real (sin cambios en la lógica)
 const renderedContent = computed(() => {
   let content = template.content ?? ''
   if (Array.isArray(template.fields)) {
     template.fields.forEach((field) => {
       const key = `data.${field.name}`
-      const re = new RegExp(String.raw`{{\s*${escapeRegex(field.name)}\s*}}`, 'g')
+      const re = new RegExp(String.raw`{{ \s*${escapeRegex(field.name)}\s* }}`, 'g')
       const value = form[key]
       const safe =
         value?.trim()
@@ -53,14 +58,14 @@ const renderedContent = computed(() => {
   return content
 })
 
-// ✅ Enviar datos al backend
+// ✅ Enviar datos al backend para actualizar
 const submit = () => {
-  form.post(route('submitted-documents.store', template.id))
+  form.put(route('submitted-documents.update', submittedDocument.id));
 }
 </script>
 
-'''<template>
-  <Head :title="`Llenar: ${template.name}`" />
+<template>
+  <Head :title="`Editar: ${template.name}`" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="py-8">
@@ -72,7 +77,7 @@ const submit = () => {
           class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6"
         >
           <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-            Complete los campos para la plantilla: {{ template.name }}
+            Editando el documento basado en: {{ template.name }}
           </h3>
 
           <form @submit.prevent="submit" class="space-y-4">
@@ -81,7 +86,6 @@ const submit = () => {
                 {{ field.name.replace(/_/g, ' ') }}
               </Label>
 
-              <!-- Input genérico -->
               <Input
                 v-if="field.type !== 'textarea'"
                 :id="field.name"
@@ -90,7 +94,6 @@ const submit = () => {
                 class="w-full"
               />
 
-              <!-- Textarea -->
               <textarea
                 v-else
                 :id="field.name"
@@ -98,7 +101,6 @@ const submit = () => {
                 class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
               ></textarea>
 
-              <!-- Errores -->
               <div
                 v-if="form.errors[`data.${field.name}`]"
                 class="text-red-500 text-sm mt-1"
@@ -112,7 +114,7 @@ const submit = () => {
               class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50"
               :disabled="form.processing"
             >
-              Guardar Documento
+              Actualizar Documento
             </button>
           </form>
         </div>
@@ -132,4 +134,3 @@ const submit = () => {
     </div>
   </AppLayout>
 </template>
-'''

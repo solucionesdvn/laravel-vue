@@ -2,33 +2,49 @@
 import AppSidebarLayout from '@/layouts/app/AppSidebarLayout.vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import type { SubmittedDocument } from '@/types';
+import type { SubmittedDocument, BreadcrumbItem } from '@/types';
 import { computed } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, Head } from '@inertiajs/vue3';
 import { Printer, ArrowLeft } from 'lucide-vue-next';
 
 const props = defineProps({
     submittedDocument: Object as () => SubmittedDocument
 });
 
-// Genera el contenido final del documento reemplazando las variables
+const template = props.submittedDocument.document_template;
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Documentos Enviados', href: route('submitted-documents.index') },
+    { title: `Ver: ${template?.name || 'Documento'}` }
+];
+
+// Helpers para el renderizado seguro
+function escapeRegex(str: string) {
+  return str.replace(/[.*+?^${}()|[\\]/g, '\\$&');
+}
+function escapeHtml(str: string) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// Lógica de renderizado mejorada
 const renderedContent = computed(() => {
-    let content = props.submittedDocument.document_template?.content || '';
+    let content = template?.content || '';
     const data = props.submittedDocument.data || {};
 
+    // Primero, reemplazamos los placeholders con los datos existentes
     for (const key in data) {
-        const placeholder = `{{${key}}}`;
+        const re = new RegExp(String.raw`{{\s*${escapeRegex(key)}\s*}}`, 'g');
         const value = data[key];
-        
-        if (typeof value === 'object' && value !== null) {
-            for (const subKey in value) {
-                const subPlaceholder = `{{${key}.${subKey}}}`;
-                content = content.replace(new RegExp(subPlaceholder.replace(/([{}])/g, '\\$1'), 'g'), value[subKey] || subPlaceholder);
-            }
-        } else {
-            content = content.replace(new RegExp(placeholder.replace(/([{}])/g, '\\$1'), 'g'), value || placeholder);
-        }
+        content = content.replace(re, escapeHtml(String(value)));
     }
+
+    // Luego, los placeholders que queden se marcan como no llenados
+    content = content.replace(/{{(.*?)}}/g, '<span class="text-red-500 italic">[Campo no llenado: $1]</span>');
+    
     return content;
 });
 
@@ -39,10 +55,12 @@ const printDocument = () => {
 </script>
 
 <template>
-    <AppSidebarLayout>
+    <Head :title="`Ver: ${template?.name || 'Documento'}`" />
+
+    <AppSidebarLayout :breadcrumbs="breadcrumbs">
         <div class="py-12">
             <div class="mx-auto max-w-4xl sm:px-6 lg:px-8">
-                <div class="mb-6 flex justify-between items-center">
+                <div class="mb-6 flex justify-between items-center print:hidden">
                     <Button as-child variant="outline">
                         <Link :href="route('submitted-documents.index')">
                             <ArrowLeft class="mr-2 h-4 w-4" />
@@ -55,11 +73,11 @@ const printDocument = () => {
                     </Button>
                 </div>
 
-                <Card class="shadow-lg">
-                    <CardHeader>
+                <Card class="shadow-lg printable-content">
+                    <CardHeader class="print:hidden">
                         <CardTitle>Vista del Documento</CardTitle>
                         <CardDescription>
-                            Plantilla usada: <strong>{{ submittedDocument.document_template?.name }}</strong>
+                            Plantilla usada: <strong>{{ template?.name }}</strong>
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -69,21 +87,28 @@ const printDocument = () => {
             </div>
         </div>
     </AppSidebarLayout>
-
-    <style>
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            .printable-content, .printable-content * {
-                visibility: visible;
-            }
-            .printable-content {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
-        }
-    </style>
 </template>
+
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .printable-content, .printable-content * {
+            visibility: visible;
+        }
+        .printable-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            border: none;
+            box-shadow: none;
+        }
+        .prose {
+            background-color: transparent !important;
+        }
+    }
+</style>
