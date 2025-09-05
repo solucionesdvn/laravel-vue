@@ -351,6 +351,10 @@ Route::resource("document-templates", DocumentTemplateController::class)
     ->only(['destroy'])
     ->middleware("permission:document-templates.delete");
 
+Route::post('document-templates/{id}/duplicate', [DocumentTemplateController::class, 'duplicate'])
+    ->name('document-templates.duplicate')
+    ->middleware('permission:document-templates.create');
+
 Route::resource("document-templates", DocumentTemplateController::class)
     ->only(['index', 'show'])
     ->middleware("permission:document-templates.create|document-templates.edit|document-templates.delete|document-templates.view");
@@ -380,6 +384,10 @@ Route::resource('submitted-documents', SubmittedDocumentController::class)
 Route::get('submitted-documents/{id}/export-pdf', [SubmittedDocumentController::class, 'exportPdf'])
     ->name('submitted-documents.export.pdf')
     ->middleware(['auth', 'permission:submitted-documents.view']);
+
+// --- Rutas Públicas para Documentos Enviados ---
+Route::get('/public/submitted-documents/{token}', [SubmittedDocumentController::class, 'publicShow'])->name('public.submitted-documents.show');
+Route::get('/public/submitted-documents/pdf/{token}', [SubmittedDocumentController::class, 'publicPdf'])->name('public.submitted-documents.pdf');
 
 
 

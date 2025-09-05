@@ -26,6 +26,7 @@ class SubmittedDocumentController extends Controller
                 'created_at' => $doc->created_at,
                 'document_template' => $doc->template, // Cargar explícitamente la relación
                 'submitted_by_user' => $doc->submittedBy, // Cargar explícitamente la relación
+                'token' => $doc->token,
             ])
             ->withQueryString();
 
@@ -136,6 +137,67 @@ class SubmittedDocumentController extends Controller
     {
         $submittedDocument = SubmittedDocument::with('template')->findOrFail($id);
         $this->authorizeSubmittedDocument($submittedDocument);
+
+        $template = $submittedDocument->template;
+        $content = $template->content;
+        $data = $submittedDocument->data;
+
+        // Reemplazar placeholders con los datos
+        foreach ($data as $key => $value) {
+            $content = str_replace("{{{$key}}}", htmlspecialchars((string)$value), $content);
+        }
+
+        // Limpiar placeholders que no fueron llenados
+        $content = preg_replace('/{{(.*?)}}/', '', $content);
+
+        // Estructura HTML básica para el PDF
+        $html = <<<HTML
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{$template->name}</title>
+    <style>
+        body { font-family: DejaVu Sans, sans-serif; font-size: 14px; }
+    </style>
+</head>
+<body>
+    {$content}
+</body>
+</html>
+HTML;
+
+        $pdf = Pdf::loadHTML($html);
+        return $pdf->stream('documento-' . $submittedDocument->id . '.pdf');
+    }
+
+    /**
+     * Muestra una versión pública del documento enviado.
+     */
+    public function publicShow($token)
+    {
+        $submittedDocument = SubmittedDocument::where('token', $token)->firstOrFail();
+
+        // Ensure the template relationship is loaded
+        $submittedDocument->load('template');
+
+        // If template is null, it means the related template was deleted.
+        // We should handle this gracefully, e.g., abort or redirect.
+        if (is_null($submittedDocument->template)) {
+            abort(404, 'Document template not found for this submitted document.');
+        }
+
+        return Inertia::render('SubmittedDocuments/PublicShow', [
+            'submittedDocument' => $submittedDocument->toArray(),
+        ]);
+    }
+
+    /**
+     * Exporta la versión pública del documento enviado como PDF.
+     */
+    public function publicPdf($token)
+    {
+        $submittedDocument = SubmittedDocument::where('token', $token)->firstOrFail();
 
         $template = $submittedDocument->template;
         $content = $template->content;

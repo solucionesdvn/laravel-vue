@@ -129,6 +129,23 @@ class DocumentTemplateController extends Controller
     }
 
     /**
+     * Duplicate the specified resource.
+     */
+    public function duplicate(Request $request, $id)
+    {
+        $originalTemplate = DocumentTemplate::findOrFail($id);
+        $this->authorizeTemplate($originalTemplate);
+
+        $newTemplate = $originalTemplate->replicate();
+        $newTemplate->name = $originalTemplate->name . ' (Copia)';
+        $newTemplate->save();
+
+        return redirect()
+            ->route('document-templates.index')
+            ->with('success', 'Plantilla duplicada correctamente.');
+    }
+
+    /**
      * Verifica que la plantilla pertenezca a la empresa del usuario autenticado.
      */
     private function authorizeTemplate(DocumentTemplate $documentTemplate)

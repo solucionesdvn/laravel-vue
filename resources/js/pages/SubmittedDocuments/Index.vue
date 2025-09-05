@@ -3,13 +3,14 @@ import AppSidebarLayout from '@/layouts/app/AppSidebarLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Eye, Search, Pencil, FileText } from 'lucide-vue-next';
+import { Eye, Search, Pencil, FileText, Link2, Printer, X } from 'lucide-vue-next';
 import { Link, Head } from '@inertiajs/vue3';
 import type { SubmittedDocument, Paginated, DocumentTemplate } from '@/types';
 import { format } from 'date-fns';
 import type { BreadcrumbItem } from '@/types';
 import { ref, computed } from 'vue';
 import { Input } from '@/components/ui/input';
+import QrcodeVue from 'qrcode.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Documentos Enviados', href: route('submitted-documents.index') }
@@ -34,6 +35,33 @@ const filteredTemplates = computed(() => {
         template.name.toLowerCase().includes(templateSearch.value.toLowerCase())
     );
 });
+
+// Lógica para compartir
+const activeShareMenu = ref<number | null>(null);
+const origin = typeof window !== 'undefined' ? window.location.origin : '';
+
+function copyPublicLink(token: string) {
+  const url = route('public.submitted-documents.show', token);
+  navigator.clipboard.writeText(url);
+  alert('Enlace copiado al portapapeles!');
+}
+
+function toggleShareMenu(docId: number) {
+    if (activeShareMenu.value === docId) {
+        activeShareMenu.value = null;
+    } else {
+        activeShareMenu.value = docId;
+    }
+}
+
+// Lógica para el modal de vista previa de PDF
+const showPdfModal = ref(false);
+const pdfUrl = ref('');
+
+function openPdfPreview(token: string) {
+  pdfUrl.value = route('public.submitted-documents.pdf', token);
+  showPdfModal.value = true;
+}
 </script>
 
 '''<template>
@@ -44,7 +72,7 @@ const filteredTemplates = computed(() => {
             <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
                 <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Documentos Cliente</h1>
             </div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-1 gap-6">
                 <!-- Existing Card for Submitted Documents -->
                 <Card>
                     <CardHeader>
@@ -61,35 +89,59 @@ const filteredTemplates = computed(() => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
+                                <template v-for="doc in submittedDocuments.data" :key="doc.id">
+                                    <TableRow>
+                                        <TableCell>
+                                            <span class="font-medium">{{ doc.document_template?.name || 'Plantilla eliminada' }}</span>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span class="text-muted-foreground">{{ doc.submitted_by_user?.name || 'Usuario no disponible' }}</span>
+                                        </TableCell>
+                                        <TableCell>{{ formatDate(doc.created_at) }}</TableCell>
+                                        <TableCell class="px-6 py-4 flex flex-col gap-2">
+                                            <div class="flex flex-wrap gap-2">
+                                                <Button as-child size="sm" class="bg-yellow-500 text-white hover:bg-yellow-700">
+                                                    <Link :href="route('submitted-documents.show', doc.id)">
+                                                        <Eye class="h-4 w-4" />
+                                                    </Link>
+                                                </Button>
+                                                <Button as-child size="sm" class="bg-blue-500 text-white hover:bg-blue-700">
+                                                    <Link :href="route('submitted-documents.edit', doc.id)">
+                                                        <Pencil class="h-4 w-4" />
+                                                    </Link>
+                                                </Button>
+                                                <Button as-child size="sm" class="bg-red-600 text-white hover:bg-red-700">
+                                                    <a :href="route('submitted-documents.export.pdf', doc.id)" target="_blank">
+                                                        <FileText class="h-4 w-4" />
+                                                    </a>
+                                                </Button>
+                                                <Button size="sm" class="bg-gray-500 text-white hover:bg-gray-700" @click="toggleShareMenu(doc.id)">
+                                                    <Link2 class="h-4 w-4" />
+                                                </Button>
+                                            </div>
+
+                                            <!-- Share Menu -->
+                                            <div v-if="activeShareMenu === doc.id" class="mt-2">
+                                                <QrcodeVue
+                                                    :value="route('public.submitted-documents.show', doc.token)"
+                                                    :size="128"
+                                                    level="M"
+                                                    render-as="svg"
+                                                />
+                                                <div class="mt-2 flex gap-2 flex-wrap">
+                                                    <Button size="sm" @click="copyPublicLink(doc.token)">Copiar enlace</Button>
+                                                    <Button as="a" size="sm" :href="`https://wa.me/?text=${encodeURIComponent(route('public.submitted-documents.show', doc.token))}`" target="_blank">WhatsApp</Button>
+                                                    <Button size="sm" @click="openPdfPreview(doc.token)">Vista previa</Button>
+                                                    <Button as="a" size="sm" :href="route('public.submitted-documents.pdf', doc.token)" target="_blank">Descargar PDF</Button>
+                                                    <Button size="sm" variant="destructive" @click="activeShareMenu = null"><X class="h-4 w-4" /></Button>
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                </template>
                                 <TableRow v-if="submittedDocuments.data.length === 0">
                                     <TableCell colspan="4" class="text-center">
                                         No hay documentos enviados todavía.
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow v-for="doc in submittedDocuments.data" :key="doc.id">
-                                    <TableCell>
-                                        <span class="font-medium">{{ doc.document_template?.name || 'Plantilla eliminada' }}</span>
-                                    </TableCell>
-                                    <TableCell>
-                                        <span class="text-muted-foreground">{{ doc.submitted_by_user?.name || 'Usuario no disponible' }}</span>
-                                    </TableCell>
-                                    <TableCell>{{ formatDate(doc.created_at) }}</TableCell>
-                                    <TableCell>
-                                        <Button as-child size="sm" class="bg-yellow-500 text-white hover:bg-yellow-700">
-                                            <Link :href="route('submitted-documents.show', doc.id)">
-                                                <Eye class="h-4 w-4" />
-                                            </Link>
-                                        </Button>
-                                        <Button as-child size="sm" class="bg-blue-500 text-white hover:bg-blue-700">
-                                            <Link :href="route('submitted-documents.edit', doc.id)">
-                                                <Pencil class="h-4 w-4" />
-                                            </Link>
-                                        </Button>
-                                        <Button as-child size="sm" class="bg-red-600 text-white hover:bg-red-700">
-                                            <a :href="route('submitted-documents.export.pdf', doc.id)" target="_blank">
-                                                <FileText class="h-4 w-4" />
-                                            </a>
-                                        </Button>
                                     </TableCell>
                                 </TableRow>
                             </TableBody>
@@ -139,6 +191,17 @@ const filteredTemplates = computed(() => {
             </div>
         </div>
     </AppSidebarLayout>
+
+    <!-- Modal Vista Previa PDF -->
+    <div v-if="showPdfModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg overflow-hidden shadow-xl w-full max-w-4xl h-[90vh] flex flex-col">
+            <div class="p-4 flex justify-between items-center border-b">
+                <h2 class="text-lg font-semibold">Vista previa del Documento</h2>
+                <Button size="sm" variant="destructive" @click="showPdfModal = false">Cerrar</Button>
+            </div>
+            <iframe :src="pdfUrl" class="flex-1 w-full" />
+        </div>
+    </div>
 </template>
 '''
 ''

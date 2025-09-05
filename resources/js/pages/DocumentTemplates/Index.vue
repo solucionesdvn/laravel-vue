@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { CirclePlus, Pencil, Trash, Search, Eye } from 'lucide-vue-next'
+import { CirclePlus, Pencil, Trash, Search, Eye, Copy } from 'lucide-vue-next'
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Plantillas de Documentos', href: '/document-templates' }
@@ -44,6 +44,14 @@ function submitSearch() {
 function deleteTemplate(id: number) {
   if (confirm('¿Estás seguro de eliminar esta plantilla?')) {
     router.delete(route('document-templates.destroy', id), {
+      preserveScroll: true
+    })
+  }
+}
+
+function duplicateTemplate(id: number) {
+  if (confirm('¿Estás seguro de duplicar esta plantilla?')) {
+    router.post(route('document-templates.duplicate', id), {}, {
       preserveScroll: true
     })
   }
@@ -108,6 +116,9 @@ function deleteTemplate(id: number) {
                   <Link :href="route('document-templates.edit', template.id)">
                     <Pencil />
                   </Link>
+                </Button>
+                <Button size="sm" class="bg-green-500 text-white hover:bg-green-700" @click="duplicateTemplate(template.id)">
+                  <Copy />
                 </Button>
                 <Button size="sm" class="bg-rose-500 text-white hover:bg-rose-700" @click="deleteTemplate(template.id)">
                   <Trash />
