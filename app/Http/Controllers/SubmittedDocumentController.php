@@ -7,9 +7,18 @@ use App\Models\SubmittedDocument;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
 
 class SubmittedDocumentController extends Controller
 {
+    /**
+     * Muestra la página de éxito después de un envío público.
+     */
+    public function publicSuccess()
+    {
+        return Inertia::render('SubmittedDocuments/PublicSuccess');
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -125,13 +134,26 @@ class SubmittedDocumentController extends Controller
             'data' => $validated['data'],
         ]);
 
-        return redirect()
-            ->route('submitted-documents.show', $submittedDocument->id)
-            ->with('success', 'Documento actualizado exitosamente.');
+        return back()->with('success', 'Documento actualizado exitosamente.');
     }
 
     /**
-     * Exporta el documento enviado como PDF.
+     * Regenera el token para un documento enviado.
+     */
+    public function regenerateToken($id)
+    {
+        $submittedDocument = SubmittedDocument::findOrFail($id);
+        $this->authorizeSubmittedDocument($submittedDocument);
+
+        $submittedDocument->update([
+            'token' => Str::uuid(),
+        ]);
+
+        return back()->with('success', 'Se ha generado un nuevo enlace para compartir.');
+    }
+
+    /**
+     * Obtiene las reglas de validación para una plantilla de documento.
      */
     public function exportPdf($id)
     {
@@ -188,7 +210,12 @@ HTML;
         }
 
         return Inertia::render('SubmittedDocuments/PublicShow', [
-            'submittedDocument' => $submittedDocument->toArray(),
+            'submittedDocument' => [
+                'id' => $submittedDocument->id,
+                'token' => $submittedDocument->token,
+                'data' => $submittedDocument->data,
+                'document_template' => $submittedDocument->template, // Clave renombrada para consistencia
+            ],
         ]);
     }
 
@@ -230,6 +257,32 @@ HTML;
 
         $pdf = Pdf::loadHTML($html);
         return $pdf->stream('documento-' . $submittedDocument->id . '.pdf');
+    }
+
+    /**
+     * Actualiza un documento desde el formulario público.
+     */
+    public function publicUpdate(Request $request, $token)
+    {
+        $submittedDocument = SubmittedDocument::where('token', $token)->firstOrFail();
+        $template = $submittedDocument->template;
+
+        if (!$template) {
+            abort(404, 'La plantilla para este documento no fue encontrada.');
+        }
+
+        $rules = $this->getValidationRules($template);
+
+        // Se envuelven los datos del request en la clave 'data' para que coincida con las reglas de validación.
+        $validated = validator(['data' => $request->all()], $rules)->validate();
+
+        $submittedDocument->update([
+            'data' => $validated['data'],
+            'token' => null, // Invalidar el token para que no se pueda volver a usar
+        ]);
+
+        // Redirigir a la página de éxito
+        return redirect()->route('public.submitted-documents.success');
     }
 
     /**

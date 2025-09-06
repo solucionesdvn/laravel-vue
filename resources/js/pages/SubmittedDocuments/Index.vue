@@ -121,19 +121,32 @@ function openPdfPreview(token: string) {
                                             </div>
 
                                             <!-- Share Menu -->
-                                            <div v-if="activeShareMenu === doc.id" class="mt-2">
-                                                <QrcodeVue
-                                                    :value="route('public.submitted-documents.show', doc.token)"
-                                                    :size="128"
-                                                    level="M"
-                                                    render-as="svg"
-                                                />
-                                                <div class="mt-2 flex gap-2 flex-wrap">
-                                                    <Button size="sm" @click="copyPublicLink(doc.token)">Copiar enlace</Button>
-                                                    <Button as="a" size="sm" :href="`https://wa.me/?text=${encodeURIComponent(route('public.submitted-documents.show', doc.token))}`" target="_blank">WhatsApp</Button>
-                                                    <Button size="sm" @click="openPdfPreview(doc.token)">Vista previa</Button>
-                                                    <Button as="a" size="sm" :href="route('public.submitted-documents.pdf', doc.token)" target="_blank">Descargar PDF</Button>
-                                                    <Button size="sm" variant="destructive" @click="activeShareMenu = null"><X class="h-4 w-4" /></Button>
+                                            <div v-if="activeShareMenu === doc.id" class="mt-2 p-4 border bg-gray-50 dark:bg-gray-800 rounded-md">
+                                                <div v-if="doc.token">
+                                                    <QrcodeVue
+                                                        :value="route('public.submitted-documents.show', doc.token)"
+                                                        :size="128"
+                                                        level="M"
+                                                        render-as="svg"
+                                                        class="mx-auto"
+                                                    />
+                                                    <div class="mt-4 flex gap-2 flex-wrap justify-center">
+                                                        <Button size="sm" @click="copyPublicLink(doc.token)">Copiar enlace</Button>
+                                                        <Button as="a" size="sm" :href="`https://wa.me/?text=${encodeURIComponent(route('public.submitted-documents.show', doc.token))}`" target="_blank">WhatsApp</Button>
+                                                        <Button size="sm" @click="openPdfPreview(doc.token)">Vista previa</Button>
+                                                        <Button as="a" size="sm" :href="route('public.submitted-documents.pdf', doc.token)" target="_blank">Descargar PDF</Button>
+                                                    </div>
+                                                </div>
+                                                <div v-else class="text-center">
+                                                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Este enlace ya fue utilizado. Puedes generar uno nuevo.</p>
+                                                    <Button as-child size="sm">
+                                                        <Link :href="route('submitted-documents.regenerate-token', doc.id)" method="post" as="button" preserve-scroll>
+                                                            Generar nuevo enlace
+                                                        </Link>
+                                                    </Button>
+                                                </div>
+                                                <div class="mt-4 flex justify-end">
+                                                     <Button size="sm" variant="ghost" @click="activeShareMenu = null"><X class="h-4 w-4 mr-1" /> Cerrar</Button>
                                                 </div>
                                             </div>
                                         </TableCell>

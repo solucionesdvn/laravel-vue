@@ -385,9 +385,16 @@ Route::get('submitted-documents/{id}/export-pdf', [SubmittedDocumentController::
     ->name('submitted-documents.export.pdf')
     ->middleware(['auth', 'permission:submitted-documents.view']);
 
+// Ruta para regenerar el token de un documento enviado
+Route::post('submitted-documents/{id}/regenerate-token', [SubmittedDocumentController::class, 'regenerateToken'])
+    ->name('submitted-documents.regenerate-token')
+    ->middleware(['auth', 'permission:submitted-documents.edit']);
+
 // --- Rutas Públicas para Documentos Enviados ---
 Route::get('/public/submitted-documents/{token}', [SubmittedDocumentController::class, 'publicShow'])->name('public.submitted-documents.show');
+Route::put('/public/submitted-documents/{token}', [SubmittedDocumentController::class, 'publicUpdate'])->name('public.submitted-documents.update');
 Route::get('/public/submitted-documents/pdf/{token}', [SubmittedDocumentController::class, 'publicPdf'])->name('public.submitted-documents.pdf');
+Route::get('/public/submitted-documents/success', [SubmittedDocumentController::class, 'publicSuccess'])->name('public.submitted-documents.success');
 
 
 

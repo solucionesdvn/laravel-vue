@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import type { SubmittedDocument } from '@/types';
-import { computed } from 'vue';
-import { Head } from '@inertiajs/vue3';
-import { Printer } from 'lucide-vue-next';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import type { SubmittedDocument, DocumentTemplateField } from '@/types';
+import { useForm, Head } from '@inertiajs/vue3';
 
 const props = defineProps<{
   submittedDocument: SubmittedDocument;
@@ -12,92 +12,112 @@ const props = defineProps<{
 
 const template = props.submittedDocument.document_template;
 
-// Helpers para el renderizado seguro
-function escapeRegex(str: string) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function escapeHtml(str: string) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
-// Lógica de renderizado mejorada
-const renderedContent = computed(() => {
-  let content = template?.content || '';
-  const data = props.submittedDocument.data || {};
-
-  // Primero, reemplazamos los placeholders con los datos existentes
-  for (const key in data) {
-    const re = new RegExp(String.raw`{{\s*${escapeRegex(key)}\s*}}`, 'g');
-    const value = data[key];
-    content = content.replace(re, escapeHtml(String(value)));
+// --- Inicialización Plana del Formulario ---
+const initializeData = () => {
+  const initialData: Record<string, any> = {};
+  if (template?.fields) {
+    template.fields.forEach((field: DocumentTemplateField) => {
+      initialData[field.name] = props.submittedDocument.data?.[field.name] || '';
+    });
   }
+  return initialData;
+};
 
-  // Luego, los placeholders que queden se marcan como no llenados
-  content = content.replace(
-    /{{(.*?)}}/g,
-    '<span class="text-red-500 italic">[Campo no llenado: $1]</span>'
-  );
+// El formulario ahora es plano, sin el objeto 'data' anidado.
+const form = useForm(initializeData());
+// --- Fin de la lógica de inicialización ---
 
-  return content;
-});
+const getFieldComponent = (type: string) => {
+  switch (type) {
+    case 'date':
+    case 'email':
+    case 'time':
+      return Input;
+    default:
+      return Input;
+  }
+};
 
-const printDocument = () => {
-  window.print();
+const getFieldType = (type: string) => {
+    switch (type) {
+        case 'date': return 'date';
+        case 'email': return 'email';
+        case 'time': return 'time';
+        default: return 'text';
+    }
+}
+
+const submit = () => {
+  form.put(route('public.submitted-documents.update', props.submittedDocument.token), {
+    onSuccess: () => {
+      alert('¡Documento guardado exitosamente!');
+    },
+    onError: (errors) => {
+      console.error('Errores de validación:', errors);
+      alert('Error al guardar. Por favor, revisa los campos marcados e intenta de nuevo.');
+    },
+  });
 };
 </script>
 
 <template>
-  <Head :title="`Documento: ${template?.name || 'Documento'}`" />
+  <Head :title="`Llenar: ${template?.name || 'Documento'}`" />
 
-  <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-    <div class="py-12">
-      <div class="mx-auto max-w-4xl sm:px-6 lg:px-8">
-        <div class="mb-6 flex justify-end items-center print:hidden">
-          <Button @click="printDocument">
-            <Printer class="mr-2 h-4 w-4" />
-            Imprimir
-          </Button>
-        </div>
-
-        <Card class="shadow-lg printable-content">
-          <CardContent class="p-0">
+  <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center py-12">
+    <div class="mx-auto w-full max-w-2xl sm:px-6 lg:px-8">
+      <form @submit.prevent="submit">
+        <Card class="shadow-lg">
+          <CardHeader>
+            <CardTitle>{{ template.name }}</CardTitle>
+            <CardDescription>
+              {{ template.description || 'Por favor, completa los siguientes campos.' }}
+            </CardDescription>
+          </CardHeader>
+          <CardContent class="space-y-6">
             <div
-              class="prose dark:prose-invert max-w-none p-12 border rounded-md bg-white dark:bg-gray-100 text-black"
-              v-html="renderedContent"
-            ></div>
+              v-for="field in template.fields"
+              :key="field.name"
+              class="space-y-2"
+            >
+              <Label :for="field.name">{{ field.label || field.name }}</Label>
+
+              <!-- v-model ahora apunta directamente a form[field.name] -->
+              <textarea
+                v-if="field.type === 'textarea'"
+                :id="field.name"
+                v-model="form[field.name]"
+                class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                :class="{ 'border-red-500': form.errors[field.name] }"
+              ></textarea>
+
+              <component
+                v-else
+                :is="getFieldComponent(field.type)"
+                :id="field.name"
+                :type="getFieldType(field.type)"
+                v-model="form[field.name]"
+                class="w-full"
+                :class="{ 'border-red-500': form.errors[field.name] }"
+              />
+
+              <p v-if="form.errors[field.name]" class="text-sm text-red-600">
+                {{ form.errors[field.name] }}
+              </p>
+            </div>
+
+            <div class="flex justify-end pt-4">
+              <Button type="submit" :disabled="form.processing">
+                {{ form.processing ? 'Guardando...' : 'Guardar Documento' }}
+              </Button>
+            </div>
           </CardContent>
         </Card>
+      </form>
+       <div class="mt-4 text-center text-sm text-gray-500">
+          <a :href="route('public.submitted-documents.pdf', submittedDocument.token)" target="_blank" class="underline">
+              Ver y descargar el documento en PDF
+          </a>
       </div>
     </div>
   </div>
 </template>
-
-<style>
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  .printable-content,
-  .printable-content * {
-    visibility: visible;
-  }
-  .printable-content {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    border: none;
-    box-shadow: none;
-  }
-  .prose {
-    background-color: transparent !important;
-  }
-}
-</style>
