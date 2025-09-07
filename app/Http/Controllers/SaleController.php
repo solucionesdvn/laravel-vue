@@ -65,16 +65,22 @@ class SaleController extends Controller
             return redirect()->route('cash-registers.create')->withErrors(['error' => 'Primero debe abrir una caja para poder registrar ventas.']);
         }
 
-        $categories = Category::whereHas('products', function ($query) use ($companyId) {
-                $query->where('company_id', $companyId)
-                      ->where('stock', '>', 0);
-            })
-            ->with(['products' => function ($query) use ($companyId) {
-                $query->where('company_id', $companyId)
-                      ->where('stock', '>', 0)
-                      ->select('id', 'name', 'stock', 'price', 'category_id');
-            }])
-            ->get(['id', 'name', 'color']);
+        // 1. Obtener todos los productos en stock de la compañía, con sus categorías.
+        $productsInStock = Product::where('company_id', $companyId)
+            ->where('stock', '>', 0)
+            ->with('category:id,name,color')
+            ->get(['id', 'name', 'stock', 'price', 'category_id']);
+
+        // 2. Agrupar los productos por el ID de su categoría para una búsqueda eficiente.
+        $groupedProducts = $productsInStock->groupBy('category_id');
+
+        // 3. Obtener las categorías únicas de la lista de productos.
+        $categories = $productsInStock->pluck('category')->unique('id')->values();
+
+        // 4. Adjuntar los productos agrupados a cada categoría.
+        $categories->each(function ($category) use ($groupedProducts) {
+            $category->products = $groupedProducts->get($category->id, collect());
+        });
         
         $clients = Client::where('company_id', $companyId)->get(['id', 'name']);
         $paymentMethods = PaymentMethod::where('company_id', $companyId)->get(['id', 'name']);

@@ -3,6 +3,9 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
+import { usePage } from '@inertiajs/vue3';
+import { ref, watch, onMounted } from 'vue';
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'User Edit',
@@ -23,7 +26,29 @@ const form = useForm({
     "password": "",
     "roles": props.userRoles || [],
     "company_id": props.user.company_id || null
-})
+});
+
+const showToast = ref(false);
+const toastMessage = ref("");
+
+const page = usePage();
+
+function checkFlash() {
+    if (page.props.flash && page.props.flash.success) {
+        toastMessage.value = page.props.flash.success;
+        showToast.value = true;
+        setTimeout(() => {
+            showToast.value = false;
+        }, 3000);
+    }
+}
+
+onMounted(checkFlash);
+watch(() => page.props.flash.success, checkFlash);
+
+function submit() {
+    form.put(route('users.update', props.user.id));
+}
 
 </script>
 
@@ -31,6 +56,10 @@ const form = useForm({
     <Head title="Users Edit" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
+        <!-- Toast de éxito -->
+        <div v-if="showToast" class="fixed top-5 right-5 z-50 bg-green-600 text-white px-4 py-2 rounded shadow-lg transition-all">
+            {{ toastMessage }}
+        </div>
         <div class="overflow-x-auto p-3 ">
 
             <Link 
@@ -39,7 +68,7 @@ const form = useForm({
                 
             Volver
             </Link>
-            <form  @submit.prevent="form.put(route('users.update', user.id))" class="space-y-6 mt-4 max-w-md mx-auto">
+            <form @submit.prevent="submit" class="space-y-6 mt-4 max-w-md mx-auto">
             <div class="grid gap-2">
                 <label for="name" class="text-sm leading-none font-medium select-none peer-disabled:cu">
                 Name:

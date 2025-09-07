@@ -9,8 +9,6 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
-
-
 class UserController extends Controller
 {
     /**
@@ -18,9 +16,7 @@ class UserController extends Controller
      */
     public function index()
     {
-
         return Inertia::render('Users/Index', [
-            //'users' => User::with("roles")->get()
             'users' => User::with(['roles', 'company'])->get(),
         ]);
     }
@@ -41,7 +37,6 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //dd($request->all());
         $request->validate([
             "name" => "required",
             "email" => "required|email|unique:users",
@@ -58,8 +53,7 @@ class UserController extends Controller
 
         $user->syncRoles($request->roles);
 
-        return to_route("users.index");
-
+        return to_route("users.index")->with('success', 'Usuario creado exitosamente.');
     }
 
     /**
@@ -68,7 +62,7 @@ class UserController extends Controller
     public function show(string $id)
     {
         return Inertia::render("Users/Show", [
-        "user" => User::find($id)
+            "user" => User::find($id)
         ]);
     }
 
@@ -102,15 +96,14 @@ class UserController extends Controller
         $user->email = $request->email;
         $user->company_id = $request->company_id;
 
-
         if ($request->password) {
-        $user->password = Hash::make($request->password);
+            $user->password = Hash::make($request->password);
         }
 
         $user->save();
         $user->syncRoles($request->roles);
 
-        return to_route("users.index");
+        return to_route("users.index")->with('success', 'Usuario actualizado exitosamente.');
     }
 
     /**
@@ -119,7 +112,6 @@ class UserController extends Controller
     public function destroy(string $id)
     {
         User::destroy($id);
-        return to_route("users.index");
-        //dd($id);
+        return to_route("users.index")->with('success', 'Usuario eliminado exitosamente.');
     }
 }

@@ -109,6 +109,7 @@ npm install @tiptap/extension-text-align @tiptap/extension-font-family @tiptap/e
 npm install @tiptap/core
 npm i @tiptap/extension-table @tiptap/extension-table-row @tiptap/extension-table-cell @tiptap/extension-table-header
 npm install @tiptap/extension-image
+npm install vue-sonner    ->TOASTS
 
 php artisan ziggy:generate => esto no
 

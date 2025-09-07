@@ -22,7 +22,11 @@ const form = useForm({
     "password": "",
     "roles": [],
     "company_id": null
-})
+});
+
+function submit() {
+    form.post(route('users.store'));
+}
 
 
 
@@ -40,7 +44,7 @@ const form = useForm({
                 
             Volver
             </Link>
-            <form  @submit.prevent="form.post(route('users.store'))" class="space-y-6 mt-4 max-w-md mx-auto">
+            <form @submit.prevent="submit" class="space-y-6 mt-4 max-w-md mx-auto">
             <div class="grid gap-2">
                 <label for="name" class="text-sm leading-none font-medium select-none peer-disabled:cu">
                 Name:

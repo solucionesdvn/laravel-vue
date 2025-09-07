@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { SubmittedDocument, DocumentTemplateField } from '@/types';
-import { useForm, Head } from '@inertiajs/vue3';
+import { useForm, Head, router } from '@inertiajs/vue3';
+import { Toaster, toast } from 'vue-sonner';
 
 const props = defineProps<{
   submittedDocument: SubmittedDocument;
@@ -50,11 +51,13 @@ const getFieldType = (type: string) => {
 const submit = () => {
   form.put(route('public.submitted-documents.update', props.submittedDocument.token), {
     onSuccess: () => {
-      alert('¡Documento guardado exitosamente!');
+      router.visit(route('public.submitted-documents.success'));
     },
     onError: (errors) => {
       console.error('Errores de validación:', errors);
-      alert('Error al guardar. Por favor, revisa los campos marcados e intenta de nuevo.');
+      toast.error('Error al guardar', {
+        description: 'Por favor, revisa los campos marcados e intenta de nuevo.',
+      });
     },
   });
 };
@@ -62,6 +65,7 @@ const submit = () => {
 
 <template>
   <Head :title="`Llenar: ${template?.name || 'Documento'}`" />
+  <Toaster rich-colors />
 
   <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center py-12">
     <div class="mx-auto w-full max-w-2xl sm:px-6 lg:px-8">
