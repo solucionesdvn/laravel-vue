@@ -110,6 +110,7 @@ npm install @tiptap/core
 npm i @tiptap/extension-table @tiptap/extension-table-row @tiptap/extension-table-cell @tiptap/extension-table-header
 npm install @tiptap/extension-image
 npm install vue-sonner    ->TOASTS
+npx shadcn-vue@latest add alert-dialog
 
 php artisan ziggy:generate => esto no
 
@@ -149,3 +150,4 @@ edicion o llenado del formato, para cerrar el cliclo de uso, si pudieras analiza
 carta de renuncia que funciona similar, solo que tengo una plantilla html donde se renderiza, pero dado a que el usuario va a querer modificar los formatos 
 no es viable hacerlo de esta manera, dicho modulo esta 100% funcional, entonces por el momento solo analiza: viabilidad, complejidad, y de no ser posible
 dime de una vez para optar por otros metodos
+

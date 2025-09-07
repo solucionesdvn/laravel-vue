@@ -1,4 +1,4 @@
-<?php
+'''<?php
 
 namespace App\Http\Controllers;
 
@@ -11,19 +11,26 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
         return Inertia::render('Users/Index', [
-            'users' => User::with(['roles', 'company'])->get(),
+            'filters' => $request->all('search', 'trashed'),
+            'users' => User::with(['roles', 'company'])
+                ->orderBy('name')
+                ->filter($request->only('search', 'trashed'))
+                ->paginate(10)
+                ->withQueryString()
+                ->through(fn ($user) => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'company' => $user->company,
+                    'roles' => $user->roles,
+                    'deleted_at' => $user->deleted_at,
+                ]),
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return Inertia::render("Users/Create", [
@@ -32,9 +39,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -56,9 +60,6 @@ class UserController extends Controller
         return to_route("users.index")->with('success', 'Usuario creado exitosamente.');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         return Inertia::render("Users/Show", [
@@ -66,9 +67,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         $user = User::find($id);
@@ -80,9 +78,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $request->validate([
@@ -106,12 +101,22 @@ class UserController extends Controller
         return to_route("users.index")->with('success', 'Usuario actualizado exitosamente.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(User $user)
     {
-        User::destroy($id);
-        return to_route("users.index")->with('success', 'Usuario eliminado exitosamente.');
+        $user->delete();
+        return redirect()->route('users.index')->with('success', 'Usuario enviado a la papelera.');
+    }
+
+    public function restore(User $user)
+    {
+        $user->restore();
+        return back()->with('success', 'Usuario restaurado.');
+    }
+
+    public function forceDelete(User $user)
+    {
+        $user->forceDelete();
+        return back()->with('success', 'Usuario eliminado permanentemente.');
     }
 }
+''

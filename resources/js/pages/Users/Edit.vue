@@ -3,12 +3,9 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
-import { usePage } from '@inertiajs/vue3';
-import { ref, watch, onMounted } from 'vue';
-
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'User Edit',
+        title: 'Editar Usuario',
         href: '/users',
     },
 ];
@@ -28,24 +25,6 @@ const form = useForm({
     "company_id": props.user.company_id || null
 });
 
-const showToast = ref(false);
-const toastMessage = ref("");
-
-const page = usePage();
-
-function checkFlash() {
-    if (page.props.flash && page.props.flash.success) {
-        toastMessage.value = page.props.flash.success;
-        showToast.value = true;
-        setTimeout(() => {
-            showToast.value = false;
-        }, 3000);
-    }
-}
-
-onMounted(checkFlash);
-watch(() => page.props.flash.success, checkFlash);
-
 function submit() {
     form.put(route('users.update', props.user.id));
 }
@@ -53,13 +32,9 @@ function submit() {
 </script>
 
 <template>
-    <Head title="Users Edit" />
+    <Head title="Editar Usuario" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <!-- Toast de éxito -->
-        <div v-if="showToast" class="fixed top-5 right-5 z-50 bg-green-600 text-white px-4 py-2 rounded shadow-lg transition-all">
-            {{ toastMessage }}
-        </div>
         <div class="overflow-x-auto p-3 ">
 
             <Link 
@@ -71,14 +46,14 @@ function submit() {
             <form @submit.prevent="submit" class="space-y-6 mt-4 max-w-md mx-auto">
             <div class="grid gap-2">
                 <label for="name" class="text-sm leading-none font-medium select-none peer-disabled:cu">
-                Name:
+                Nombre:
                 </label>
                 <input
                 id="name"
                 name="name"
                 v-model="form.name"
                 class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-base sha"
-                placeholder="Enter name"
+                placeholder="Ingrese el nombre"
                 />
                 <p v-if="form.errors.name" class="text-red-500 text-sm mt-1">{{form.errors.name}}</p>
             </div>
@@ -92,7 +67,7 @@ function submit() {
                 type="email"
                 v-model="form.email"
                 class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-base sha"
-                placeholder="Enter email"
+                placeholder="Ingrese el email"
                 />
                 <p v-if="form.errors.email" class="text-red-500 text-sm mt-1">{{form.errors.email}}</p>
 
@@ -122,7 +97,7 @@ function submit() {
             </div>
                 <div class="grid gap-2">
                 <label for="password" class="text-sm leading-none font-medium select-none peer-disabled:cu">
-                Password:
+                Contraseña:
                 </label>
                 <input
                 id="password"
@@ -130,13 +105,13 @@ function submit() {
                 type="password"
                 v-model="form.password"
                 class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-base sha"
-                placeholder="Enter password"
+                placeholder="Dejar en blanco para no cambiar"
                 />
                 <p v-if="form.errors.password" class="text-red-500 text-sm mt-1">{{form.errors.password}}</p>
             </div>
 
             <div class="grid gap-2">
-            <label for="email" class="text-sm leading-none font-medium select-none peer-disabled:curso">
+            <label for="roles" class="text-sm leading-none font-medium select-none peer-disabled:curso">
                 Roles:
             </label>
             <label
@@ -158,9 +133,11 @@ function submit() {
 
             <button
                 type="submit"
-                class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md tra"
+                :disabled="form.processing"
+                class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md tra disabled:opacity-50"
             >
-                Submit
+                <span v-if="form.processing">Actualizando...</span>
+                <span v-else>Actualizar</span>
             </button>
             </form>
                         

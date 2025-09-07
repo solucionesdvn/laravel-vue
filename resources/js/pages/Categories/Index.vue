@@ -16,6 +16,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Pencil, Trash, CirclePlus, Search } from 'lucide-vue-next';
 import { debounce } from 'lodash';
 
@@ -50,9 +61,7 @@ watch(
 );
 
 function deleteCategory(id: number) {
-  if (confirm("¿Está seguro de eliminar esta categoría?")) {
-    router.delete(route('categories.destroy', id));
-  }
+  router.delete(route('categories.destroy', id));
 }
 </script>
 
@@ -132,15 +141,31 @@ function deleteCategory(id: number) {
                       <Pencil class="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    class="bg-rose-500 text-white hover:bg-rose-700"
-                    v-if="can('categories.delete')"
-                    @click="deleteCategory(category.id)"
-                  >
-                    <Trash class="h-4 w-4" />
-                  </Button>
+                  <AlertDialog v-if="can('categories.delete')">
+                    <AlertDialogTrigger as-child>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        class="bg-rose-500 text-white hover:bg-rose-700"
+                      >
+                        <Trash class="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Está seguro de eliminar esta categoría?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta acción no se puede deshacer. Esto eliminará permanentemente la categoría.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction @click="deleteCategory(category.id)">
+                          Continuar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </TableCell>
             </TableRow>

@@ -75,6 +75,9 @@ Route::resource("users", UserController::class)
     ->only(['index', 'show'])
     ->middleware("permission:users.create|users.edit|users.delete|users.view");
 
+Route::put('users/{user}/restore', [UserController::class, 'restore'])->name('users.restore')->middleware('permission:users.delete');
+Route::delete('users/{user}/force-delete', [UserController::class, 'forceDelete'])->name('users.force-delete')->middleware('permission:users.delete');
+
 //Roles
 Route::resource("roles", RoleController::class);
 

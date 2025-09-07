@@ -15,6 +15,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Pencil, Trash, CirclePlus } from 'lucide-vue-next';
 
 const props = defineProps<{
@@ -30,9 +41,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 function deleteRole(id: number) {
-  if (confirm("¿Está seguro de que desea eliminar este rol?")) {
     router.delete(route('roles.destroy', id));
-  }
 }
 
 const groupPermissions = (permissions: Array<{ name: string }>) => {
@@ -117,9 +126,27 @@ const getBadgeClass = (action: string) => {
                                             <Pencil class="h-4 w-4" />
                                         </Link>
                                     </Button>
-                                    <Button size="icon" variant="outline" class="bg-rose-500 text-white hover:bg-rose-700" v-if="can('roles.delete')" @click="deleteRole(role.id)">
-                                        <Trash class="h-4 w-4" />
-                                    </Button>
+                                    <AlertDialog v-if="can('roles.delete')">
+                                        <AlertDialogTrigger as-child>
+                                            <Button size="icon" variant="outline" class="bg-rose-500 text-white hover:bg-rose-700">
+                                                <Trash class="h-4 w-4" />
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>¿Está seguro de que desea eliminar este rol?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Esta acción no se puede deshacer. Esto eliminará permanentemente el rol y sus permisos asociados.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                <AlertDialogAction @click="deleteRole(role.id)">
+                                                    Continuar
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
                                 </div>
                             </TableCell>
                         </TableRow>

@@ -18,6 +18,7 @@ withDefaults(defineProps<Props>(), {
 
 const page = usePage();
 
+/*
 watchEffect(() => {
     const successMessage = (page.props.flash as any)?.success;
     const errorMessage = (page.props.errors as any)?.error || (page.props.flash as any)?.error;
@@ -34,6 +35,7 @@ watchEffect(() => {
         });
     }
 });
+*/
 </script>
 
 <template>

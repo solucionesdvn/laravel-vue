@@ -16,6 +16,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Pencil, Trash, CirclePlus, Search } from 'lucide-vue-next';
 import { debounce } from 'lodash';
 
@@ -50,9 +61,7 @@ watch(
 );
 
 function deleteCompany(id: number) {
-  if (confirm("¿Está seguro de eliminar esta empresa?")) {
     router.delete(route('companies.destroy', id));
-  }
 }
 </script>
 
@@ -123,15 +132,31 @@ function deleteCompany(id: number) {
                       <Pencil class="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    class="bg-rose-500 text-white hover:bg-rose-700"
-                    v-if="can('companies.delete')"
-                    @click="deleteCompany(company.id)"
-                  >
-                    <Trash class="h-4 w-4" />
-                  </Button>
+                  <AlertDialog v-if="can('companies.delete')">
+                    <AlertDialogTrigger as-child>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        class="bg-rose-500 text-white hover:bg-rose-700"
+                      >
+                        <Trash class="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Está seguro de que desea eliminar esta empresa?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta acción no se puede deshacer. Esto eliminará permanentemente la empresa.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction @click="deleteCompany(company.id)">
+                          Continuar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </TableCell>
             </TableRow>

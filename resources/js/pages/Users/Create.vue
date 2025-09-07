@@ -4,8 +4,8 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'User Create',
+        {
+        title: 'Crear Usuario',
         href: '/users',
     },
 ];
@@ -33,7 +33,7 @@ function submit() {
 </script>
 
 <template>
-    <Head title="Users Create" />
+    <Head title="Crear Usuario" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="overflow-x-auto p-3 ">
@@ -47,14 +47,14 @@ function submit() {
             <form @submit.prevent="submit" class="space-y-6 mt-4 max-w-md mx-auto">
             <div class="grid gap-2">
                 <label for="name" class="text-sm leading-none font-medium select-none peer-disabled:cu">
-                Name:
+                Nombre:
                 </label>
                 <input
                 id="name"
                 name="name"
                 v-model="form.name"
                 class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-base sha"
-                placeholder="Enter name"
+                placeholder="Ingrese el nombre"
                 />
                 <p v-if="form.errors.name" class="text-red-500 text-sm mt-1">{{form.errors.name}}</p>
             </div>
@@ -68,7 +68,7 @@ function submit() {
                 type="email"
                 v-model="form.email"
                 class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-base sha"
-                placeholder="Enter email"
+                placeholder="Ingrese el email"
                 />
                 <p v-if="form.errors.email" class="text-red-500 text-sm mt-1">{{form.errors.email}}</p>
 
@@ -94,7 +94,7 @@ function submit() {
 
             <div class="grid gap-2">
                 <label for="password" class="text-sm leading-none font-medium select-none peer-disabled:cu">
-                Password:
+                Contraseña:
                 </label>
                 <input
                 id="password"
@@ -102,13 +102,13 @@ function submit() {
                 type="password"
                 v-model="form.password"
                 class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-base sha"
-                placeholder="Enter password"
+                placeholder="Ingrese la contraseña"
                 />
                 <p v-if="form.errors.password" class="text-red-500 text-sm mt-1">{{form.errors.password}}</p>
             </div>
 
             <div class="grid gap-2">
-            <label for="email" class="text-sm leading-none font-medium select-none peer-disabled:curso">
+            <label for="roles" class="text-sm leading-none font-medium select-none peer-disabled:curso">
                 Roles:
             </label>
             <label
@@ -130,9 +130,11 @@ function submit() {
 
             <button
                 type="submit"
-                class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md tra"
+                :disabled="form.processing"
+                class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md tra disabled:opacity-50"
             >
-                Submit
+                <span v-if="form.processing">Guardando...</span>
+                <span v-else>Guardar</span>
             </button>
             </form>
                         
