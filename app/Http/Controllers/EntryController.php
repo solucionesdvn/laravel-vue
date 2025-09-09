@@ -50,7 +50,6 @@ class EntryController extends Controller
     {
         $request->validate([
             'supplier_id' => 'nullable|exists:suppliers,id',
-            'date'        => 'required|date',
             'notes'       => 'nullable|string',
             'items'       => 'required|array|min:1',
             'items.*.product_id'      => 'required|exists:products,id',
@@ -73,7 +72,7 @@ class EntryController extends Controller
             $entry = Entry::create([
                 'company_id'  => $companyId,
                 'supplier_id' => $request->supplier_id,
-                'date'        => $request->date,
+                'date'        => now(),
                 'notes'       => $request->notes,
                 'created_by'  => $userId,
                 'total_cost'  => $totalCost,

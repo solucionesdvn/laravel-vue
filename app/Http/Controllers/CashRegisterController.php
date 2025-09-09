@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\CashRegister;
+use App\Models\Sale;
+use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -16,18 +18,34 @@ class CashRegisterController extends Controller
         $openRegister = CashRegister::where('company_id', $companyId)
             ->whereNull('closed_at')
             ->with('user')
+            ->with(['sales' => function ($query) {
+                $query->select('cash_register_id', 'payment_method_id', \DB::raw('SUM(total) as total_sales_by_method'))
+                      ->groupBy('cash_register_id', 'payment_method_id');
+            }])
+            ->withSum('sales', 'total')
+            ->withCount('sales')
+            ->withSum('expenses', 'amount') // Add this line
             ->first();
 
         // Get a paginated list of closed registers for history
         $closedRegisters = CashRegister::where('company_id', $companyId)
             ->whereNotNull('closed_at')
             ->with('user')
+            ->with(['sales' => function ($query) {
+                $query->select('cash_register_id', 'payment_method_id', \DB::raw('SUM(total) as total_sales_by_method'))
+                      ->groupBy('cash_register_id', 'payment_method_id');
+            }])
+            ->withSum('expenses', 'amount') // Add this line
             ->latest()
             ->paginate(10);
+
+        // Fetch payment method names for display
+        $paymentMethods = PaymentMethod::where('company_id', $companyId)->get(['id', 'name']);
 
         return Inertia::render('CashRegisters/Index', [
             'openRegister' => $openRegister,
             'closedRegisters' => $closedRegisters,
+            'paymentMethods' => $paymentMethods,
         ]);
     }
 

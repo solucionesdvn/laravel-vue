@@ -11,6 +11,7 @@ import type { BreadcrumbItem } from '@/types';
 import { ref, computed } from 'vue';
 import { Input } from '@/components/ui/input';
 import QrcodeVue from 'qrcode.vue';
+import { toast } from 'vue-sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Documentos Enviados', href: route('submitted-documents.index') }
@@ -132,7 +133,7 @@ function openPdfPreview(token: string) {
                                                     />
                                                     <div class="mt-4 flex gap-2 flex-wrap justify-center">
                                                         <Button size="sm" @click="copyPublicLink(doc.token)">Copiar enlace</Button>
-                                                        <Button as="a" size="sm" :href="`https://wa.me/?text=${encodeURIComponent(route('public.submitted-documents.show', doc.token))}`" target="_blank">WhatsApp</Button>
+                                                        <Button as="a" size="sm" :href="`https://wa.me/?text=${encodeURIComponent('Estimado/a, se ha generado un documento automatizado para usted. Por favor, acceda a él a través del siguiente enlace:')}%0A${encodeURIComponent(route('public.submitted-documents.show', doc.token))}%0A${encodeURIComponent('Tenga en cuenta que la información contenida en este documento será eliminada tras su uso para su seguridad.')}`" target="_blank">WhatsApp</Button>
                                                         <Button size="sm" @click="openPdfPreview(doc.token)">Vista previa</Button>
                                                         <Button as="a" size="sm" :href="route('public.submitted-documents.pdf', doc.token)" target="_blank">Descargar PDF</Button>
                                                     </div>
@@ -204,6 +205,8 @@ function openPdfPreview(token: string) {
             </div>
         </div>
     </AppSidebarLayout>
+
+    
 
     <!-- Modal Vista Previa PDF -->
     <div v-if="showPdfModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

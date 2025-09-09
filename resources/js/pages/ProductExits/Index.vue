@@ -15,6 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { CirclePlus, Search, Eye } from 'lucide-vue-next'
+import { format } from 'date-fns';
 
 const props = defineProps<{
   productExits: {
@@ -49,13 +50,9 @@ function submitSearch() {
   })
 }
 
-const formatDate = (value: string) => {
-    return new Date(value).toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-    })
-}
+const formatDate = (dateString: string) => {
+    return format(new Date(dateString), 'dd/MM/yyyy HH:mm');
+};
 
 const formatCurrency = (value: number | string | null) => {
     const numberValue = Number(value || 0);

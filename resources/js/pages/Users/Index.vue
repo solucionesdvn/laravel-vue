@@ -104,7 +104,7 @@ function restore(id: number) {
             <SelectValue placeholder="Filtrar por estado" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Activos</SelectItem>
+            <SelectItem value="no">Activos</SelectItem>
             <SelectItem value="only">En Papelera</SelectItem>
             <SelectItem value="with">Todos</SelectItem>
           </SelectContent>
@@ -154,8 +154,8 @@ function restore(id: number) {
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
                           <AlertDialogAction @click="forceDelete(user.id)">Confirmar</AlertDialogAction>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
@@ -183,8 +183,8 @@ function restore(id: number) {
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
                           <AlertDialogAction @click="destroy(user.id)">Confirmar</AlertDialogAction>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
@@ -197,24 +197,20 @@ function restore(id: number) {
       </div>
 
       <!-- Paginación -->
-      <div v-if="users.data.length > 0" class="mt-4 flex justify-center space-x-2">
-        <template v-for="(link, index) in users.links" :key="index">
-          <button
-            v-if="link.url"
-            :class="[ 'px-3 py-1 rounded text-sm',
-              link.active
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
-            ]"
-            @click="router.visit(link.url, { preserveScroll: true })"
-            v-html="link.label"
-          ></button>
-          <span
-            v-else
-            class="px-3 py-1 rounded text-sm text-gray-400 cursor-not-allowed"
-            v-html="link.label"
-          />
-        </template>
+      <div v-if="users.links.length > 3" class="mt-4 flex justify-center space-x-1">
+        <Link
+          v-for="(link, index) in users.links"
+          :key="index"
+          :href="link.url ?? '#'"
+          :disabled="!link.url"
+          class="px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+          :class="{
+            'bg-indigo-600 text-white pointer-events-none': link.active,
+            'text-gray-700 bg-gray-200 hover:bg-gray-300 dark:text-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600': !link.active && link.url,
+            'text-gray-400 cursor-not-allowed': !link.url
+          }"
+          v-html="link.label"
+        />
       </div>
     </div>
   </AppLayout>

@@ -7,30 +7,34 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { CirclePlus, Lock, Unlock } from 'lucide-vue-next'
+import { format } from 'date-fns';
 
-const props = defineProps<{
+const props = defineProps<{ 
   openRegister: {
     id: number
     user?: { name: string }
     opened_at: string
     opening_amount: number
     notes?: string
+    sales?: Array<{ cash_register_id: number; payment_method_id: number; total_sales_by_method: number }>
+    sales_sum_total?: number
+    sales_count?: number
+    total_expenses?: number // Add this line
   } | null
   closedRegisters: {
     data: Array<any>
     links: Array<any>
   }
+  paymentMethods: Array<{ id: number; name: string }>
 }>()
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Gestión de Caja', href: route('cash-registers.index') },
 ]
 
-const formatDate = (date: string) =>
-  new Date(date).toLocaleString('es-CO', {
-    dateStyle: 'long',
-    timeStyle: 'short',
-  })
+const formatDate = (dateString: string) => {
+    return format(new Date(dateString), 'dd/MM/yyyy HH:mm');
+};
 
 const formatMoney = (amount: number) =>
   new Intl.NumberFormat('es-CO', {
@@ -38,6 +42,24 @@ const formatMoney = (amount: number) =>
     currency: 'COP',
     minimumFractionDigits: 0,
   }).format(amount)
+
+const formattedSalesByMethod = (salesData: any[] | undefined) => {
+  if (!salesData || salesData.length === 0) {
+    return 'N/A';
+  }
+  const salesMap = new Map();
+  salesData.forEach(sale => {
+    const methodName = props.paymentMethods.find(pm => pm.id === sale.payment_method_id)?.name || `Método ${sale.payment_method_id}`;
+    salesMap.set(methodName, (salesMap.get(methodName) || 0) + sale.total_sales_by_method);
+  });
+
+  let result = '';
+  salesMap.forEach((total, name) => {
+    result += `${name}: ${formatMoney(total)}
+`;
+  });
+  return result.trim();
+};
 
 </script>
 
@@ -68,6 +90,11 @@ const formatMoney = (amount: number) =>
                 <p><span class="font-semibold">Usuario:</span> {{ openRegister.user?.name }}</p>
                 <p><span class="font-semibold">Fecha de Apertura:</span> {{ formatDate(openRegister.opened_at) }}</p>
                 <p><span class="font-semibold">Monto Inicial:</span> {{ formatMoney(openRegister.opening_amount) }}</p>
+                <p v-if="openRegister.sales_sum_total !== null"><span class="font-semibold">Consolidado Recaudado:</span> {{ formatMoney(openRegister.sales_sum_total) }}</p>
+                <p v-if="openRegister.sales_count !== undefined"><span class="font-semibold">Cantidad de Ventas:</span> {{ openRegister.sales_count }}</p>
+                <p v-if="openRegister.total_expenses !== undefined"><span class="font-semibold">Total Gastos:</span> {{ formatMoney(openRegister.total_expenses) }}</p>
+                <p v-if="openRegister.sales_sum_total !== undefined && openRegister.total_expenses !== undefined"><span class="font-semibold">Balance Total:</span> {{ formatMoney(Number(openRegister.opening_amount) + Number(openRegister.sales_sum_total || 0) - Number(openRegister.total_expenses || 0)) }}</p>
+                <p v-if="openRegister.sales && openRegister.sales.length > 0"><span class="font-semibold">Ventas por Método:</span><br><pre>{{ formattedSalesByMethod(openRegister.sales) }}</pre></p>
                 <div class="pt-4">
                     <Button as-child size="lg" v-if="can('cash-registers.close')">
                         <Link :href="route('cash-registers.close', openRegister.id)">Cerrar Caja</Link>
@@ -92,13 +119,14 @@ const formatMoney = (amount: number) =>
                 <TableCaption>Historial de cajas finalizadas</TableCaption>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>ID</TableHead>
+                        
                         <TableHead>Usuario</TableHead>
                         <TableHead>Apertura</TableHead>
                         <TableHead>Cierre</TableHead>
                         <TableHead>Monto Inicial</TableHead>
                         <TableHead>Monto Final</TableHead>
                         <TableHead>Ventas</TableHead>
+                        <TableHead>Ventas por Método</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -108,13 +136,14 @@ const formatMoney = (amount: number) =>
                         </TableCell>
                     </TableRow>
                     <TableRow v-for="register in closedRegisters.data" :key="register.id">
-                        <TableCell>{{ register.id }}</TableCell>
+                        
                         <TableCell>{{ register.user?.name || 'N/A' }}</TableCell>
                         <TableCell>{{ formatDate(register.opened_at) }}</TableCell>
                         <TableCell>{{ register.closed_at ? formatDate(register.closed_at) : '' }}</TableCell>
                         <TableCell>{{ formatMoney(register.opening_amount) }}</TableCell>
                         <TableCell>{{ formatMoney(register.closing_amount) }}</TableCell>
                         <TableCell>{{ formatMoney(register.total_sales) }}</TableCell>
+                        <TableCell><pre>{{ formattedSalesByMethod(register.sales) }}</pre></TableCell>
                     </TableRow>
                 </TableBody>
             </Table>

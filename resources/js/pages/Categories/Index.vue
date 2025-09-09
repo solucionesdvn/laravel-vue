@@ -159,10 +159,10 @@ function deleteCategory(id: number) {
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
                         <AlertDialogAction @click="deleteCategory(category.id)">
                           Continuar
                         </AlertDialogAction>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>

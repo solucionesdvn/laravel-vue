@@ -24,7 +24,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 ]
 
 const form = useForm({
-  date: new Date().toISOString().slice(0, 10),
   reason: '',
   notes: '',
   items: [] as Array<{ product_id: number | null; quantity: number }>,
@@ -73,11 +72,7 @@ const inputClass = "mt-1 flex h-9 w-full rounded-md border border-input bg-trans
                 </CardHeader>
                 <CardContent class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <Label for="date">Fecha</Label>
-                            <Input id="date" type="date" v-model="form.date" />
-                            <InputError :message="form.errors.date" />
-                        </div>
+                        
                         <div>
                             <Label for="reason">Motivo de la Salida</Label>
                             <Input id="reason" type="text" v-model="form.reason" placeholder="Ej. Merma, Uso interno" />

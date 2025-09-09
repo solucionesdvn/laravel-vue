@@ -7,6 +7,17 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Pencil, Trash, CirclePlus, Search, CheckCircle, XCircle } from 'lucide-vue-next';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { watch } from 'vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -28,11 +39,9 @@ const form = useForm({
 });
 
 const deleteItem = (id: number) => {
-  if (confirm('¿Está seguro de eliminar este método de pago?')) {
-    router.delete(route('payment-methods.destroy', id), {
-      preserveScroll: true,
-    });
-  }
+  router.delete(route('payment-methods.destroy', id), {
+    preserveScroll: true,
+  });
 };
 
 const debounce = (fn: Function, delay: number) => {
@@ -97,14 +106,32 @@ watch(
               
               <TableCell>
                 <div class="flex justify-end gap-2">
-                  <Button as-child size="icon" variant="outline" v-if="can('payment-methods.edit')">
+                  <Button as-child size="icon" class="bg-blue-500 text-white hover:bg-blue-700" v-if="can('payment-methods.edit')">
                     <Link :href="route('payment-methods.edit', item.id)">
                       <Pencil class="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button size="icon" variant="destructive" v-if="can('payment-methods.delete')" @click="deleteItem(item.id)">
-                    <Trash class="h-4 w-4" />
-                  </Button>
+                  <AlertDialog v-if="can('payment-methods.delete')">
+                    <AlertDialogTrigger as-child>
+                      <Button size="icon" variant="destructive">
+                        <Trash class="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Está seguro de eliminar este método de pago?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta acción no se puede deshacer. Esto eliminará permanentemente el método de pago.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogAction @click="deleteItem(item.id)">
+                          Confirmar
+                        </AlertDialogAction>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </TableCell>
             </TableRow>

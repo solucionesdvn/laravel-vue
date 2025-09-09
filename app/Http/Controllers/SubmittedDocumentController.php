@@ -164,9 +164,15 @@ class SubmittedDocumentController extends Controller
         $content = $template->content;
         $data = $submittedDocument->data;
 
+        // --- TEMPORARY LOGGING START ---
+        \Log::info('PDF Export Debug: Document ID ' . $id);
+        \Log::info('PDF Export Debug: Template Content: ' . $content);
+        \Log::info('PDF Export Debug: Submitted Data: ' . json_encode($data));
+        // --- TEMPORARY LOGGING END ---
+
         // Reemplazar placeholders con los datos
         foreach ($data as $key => $value) {
-            $content = str_replace("{{{$key}}}", htmlspecialchars((string)$value), $content);
+            $content = str_replace("{{ " . $key . " }}", htmlspecialchars((string)$value), $content);
         }
 
         // Limpiar placeholders que no fueron llenados
@@ -230,9 +236,15 @@ HTML;
         $content = $template->content;
         $data = $submittedDocument->data;
 
+        // --- TEMPORARY LOGGING START ---
+        \Log::info('PDF Export Debug (Public): Token ' . $token);
+        \Log::info('PDF Export Debug (Public): Template Content: ' . $content);
+        \Log::info('PDF Export Debug (Public): Submitted Data: ' . json_encode($data));
+        // --- TEMPORARY LOGGING END ---
+
         // Reemplazar placeholders con los datos
         foreach ($data as $key => $value) {
-            $content = str_replace("{{{$key}}}", htmlspecialchars((string)$value), $content);
+            $content = str_replace("{{ " . $key . " }}", htmlspecialchars((string)$value), $content);
         }
 
         // Limpiar placeholders que no fueron llenados

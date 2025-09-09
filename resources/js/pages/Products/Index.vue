@@ -13,7 +13,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { CirclePlus, Pencil, Trash, Camera, Search } from 'lucide-vue-next'
+import { CirclePlus, Pencil, Trash, Camera, Search, ClipboardList } from 'lucide-vue-next'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Productos', href: '/products' }
@@ -89,11 +100,9 @@ function updateImage() {
 }
 
 function deleteProduct(id: number) {
-  if (confirm('¿Estás seguro de eliminar este producto?')) {
-    router.delete(route('products.destroy', id), {
-      preserveScroll: true
-    })
-  }
+  router.delete(route('products.destroy', id), {
+    preserveScroll: true
+  });
 }
 
 function exportToExcel() {
@@ -158,10 +167,14 @@ function exportToExcel() {
             <TableRow v-for="product in products.data" :key="product.id">
               <TableCell class="px-6 py-4">
                 <img
-                  :src="product.image_url || 'https://via.placeholder.com/50'"
+                  v-if="product.image_url"
+                  :src="product.image_url"
                   alt="Product Image"
                   class="w-12 h-12 rounded object-cover border shadow"
                 />
+                <div v-else class="w-12 h-12 flex items-center justify-center text-gray-400 bg-gray-100 dark:bg-gray-800 rounded border text-xs text-center">
+                    Sin imagen
+                </div>
               </TableCell>
               <TableCell class="px-6 py-4">{{ product.name }}</TableCell>
               <TableCell class="px-6 py-4">{{ product.sku }}</TableCell>
@@ -173,12 +186,35 @@ function exportToExcel() {
                     <Pencil />
                   </Link>
                 </Button>
+                <Button as-child size="sm" class="bg-gray-500 text-white hover:bg-gray-700">
+                  <Link :href="route('products.kardex', product.id)">
+                    <ClipboardList />
+                  </Link>
+                </Button>
                 <Button size="sm" class="bg-yellow-500 text-white hover:bg-yellow-700" @click="openImageModal(product)">
                   <Camera />
                 </Button>
-                <Button size="sm" class="bg-rose-500 text-white hover:bg-rose-700" @click="deleteProduct(product.id)">
-                  <Trash />
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger as-child>
+                    <Button size="sm" class="bg-rose-500 text-white hover:bg-rose-700">
+                      <Trash />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Está seguro de eliminar este producto?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta acción no se puede deshacer. Esto eliminará permanentemente el producto.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogAction @click="deleteProduct(product.id)">
+                        Confirmar
+                      </AlertDialogAction>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </TableCell>
             </TableRow>
           </TableBody>

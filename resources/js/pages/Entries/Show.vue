@@ -44,7 +44,7 @@ const formatCurrency = (value: number) => {
   <Head :title="`Entrada #${entry.id}`" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="p-4 sm:p-6 max-w-4xl mx-auto">
+    <div class="p-4 sm:p-6 w-full">
       <Card class="bg-white dark:bg-gray-900 rounded-lg shadow-md">
         <CardHeader>
           <div class="flex justify-between items-center">

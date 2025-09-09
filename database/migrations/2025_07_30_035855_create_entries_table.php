@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->id();
             $table->unsignedBigInteger('company_id');
             $table->unsignedBigInteger('supplier_id')->nullable();
-            $table->date('date');
+            $table->dateTime('date');
             $table->text('notes')->nullable();
             $table->decimal('total_cost', 12, 2);
             $table->unsignedBigInteger('created_by');

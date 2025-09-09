@@ -111,6 +111,7 @@ npm i @tiptap/extension-table @tiptap/extension-table-row @tiptap/extension-tabl
 npm install @tiptap/extension-image
 npm install vue-sonner    ->TOASTS
 npx shadcn-vue@latest add alert-dialog
+npx shadcn-vue@latest add select
 
 php artisan ziggy:generate => esto no
 

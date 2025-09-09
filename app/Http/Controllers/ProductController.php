@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Supplier;
+use App\Models\EntryItem;
+use App\Models\SaleItem;
+use App\Models\ProductExitItem;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Exports\ProductsExport;
@@ -182,5 +185,96 @@ class ProductController extends Controller
             // Para depuración, devolvemos el mensaje de error exacto.
             return response()->json(['message' => $e->getMessage()], 500);
         }
+    }
+
+    public function getProductsByCategory(\App\Models\Category $category)
+    {
+        // Ensure the category belongs to the user's company for security
+        if ($category->company_id !== auth()->user()->company_id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $products = Product::where('company_id', $category->company_id)
+            ->where('category_id', $category->id)
+            ->where('stock', '>', 0)
+            ->orderBy('name')
+            ->select('id', 'name', 'sku', 'price', 'stock')
+            ->get();
+
+        return response()->json($products);
+    }
+
+    public function kardex(Product $product)
+    {
+        // Optional: Add authorization if you have a policy
+        // $this->authorize('view', $product);
+
+        // Security check
+        if ($product->company_id !== auth()->user()->company_id) {
+            abort(403);
+        }
+
+        // Fetch all movement items
+        $entryItems = \App\Models\EntryItem::where('product_id', $product->id)->with('entry:id,date')->get();
+        $saleItems = \App\Models\SaleItem::where('product_id', $product->id)->with('sale:id,date')->get();
+        $exitItems = \App\Models\ProductExitItem::where('product_id', $product->id)->with('productExit:id,date,reason')->get();
+
+        // Map entries
+        $entries = $entryItems->map(function ($item) {
+            return [
+                'date' => $item->entry->date,
+                'type' => 'Entrada',
+                'quantity_in' => $item->quantity,
+                'quantity_out' => 0,
+                'details' => 'Compra #' . $item->entry->id,
+                'url' => route('entries.show', $item->entry->id),
+            ];
+        });
+
+        // Map sales
+        $sales = $saleItems->map(function ($item) {
+            return [
+                'date' => $item->sale->date,
+                'type' => 'Venta',
+                'quantity_in' => 0,
+                'quantity_out' => $item->quantity,
+                'details' => 'Venta #' . $item->sale->id,
+                'url' => route('sales.show', $item->sale->id),
+            ];
+        });
+
+        // Map other exits
+        $exits = $exitItems->map(function ($item) {
+            return [
+                'date' => $item->productExit->date,
+                'type' => 'Ajuste Salida',
+                'quantity_in' => 0,
+                'quantity_out' => $item->quantity,
+                'details' => $item->productExit->reason,
+                'url' => route('product-exits.show', $item->productExit->id),
+            ];
+        });
+
+        // Merge, sort, and calculate balance
+        $movements = $entries->concat($sales)->concat($exits)->sortBy('date')->values();
+
+        // Recalculate balance accurately starting from the current stock and working backwards
+        $kardex = $movements->sortByDesc('date')->values();
+        $currentStock = $product->stock;
+        $balance = $currentStock;
+
+        $kardex = $kardex->map(function ($movement) use (&$balance) {
+            $movement['balance'] = $balance;
+            $balance -= ($movement['quantity_in'] - $movement['quantity_out']);
+            return $movement;
+        });
+
+        // Sort back to ascending to display chronologically
+        $kardex = $kardex->sortBy('date')->values();
+
+        return Inertia::render('Products/Kardex', [
+            'product' => $product,
+            'kardex' => $kardex,
+        ]);
     }
 }

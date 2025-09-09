@@ -14,6 +14,17 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { CirclePlus, Pencil, Trash, Search, Eye, Copy } from 'lucide-vue-next'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Plantillas de Documentos', href: '/document-templates' }
@@ -42,19 +53,15 @@ function submitSearch() {
 }
 
 function deleteTemplate(id: number) {
-  if (confirm('¿Estás seguro de eliminar esta plantilla?')) {
-    router.delete(route('document-templates.destroy', id), {
-      preserveScroll: true
-    })
-  }
+  router.delete(route('document-templates.destroy', id), {
+    preserveScroll: true
+  });
 }
 
 function duplicateTemplate(id: number) {
-  if (confirm('¿Estás seguro de duplicar esta plantilla?')) {
-    router.post(route('document-templates.duplicate', id), {}, {
-      preserveScroll: true
-    })
-  }
+  router.post(route('document-templates.duplicate', id), {}, {
+    preserveScroll: true
+  });
 }
 
 </script>
@@ -117,12 +124,48 @@ function duplicateTemplate(id: number) {
                     <Pencil />
                   </Link>
                 </Button>
-                <Button size="sm" class="bg-green-500 text-white hover:bg-green-700" @click="duplicateTemplate(template.id)">
-                  <Copy />
-                </Button>
-                <Button size="sm" class="bg-rose-500 text-white hover:bg-rose-700" @click="deleteTemplate(template.id)">
-                  <Trash />
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger as-child>
+                    <Button size="sm" class="bg-green-500 text-white hover:bg-green-700">
+                      <Copy />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Está seguro de duplicar esta plantilla?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Se creará una copia exacta de esta plantilla.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogAction @click="duplicateTemplate(template.id)">
+                        Confirmar
+                      </AlertDialogAction>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                <AlertDialog>
+                  <AlertDialogTrigger as-child>
+                    <Button size="sm" class="bg-rose-500 text-white hover:bg-rose-700">
+                      <Trash />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Está seguro de eliminar esta plantilla?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta acción no se puede deshacer. Esto eliminará permanentemente la plantilla.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogAction @click="deleteTemplate(template.id)">
+                        Confirmar
+                      </AlertDialogAction>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </TableCell>
             </TableRow>
           </TableBody>

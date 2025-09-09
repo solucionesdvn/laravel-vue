@@ -15,6 +15,10 @@ class Entry extends Model
         'created_by',
     ];
 
+    protected $casts = [
+        'date' => 'datetime',
+    ];
+
     public function items()
     {
         return $this->hasMany(EntryItem::class);

@@ -16,6 +16,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Pencil, Trash, CirclePlus, Search } from 'lucide-vue-next';
 import { debounce } from 'lodash';
 
@@ -50,9 +61,7 @@ watch(
 );
 
 function deleteClient(id: number) {
-  if (confirm("¿Está seguro de eliminar este cliente?")) {
-    router.delete(route('clients.destroy', id));
-  }
+  router.delete(route('clients.destroy', id));
 }
 </script>
 
@@ -125,15 +134,31 @@ function deleteClient(id: number) {
                       <Pencil class="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    class="bg-rose-500 text-white hover:bg-rose-700"
-                    v-if="can('clients.delete')"
-                    @click="deleteClient(client.id)"
-                  >
-                    <Trash class="h-4 w-4" />
-                  </Button>
+                  <AlertDialog v-if="can('clients.delete')">
+                    <AlertDialogTrigger as-child>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        class="bg-rose-500 text-white hover:bg-rose-700"
+                      >
+                        <Trash class="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Está seguro de eliminar este cliente?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta acción no se puede deshacer. Esto eliminará permanentemente el cliente.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogAction @click="deleteClient(client.id)">
+                          Confirmar
+                        </AlertDialogAction>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </TableCell>
             </TableRow>

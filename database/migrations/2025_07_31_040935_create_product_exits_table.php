@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('company_id');
             $table->unsignedBigInteger('user_id');
-            $table->date('date');
+            $table->dateTime('date');
             $table->string('reason'); // motivo de salida
             $table->text('notes')->nullable();
             $table->decimal('total', 12, 2)->default(0);

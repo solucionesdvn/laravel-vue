@@ -25,7 +25,6 @@ const selectedMargin = ref(30)
 
 const form = useForm({
   supplier_id: null as number | null,
-  date: new Date().toISOString().substring(0, 10),
   notes: '',
   items: [] as Array<{
     product_id: number | null
@@ -98,11 +97,7 @@ const inputClass = "mt-1 flex h-9 w-full rounded-md border border-input bg-trans
                             </select>
                             <InputError :message="form.errors.supplier_id" />
                         </div>
-                        <div>
-                            <Label for="date">Fecha</Label>
-                            <Input id="date" type="date" v-model="form.date" />
-                            <InputError :message="form.errors.date" />
-                        </div>
+                        
                     </div>
                     <div>
                         <Label for="notes">Notas</Label>

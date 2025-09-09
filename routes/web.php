@@ -17,6 +17,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\DocumentTemplateController;
 use App\Http\Controllers\SubmittedDocumentController;
+use App\Http\Controllers\ExpenseController;
 
 
 
@@ -160,6 +161,7 @@ Route::resource("payment-methods", PaymentMethodController::class)
 
 Route::get('/products/export', [ProductController::class, 'export'])->name('products.export');
 Route::get('/products/search', [ProductController::class, 'search'])->name('products.search')->middleware('auth');
+Route::get('products/{product}/kardex', [ProductController::class, 'kardex'])->name('products.kardex')->middleware('auth');
 
 
 Route::resource('products', ProductController::class)->except(['show']);
@@ -253,6 +255,9 @@ Route::resource("cash-registers", CashRegisterController::class)
     ->only(['index', 'show'])
     ->middleware("permission:cash-registers.create|cash-registers.edit|cash-registers.delete|cash-registers.view");
 
+// Gastos
+Route::resource("expenses", ExpenseController::class);
+
 
     
  //VENTAS
@@ -273,6 +278,8 @@ Route::resource("sales", SaleController::class)
 Route::resource("sales", SaleController::class)
     ->only(['index', 'show'])
     ->middleware("permission:sales.create|sales.edit|sales.delete|sales.view");
+
+Route::get('/sales/report/products-sold', [SaleController::class, 'getProductsSoldReport'])->name('sales.report.products-sold')->middleware('auth');
 
 //Clientes -
 Route::post('/clients/api-store', [ClientController::class, 'apiStore'])->name('clients.api.store')->middleware(['auth', 'permission:clients.create']);
@@ -403,3 +410,6 @@ Route::put('/public/submitted-documents/{token}', [SubmittedDocumentController::
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
+
+// API route for fetching products by category
+Route::get('/categories/{category}/products', [\App\Http\Controllers\ProductController::class, 'getProductsByCategory'])->name('categories.products')->middleware('auth');

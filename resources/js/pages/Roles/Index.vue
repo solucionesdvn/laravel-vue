@@ -140,10 +140,10 @@ const getBadgeClass = (action: string) => {
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
                                                 <AlertDialogAction @click="deleteRole(role.id)">
                                                     Continuar
                                                 </AlertDialogAction>
+                                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
                                     </AlertDialog>

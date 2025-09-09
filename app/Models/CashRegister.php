@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Expense;
 
 class CashRegister extends Model
 {
@@ -45,5 +46,10 @@ class CashRegister extends Model
     public function sales()
     {
         return $this->hasMany(Sale::class);
+    }
+
+    public function expenses()
+    {
+        return $this->hasMany(Expense::class);
     }    
 }

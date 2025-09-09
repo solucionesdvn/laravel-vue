@@ -108,6 +108,12 @@ const mainNavItems: NavItem[] = [
         permission: 'cash-registers.view',
     },
     {
+        title: 'Gastos',
+        href: '/expenses',
+        icon: Wallet,
+        permission: 'expenses.view',
+    },
+    {
         title: 'Metodos de pago',
         href: '/payment-methods',
         icon: CircleDollarSign,
@@ -123,20 +129,20 @@ const mainNavItems: NavItem[] = [
     { type: 'separator', title: 'separator-1' },
 
     {
-        title: 'Carta R',
+        title: 'Carta R Pruebas Demo',
         href: '/resignation-forms',
         icon: Files,
         permission: 'resignation-forms.view',
     },
     {
-        title: 'Docs',
+        title: 'Formatos Dinamicos',
         href: '/document-templates',
         icon: Files,
         permission: 'document-templates.view',
     },
 
     {
-        title: 'Llenar Docs',
+        title: 'Llenar documentos',
         href: '/submitted-documents',
         icon: Files,
         permission: 'submitted-documents.view',
@@ -169,7 +175,7 @@ const visibleMainNavItems = mainNavItems.filter(item => {
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
                         <Link :href="route('dashboard')">
-                            <AppLogo />
+                            <AppLogo :company-name="page.props.auth.user.company?.name" />
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>

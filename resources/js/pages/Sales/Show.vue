@@ -101,8 +101,8 @@ const formatDate = (value: string) => {
             <TableRow v-for="item in sale.items" :key="item.id">
               <TableCell class="px-6 py-4">{{ item.product?.name || 'Producto Eliminado' }}</TableCell>
               <TableCell class="px-6 py-4 text-right">{{ item.quantity }}</TableCell>
-              <TableCell class="px-6 py-4 text-right">{{ formatCurrency(item.price) }}</TableCell>
-              <TableCell class="px-6 py-4 text-right">{{ formatCurrency(item.quantity * item.price) }}</TableCell>
+              <TableCell class="px-6 py-4 text-right">{{ formatCurrency(item.unit_price) }}</TableCell>
+              <TableCell class="px-6 py-4 text-right">{{ formatCurrency(item.quantity * item.unit_price) }}</TableCell>
             </TableRow>
           </TableBody>
         </Table>

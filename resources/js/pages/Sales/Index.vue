@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
+import { ref } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { can } from '@/lib/can';
 
@@ -15,8 +16,12 @@ import {
     TableRow,
 } from '@/components/ui/table';
 
-import { CirclePlus, Eye, Trash2 } from 'lucide-vue-next';
+import { CirclePlus, Eye, Trash2, BarChart } from 'lucide-vue-next';
 import type { Sale } from '@/types'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import axios from 'axios';
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Ventas', href: '/sales' }
@@ -55,6 +60,31 @@ const formatDate = (value: string) => {
         year: 'numeric',
     })
 }
+
+const isReportModalOpen = ref(false);
+const startDate = ref(new Date().toISOString().split('T')[0]); // YYYY-MM-DD
+const endDate = ref(new Date().toISOString().split('T')[0]); // YYYY-MM-DD
+const productsSoldReport = ref<any[]>([]);
+const isLoadingReport = ref(false);
+
+async function generateReport() {
+    isLoadingReport.value = true;
+    productsSoldReport.value = [];
+    try {
+        const response = await axios.get(route('sales.report.products-sold'), {
+            params: {
+                start_date: startDate.value,
+                end_date: endDate.value,
+            },
+        });
+        productsSoldReport.value = response.data;
+    } catch (error) {
+        console.error('Error generating report:', error);
+        // Handle error, e.g., show a toast
+    } finally {
+        isLoadingReport.value = false;
+    }
+}
 </script>
 
 <template>
@@ -76,6 +106,13 @@ const formatDate = (value: string) => {
               <CirclePlus class="mr-1" /> Nueva Venta
             </Link>
           </Button>
+          <Button
+              size="sm"
+              class="bg-green-600 text-white hover:bg-green-700"
+              @click="isReportModalOpen = true"
+          >
+              Reporte de Productos
+          </Button>
         </div>
       </div>
 
@@ -86,7 +123,7 @@ const formatDate = (value: string) => {
 
           <TableHeader class="bg-gray-50 dark:bg-gray-800">
             <TableRow>
-              <TableHead class="px-6 py-3">ID</TableHead>
+              
               <TableHead class="px-6 py-3">Cliente</TableHead>
               <TableHead class="px-6 py-3">Vendedor</TableHead>
               <TableHead class="px-6 py-3 text-right">Total</TableHead>
@@ -98,7 +135,7 @@ const formatDate = (value: string) => {
 
           <TableBody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             <TableRow v-if="sales.data.length === 0">
-                <TableCell colspan="7" class="text-center py-6 text-gray-500">
+                <TableCell colspan="6" class="text-center py-6 text-gray-500">
                     No hay ventas registradas.
                 </TableCell>
             </TableRow>
@@ -107,7 +144,7 @@ const formatDate = (value: string) => {
                 :key="sale.id"
                 :class="{ 'bg-red-50 dark:bg-red-900/20 opacity-60': sale.deleted_at }"
             >
-              <TableCell class="px-6 py-4">{{ sale.id }}</TableCell>
+              
               <TableCell class="px-6 py-4">{{ sale.client?.name || 'N/A' }}</TableCell>
               <TableCell class="px-6 py-4">{{ sale.user?.name || 'N/A' }}</TableCell>
               <TableCell class="px-6 py-4 text-right">{{ formatCurrency(sale.total) }}</TableCell>
@@ -173,5 +210,61 @@ const formatDate = (value: string) => {
         </div>
       </div>
     </div>
+
+    <!-- Reporte de Productos Modal -->
+    <Dialog :open="isReportModalOpen" @update:open="isReportModalOpen = $event">
+        <DialogContent class="sm:max-w-[600px]">
+            <DialogHeader>
+                <DialogTitle>Reporte de Productos Vendidos</DialogTitle>
+            </DialogHeader>
+            <div class="grid gap-4 py-4">
+                <div class="flex items-center gap-4">
+                    <div>
+                        <Label for="start_date">Fecha Inicio</Label>
+                        <Input id="start_date" type="date" v-model="startDate" />
+                    </div>
+                    <div>
+                        <Label for="end_date">Fecha Fin</Label>
+                        <Input id="end_date" type="date" v-model="endDate" />
+                    </div>
+                    <Button @click="generateReport" :disabled="isLoadingReport">
+                        <span v-if="isLoadingReport">Generando...</span>
+                        <span v-else>Generar Reporte</span>
+                    </Button>
+                </div>
+
+                <div v-if="isLoadingReport" class="text-center py-4">
+                    Cargando reporte...
+                </div>
+                <div v-else-if="productsSoldReport.length === 0" class="text-center py-4">
+                    No hay productos vendidos en el rango de fechas seleccionado.
+                </div>
+                <div v-else class="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Producto</TableHead>
+                                <TableHead>SKU</TableHead>
+                                <TableHead class="text-right">Cantidad Total Vendida</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="product in productsSoldReport" :key="product.product_id">
+                                <TableCell>{{ product.product.name }}</TableCell>
+                                <TableCell>{{ product.product.sku }}</TableCell>
+                                <TableCell class="text-right font-bold">{{ product.total_quantity }}</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </div>
+            </div>
+            <DialogFooter>
+                <DialogClose as-child>
+                    <Button type="button" variant="secondary">Cerrar</Button>
+                </DialogClose>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
   </AppLayout>
 </template>

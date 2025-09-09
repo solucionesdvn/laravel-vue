@@ -18,6 +18,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 import { Pencil, Trash, CirclePlus, Eye, Search } from 'lucide-vue-next';
 
@@ -66,9 +77,7 @@ watch(
 );
 
 function deleteSupplier(id: number) {
-  if (confirm("¿Está seguro de eliminar este proveedor?")) {
-    router.delete(route('suppliers.destroy', id));
-  }
+  router.delete(route('suppliers.destroy', id));
 }
 </script>
 
@@ -148,14 +157,30 @@ function deleteSupplier(id: number) {
                     <Pencil />
                   </Link>
                 </Button>
-                <Button
-                  size="sm"
-                  class="bg-rose-500 text-white hover:bg-rose-700"
-                  v-if="can('suppliers.delete')"
-                  @click="deleteSupplier(supplier.id)"
-                >
-                  <Trash />
-                </Button>
+                <AlertDialog v-if="can('suppliers.delete')">
+                  <AlertDialogTrigger as-child>
+                    <Button
+                      size="sm"
+                      class="bg-rose-500 text-white hover:bg-rose-700"
+                    >
+                      <Trash />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Está seguro de eliminar este proveedor?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta acción no se puede deshacer. Esto eliminará permanentemente el proveedor.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogAction @click="deleteSupplier(supplier.id)">
+                        Confirmar
+                      </AlertDialogAction>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </TableCell>
             </TableRow>
           </TableBody>

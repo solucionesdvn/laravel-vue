@@ -102,7 +102,14 @@ class PermissionSeeder extends Seeder
             "submitted-documents.view",
             "submitted-documents.create",
             "submitted-documents.edit",
-            "submitted-documents.delete",                   
+            "submitted-documents.delete",
+   
+            "expenses.view",
+            "expenses.create",
+            "expenses.edit",
+            "expenses.delete",          
+            
+            
 
             
         ];

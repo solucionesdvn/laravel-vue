@@ -48,7 +48,6 @@ class ProductExitController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'date'    => 'required|date',
             'reason'  => 'required|string|max:255',
             'notes'   => 'nullable|string',
             'items'   => 'required|array|min:1',
@@ -65,7 +64,7 @@ class ProductExitController extends Controller
             $exit = ProductExit::create([
                 'company_id' => $companyId,
                 'user_id'    => $userId,
-                'date'       => $request->date,
+                'date'       => now(),
                 'reason'     => $request->reason,
                 'notes'      => $request->notes,
                 'total'      => 0, // Placeholder, will be updated after loop

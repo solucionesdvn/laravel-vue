@@ -24,14 +24,16 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Registrar Venta', href: null },
 ]
 
-// State for category selection
-const selectedCategoryId = ref<number | null>(null)
-
 // State for global product search
 const searchQuery = ref('')
 const searchResults = ref<any[]>([])
 const isLoadingSearch = ref(false)
 let debounceTimer: number | undefined
+
+// State for category selection
+const selectedCategoryId = ref<number | null>(null)
+const categoryProducts = ref<any[]>([])
+const isLoadingCategoryProducts = ref(false)
 
 // State for change calculation
 const amountPaid = ref<number | null>(null)
@@ -59,9 +61,27 @@ const clientForm = useForm({
     identification: '',
 })
 
-const selectedCategory = computed(() => {
-  return props.categories.find(cat => cat.id === selectedCategoryId.value)
-})
+async function selectCategory(categoryId: number) {
+  if (selectedCategoryId.value === categoryId) {
+    // Deselect category if clicked again
+    selectedCategoryId.value = null
+    categoryProducts.value = []
+    return
+  }
+
+  selectedCategoryId.value = categoryId
+  isLoadingCategoryProducts.value = true
+  categoryProducts.value = [] // Clear previous products
+
+  try {
+    const response = await axios.get(route('categories.products', { category: categoryId }))
+    categoryProducts.value = response.data
+  } catch (error) {
+    console.error('Error fetching products for category:', error)
+  } finally {
+    isLoadingCategoryProducts.value = false
+  }
+}
 
 const addToCart = (product: any) => {
   const existing = saleForm.items.find(item => item.product_id === product.id)
@@ -247,27 +267,35 @@ const inputClass = "mt-1 flex h-9 w-full rounded-md border border-input bg-trans
             </CardHeader>
             <CardContent>
                 <div class="flex flex-wrap gap-2">
-                    <Button 
+                    <Button
                         v-for="category in props.categories"
                         :key="category.id"
-                        @click="selectedCategoryId = category.id"
+                        @click="selectCategory(category.id)"
                         :style="{
                             backgroundColor: selectedCategoryId === category.id ? category.color : 'transparent',
                             borderColor: category.color,
                             color: selectedCategoryId === category.id ? 'white' : category.color
                         }"
-                        class="transition-colors duration-200"
+                        class="w-32 justify-center transition-all duration-200 hover:shadow-lg hover:scale-105"
                     >
-                    {{ category.name }}
+                        <span class="truncate">{{ category.name }}</span>
                     </Button>
                 </div>
 
-                <div v-if="selectedCategory" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4 pt-4 border-t dark:border-gray-700">
+                <div v-if="isLoadingCategoryProducts" class="mt-4 pt-4 border-t dark:border-gray-700 text-center">
+                    Cargando productos...
+                </div>
+
+                <div v-else-if="selectedCategoryId && categoryProducts.length === 0" class="mt-4 pt-4 border-t dark:border-gray-700 text-center">
+                    No hay productos en stock para esta categoría.
+                </div>
+
+                <div v-else-if="categoryProducts.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4 pt-4 border-t dark:border-gray-700">
                     <button
-                        v-for="product in selectedCategory.products"
+                        v-for="product in categoryProducts"
                         :key="product.id"
                         @click="addToCart(product)"
-                        class="relative p-3 bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md text-left transition-all hover:scale-105"
+                        class="relative p-3 bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl shadow-md hover:shadow-xl hover:border-gray-300 text-left transition-all hover:scale-105"
                         :disabled="product.stock === 0"
                         :class="{ 'opacity-50 cursor-not-allowed': product.stock === 0 }"
                     >
@@ -282,6 +310,7 @@ const inputClass = "mt-1 flex h-9 w-full rounded-md border border-input bg-trans
                 </div>
             </CardContent>
         </Card>
+        
       </div>
 
       <!-- Columna de Carrito y Pago -->

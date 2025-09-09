@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/table'
 import { CirclePlus, Search, Eye } from 'lucide-vue-next'
 import { can } from '@/lib/can';
+import { format } from 'date-fns';
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Entradas', href: '/entries' }
@@ -41,6 +42,10 @@ function submitSearch() {
     preserveState: true
   })
 }
+
+const formatDate = (dateString: string) => {
+    return format(new Date(dateString), 'dd/MM/yyyy HH:mm');
+};
 </script>
 
 <template>
@@ -91,7 +96,7 @@ function submitSearch() {
 
           <TableBody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             <TableRow v-for="entry in entries.data" :key="entry.id">
-              <TableCell class="px-6 py-4">{{ entry.date }}</TableCell>
+              <TableCell class="px-6 py-4">{{ formatDate(entry.date) }}</TableCell>
               <TableCell class="px-6 py-4">{{ entry.supplier?.name || 'N/A' }}</TableCell>
               <TableCell class="px-6 py-4">{{ entry.notes || '-' }}</TableCell>
               <TableCell class="px-6 py-4">$ {{ entry.total_cost }}</TableCell>
