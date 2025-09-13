@@ -36,6 +36,9 @@ class CompanyController extends Controller
             'name' => 'required|string|max:255|unique:companies,name',
             'nit' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:50',
+            'currency' => 'nullable|string|max:10',
+            'locale' => 'nullable|string|max:10',
         ]);
 
         Company::create($request->all());
@@ -56,6 +59,9 @@ class CompanyController extends Controller
             'name' => 'required|string|max:255|unique:companies,name,' . $company->id,
             'nit' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:50',
+            'currency' => 'nullable|string|max:10',
+            'locale' => 'nullable|string|max:10',
         ]);
 
         $company->update($request->all());

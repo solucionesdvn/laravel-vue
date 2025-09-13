@@ -12,6 +12,9 @@ const props = defineProps<{
     name: string;
     nit: string;
     address: string;
+    phone: string;
+    currency: string;
+    locale: string;
   };
 }>();
 
@@ -19,6 +22,9 @@ const form = useForm({
   name: props.company.name,
   nit: props.company.nit,
   address: props.company.address,
+  phone: props.company.phone,
+  currency: props.company.currency,
+  locale: props.company.locale,
 });
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -77,6 +83,47 @@ function submit() {
             :class="{ 'border-red-500': form.errors.address }"
           />
           <p v-if="form.errors.address" class="text-sm text-red-600 mt-1">{{ form.errors.address }}</p>
+        </div>
+
+        <!-- Teléfono -->
+        <div>
+          <Label for="phone">Teléfono</Label>
+          <Input
+            id="phone"
+            v-model="form.phone"
+            type="text"
+            placeholder="300 123 4567"
+            :class="{ 'border-red-500': form.errors.phone }"
+          />
+          <p v-if="form.errors.phone" class="text-sm text-red-600 mt-1">{{ form.errors.phone }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Moneda -->
+          <div>
+            <Label for="currency">Moneda</Label>
+            <Input
+              id="currency"
+              v-model="form.currency"
+              type="text"
+              placeholder="COP"
+              :class="{ 'border-red-500': form.errors.currency }"
+            />
+            <p v-if="form.errors.currency" class="text-sm text-red-600 mt-1">{{ form.errors.currency }}</p>
+          </div>
+
+          <!-- Locale -->
+          <div>
+            <Label for="locale">Configuración Regional (Locale)</Label>
+            <Input
+              id="locale"
+              v-model="form.locale"
+              type="text"
+              placeholder="es-CO"
+              :class="{ 'border-red-500': form.errors.locale }"
+            />
+            <p v-if="form.errors.locale" class="text-sm text-red-600 mt-1">{{ form.errors.locale }}</p>
+          </div>
         </div>
 
         <!-- Botones -->

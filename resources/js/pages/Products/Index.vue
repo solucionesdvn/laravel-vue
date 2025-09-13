@@ -41,11 +41,12 @@ const props = defineProps<{
   }
 }>()
 
-const selectedProduct = ref(null)
-const showModal = ref(false)
-const imageForm = ref({ image: null })
-const previewUrl = ref<string | null>(null)
-const errors = ref<{ image?: string }>({})
+// 🔴 Comentamos toda la lógica de imágenes por ahora
+// const selectedProduct = ref(null)
+// const showModal = ref(false)
+// const imageForm = ref({ image: null })
+// const previewUrl = ref<string | null>(null)
+// const errors = ref<{ image?: string }>({})
 
 const searchForm = useForm({
   search: props.filters.search || ''
@@ -58,46 +59,44 @@ function submitSearch() {
   })
 }
 
-function openImageModal(product: any) {
-  selectedProduct.value = product
-  showModal.value = true
-  imageForm.value.image = null
-  previewUrl.value = product.image_url || null
-  errors.value.image = undefined
-}
+// function openImageModal(product: any) {
+//   selectedProduct.value = product
+//   showModal.value = true
+//   imageForm.value.image = null
+//   previewUrl.value = product.image_url || null
+//   errors.value.image = undefined
+// }
 
-function handleImageChange(event: Event) {
-  const file = (event.target as HTMLInputElement)?.files?.[0]
-  if (file) {
-    imageForm.value.image = file
-    previewUrl.value = URL.createObjectURL(file)
-    errors.value.image = undefined
-  }
-}
+// function handleImageChange(event: Event) {
+//   const file = (event.target as HTMLInputElement)?.files?.[0]
+//   if (file) {
+//     imageForm.value.image = file
+//     previewUrl.value = URL.createObjectURL(file)
+//     errors.value.image = undefined
+//   }
+// }
 
-function updateImage() {
-  if (!selectedProduct.value) return
-
-  const formData = new FormData()
-  formData.append('_method', 'PUT')
-  if (imageForm.value.image) {
-    formData.append('image', imageForm.value.image)
-  }
-
-  router.post(route('products.updateImage', selectedProduct.value.id), formData, {
-    forceFormData: true,
-    preserveScroll: true,
-    onSuccess: () => {
-      showModal.value = false
-      imageForm.value.image = null
-      previewUrl.value = null
-      errors.value.image = undefined
-    },
-    onError: (err) => {
-      errors.value.image = err.image
-    },
-  })
-}
+// function updateImage() {
+//   if (!selectedProduct.value) return
+//   const formData = new FormData()
+//   formData.append('_method', 'PUT')
+//   if (imageForm.value.image) {
+//     formData.append('image', imageForm.value.image)
+//   }
+//   router.post(route('products.updateImage', selectedProduct.value.id), formData, {
+//     forceFormData: true,
+//     preserveScroll: true,
+//     onSuccess: () => {
+//       showModal.value = false
+//       imageForm.value.image = null
+//       previewUrl.value = null
+//       errors.value.image = undefined
+//     },
+//     onError: (err) => {
+//       errors.value.image = err.image
+//     },
+//   })
+// }
 
 function deleteProduct(id: number) {
   router.delete(route('products.destroy', id), {
@@ -154,7 +153,8 @@ function exportToExcel() {
 
           <TableHeader class="bg-gray-50 dark:bg-gray-800">
             <TableRow>
-              <TableHead class="px-6 py-3">Imagen</TableHead>
+              <!-- 🔴 Columna de imagen comentada -->
+              <!-- <TableHead class="px-6 py-3">Imagen</TableHead> -->
               <TableHead class="px-6 py-3">Nombre</TableHead>
               <TableHead class="px-6 py-3">SKU</TableHead>
               <TableHead class="px-6 py-3">Precio</TableHead>
@@ -165,6 +165,8 @@ function exportToExcel() {
 
           <TableBody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             <TableRow v-for="product in products.data" :key="product.id">
+              <!-- 🔴 Celda de imagen comentada -->
+              <!--
               <TableCell class="px-6 py-4">
                 <img
                   v-if="product.image_url"
@@ -176,6 +178,7 @@ function exportToExcel() {
                     Sin imagen
                 </div>
               </TableCell>
+              -->
               <TableCell class="px-6 py-4">{{ product.name }}</TableCell>
               <TableCell class="px-6 py-4">{{ product.sku }}</TableCell>
               <TableCell class="px-6 py-4">$ {{ product.price }}</TableCell>
@@ -191,9 +194,12 @@ function exportToExcel() {
                     <ClipboardList />
                   </Link>
                 </Button>
+                <!-- 🔴 Botón para abrir modal de imagen comentado -->
+                <!--
                 <Button size="sm" class="bg-yellow-500 text-white hover:bg-yellow-700" @click="openImageModal(product)">
                   <Camera />
                 </Button>
+                -->
                 <AlertDialog>
                   <AlertDialogTrigger as-child>
                     <Button size="sm" class="bg-rose-500 text-white hover:bg-rose-700">
@@ -242,7 +248,8 @@ function exportToExcel() {
         </div>
       </div>
 
-      <!-- Modal imagen -->
+      <!-- 🔴 Modal de imagen comentado -->
+      <!--
       <div
         v-if="showModal"
         class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
@@ -280,6 +287,7 @@ function exportToExcel() {
           </div>
         </div>
       </div>
+      -->
     </div>
   </AppLayout>
 </template>

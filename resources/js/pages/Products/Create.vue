@@ -25,27 +25,27 @@ const form = useForm({
   stock: 0,
   price: '',
   cost_price: '',
-  image: null,
+  // image: null,
 });
 
-const previewUrl = ref<string | null>(null);
+// const previewUrl = ref<string | null>(null);
 
-function handleImageChange(event: Event) {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
+// function handleImageChange(event: Event) {
+//   const target = event.target as HTMLInputElement;
+//   const file = target.files?.[0];
 
-  if (file) {
-    form.image = file;
-    previewUrl.value = URL.createObjectURL(file);
-  } else {
-    form.image = null;
-    previewUrl.value = null;
-  }
-}
+//   if (file) {
+//     form.image = file;
+//     previewUrl.value = URL.createObjectURL(file);
+//   } else {
+//     form.image = null;
+//     previewUrl.value = null;
+//   }
+// }
 
 function submit() {
   form.post(route('products.store'), {
-    forceFormData: true,
+    // forceFormData: true,
   });
 }
 </script>
@@ -110,12 +110,12 @@ function submit() {
                 <p v-if="form.errors.stock" class="text-sm text-red-600 mt-1">{{ form.errors.stock }}</p>
             </div>
 
-            <div>
+            <!-- <div>
               <Label for="image">Imagen del Producto</Label>
               <Input id="image" type="file" @change="handleImageChange" class="mt-1 block w-full" />
               <p v-if="form.errors.image" class="text-sm text-red-600 mt-1">{{ form.errors.image }}</p>
               <img v-if="previewUrl" :src="previewUrl" class="mt-2 h-24 w-24 object-cover rounded-md" />
-            </div>
+            </div> -->
 
             <div class="flex justify-end gap-4 pt-4">
               <Button variant="ghost" as-child>

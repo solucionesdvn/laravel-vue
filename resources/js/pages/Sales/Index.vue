@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { can } from '@/lib/can';
 
@@ -16,7 +16,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 
-import { CirclePlus, Eye, Trash2, BarChart } from 'lucide-vue-next';
+import { CirclePlus, Eye, Trash2, Printer } from 'lucide-vue-next';
 import type { Sale } from '@/types'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -27,7 +27,7 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Ventas', href: '/sales' }
 ];
 
-defineProps<{
+const props = defineProps<{
     sales: {
         data: Sale[]
         links: {
@@ -36,7 +36,29 @@ defineProps<{
             active: boolean
         }[]
     }
+    filters: {
+        start_date: string | null
+        end_date: string | null
+    }
 }>()
+
+const filterForm = reactive({
+    start_date: props.filters.start_date || '',
+    end_date: props.filters.end_date || '',
+})
+
+function applyFilters() {
+    router.get(route('sales.index'), filterForm, {
+        preserveState: true,
+        replace: true,
+    })
+}
+
+function clearFilters() {
+    filterForm.start_date = '';
+    filterForm.end_date = '';
+    applyFilters();
+}
 
 const annulSale = (saleId: number) => {
     if (confirm('¿Estás seguro de que quieres anular esta venta? Esta acción no se puede deshacer.')) {
@@ -95,7 +117,7 @@ async function generateReport() {
       <!-- Título y botón -->
       <div class="flex items-center justify-between flex-wrap gap-4">
         <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Lista de Ventas</h1>
-        <div>
+        <div class="flex items-center gap-2">
           <Button
             as-child
             size="sm"
@@ -114,6 +136,24 @@ async function generateReport() {
               Reporte de Productos
           </Button>
         </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="flex items-end gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border dark:border-gray-700">
+          <div>
+              <Label for="start_date" class="mb-1 text-sm">Fecha Inicio</Label>
+              <Input id="start_date" type="date" v-model="filterForm.start_date" />
+          </div>
+          <div>
+              <Label for="end_date" class="mb-1 text-sm">Fecha Fin</Label>
+              <Input id="end_date" type="date" v-model="filterForm.end_date" />
+          </div>
+          <Button @click="applyFilters">
+              Filtrar
+          </Button>
+          <Button @click="clearFilters" variant="outline">
+              Limpiar
+          </Button>
       </div>
 
       <!-- Tabla -->
@@ -136,7 +176,7 @@ async function generateReport() {
           <TableBody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             <TableRow v-if="sales.data.length === 0">
                 <TableCell colspan="6" class="text-center py-6 text-gray-500">
-                    No hay ventas registradas.
+                    No hay ventas para el filtro seleccionado.
                 </TableCell>
             </TableRow>
             <TableRow
@@ -168,10 +208,20 @@ async function generateReport() {
                   as-child
                   size="sm"
                   class="bg-yellow-500 text-white hover:bg-yellow-700"
-                  v-if="can('sales.view')"
+                  v-if="!sale.deleted_at && can('sales.view')"
                 >
                     <Link :href="route('sales.show', sale.id)">
                         <Eye />
+                    </Link>
+                </Button>
+                <Button
+                  as-child
+                  size="sm"
+                  class="bg-blue-500 text-white hover:bg-blue-700"
+                  v-if="!sale.deleted_at && can('sales.view')"
+                >
+                    <Link :href="route('sales.receipt', sale.id)" target="_blank">
+                        <Printer />
                     </Link>
                 </Button>
                 <Button
@@ -220,12 +270,12 @@ async function generateReport() {
             <div class="grid gap-4 py-4">
                 <div class="flex items-center gap-4">
                     <div>
-                        <Label for="start_date">Fecha Inicio</Label>
-                        <Input id="start_date" type="date" v-model="startDate" />
+                        <Label for="start_date_report">Fecha Inicio</Label>
+                        <Input id="start_date_report" type="date" v-model="startDate" />
                     </div>
                     <div>
-                        <Label for="end_date">Fecha Fin</Label>
-                        <Input id="end_date" type="date" v-model="endDate" />
+                        <Label for="end_date_report">Fecha Fin</Label>
+                        <Input id="end_date_report" type="date" v-model="endDate" />
                     </div>
                     <Button @click="generateReport" :disabled="isLoadingReport">
                         <span v-if="isLoadingReport">Generando...</span>

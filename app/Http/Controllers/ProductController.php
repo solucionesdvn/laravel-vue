@@ -12,8 +12,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Exports\ProductsExport;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class ProductController extends Controller
 {
@@ -66,16 +66,19 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'cost_price' => 'required|numeric|min:0',
             'supplier_id' => 'nullable|integer',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            // 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         $validated['company_id'] = $companyId;
 
+        /*
         if ($request->hasFile('image')) {
             $validated['image'] = Storage::disk('public')->put('products', $request->file('image'));
         } else {
             $validated['image'] = null;
         }
+        */
+        $validated['image'] = null; // Set image to null when not uploading
 
         Product::create($validated);
 
@@ -118,27 +121,29 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Producto actualizado correctamente.');
     }
 
-    public function updateImage(Request $request, Product $product)
-    {
-        $validated = $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        ]);
+    // public function updateImage(Request $request, Product $product)
+    // {
+    //     $validated = $request->validate([
+    //         'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+    //     ]);
 
-        if ($product->image) {
-            Storage::disk('public')->delete($product->image);
-        }
+    //     if ($product->image) {
+    //         Storage::disk('public')->delete($product->image);
+    //     }
 
-        $path = Storage::disk('public')->put('products', $request->file('image'));
-        $product->update(['image' => $path]);
+    //     $path = Storage::disk('public')->put('products', $request->file('image'));
+    //     $product->update(['image' => $path]);
 
-        return back()->with('success', 'Imagen actualizada correctamente.');
-    }
+    //     return back()->with('success', 'Imagen actualizada correctamente.');
+    // }
 
     public function destroy(Product $product)
     {
+        /*
         if ($product->image) {
             Storage::disk('public')->delete($product->image);
         }
+        */
         $product->delete();
 
         return redirect()->route('products.index')->with('success', 'Producto eliminado correctamente.');
@@ -204,77 +209,71 @@ class ProductController extends Controller
         return response()->json($products);
     }
 
-    public function kardex(Product $product)
+    public function kardex(Request $request, Product $product)
     {
-        // Optional: Add authorization if you have a policy
-        // $this->authorize('view', $product);
-
         // Security check
         if ($product->company_id !== auth()->user()->company_id) {
             abort(403);
         }
 
-        // Fetch all movement items
-        $entryItems = \App\Models\EntryItem::where('product_id', $product->id)->with('entry:id,date')->get();
-        $saleItems = \App\Models\SaleItem::where('product_id', $product->id)->with('sale:id,date')->get();
-        $exitItems = \App\Models\ProductExitItem::where('product_id', $product->id)->with('productExit:id,date,reason')->get();
+        $perPage = 10; // Or whatever you want
 
-        // Map entries
-        $entries = $entryItems->map(function ($item) {
-            return [
-                'date' => $item->entry->date,
-                'type' => 'Entrada',
-                'quantity_in' => $item->quantity,
-                'quantity_out' => 0,
-                'details' => 'Compra #' . $item->entry->id,
-                'url' => route('entries.show', $item->entry->id),
-            ];
-        });
+        // Fetch and paginate Entry Items
+        $entryKardex = \App\Models\EntryItem::where('product_id', $product->id)
+            ->with('entry:id,date')
+            ->latest('created_at') // Order by creation date descending
+            ->paginate($perPage, ['*'], 'entryPage', $request->input('entryPage'))
+            ->through(function ($item) {
+                return [
+                    'date' => $item->entry->date,
+                    'type' => 'Entrada',
+                    'details' => 'Movimiento de Entrada',
+                    'quantity_in' => $item->quantity,
+                    'quantity_out' => 0,
+                    'url' => route('entries.show', $item->entry->id),
+                ];
+            });
 
-        // Map sales
-        $sales = $saleItems->map(function ($item) {
-            return [
-                'date' => $item->sale->date,
-                'type' => 'Venta',
-                'quantity_in' => 0,
-                'quantity_out' => $item->quantity,
-                'details' => 'Venta #' . $item->sale->id,
-                'url' => route('sales.show', $item->sale->id),
-            ];
-        });
+        // Fetch and paginate Sale Items
+        $saleKardex = \App\Models\SaleItem::where('product_id', $product->id)
+            ->withTrashed() // Include soft-deleted SaleItems
+            ->with(['sale' => function ($query) {
+                $query->withTrashed()->select('id', 'date'); // Include soft-deleted Sales
+            }])
+            ->latest('created_at') // Order by creation date descending
+            ->paginate($perPage, ['*'], 'salePage', $request->input('salePage'))
+            ->through(function ($item) {
+                return [
+                    'date' => $item->sale->date,
+                    'type' => 'Venta',
+                    'details' => 'Movimiento de Venta',
+                    'quantity_in' => 0,
+                    'quantity_out' => $item->quantity,
+                    'url' => route('sales.show', $item->sale->id),
+                ];
+            });
 
-        // Map other exits
-        $exits = $exitItems->map(function ($item) {
-            return [
-                'date' => $item->productExit->date,
-                'type' => 'Ajuste Salida',
-                'quantity_in' => 0,
-                'quantity_out' => $item->quantity,
-                'details' => $item->productExit->reason,
-                'url' => route('product-exits.show', $item->productExit->id),
-            ];
-        });
-
-        // Merge, sort, and calculate balance
-        $movements = $entries->concat($sales)->concat($exits)->sortBy('date')->values();
-
-        // Recalculate balance accurately starting from the current stock and working backwards
-        $kardex = $movements->sortByDesc('date')->values();
-        $currentStock = $product->stock;
-        $balance = $currentStock;
-
-        $kardex = $kardex->map(function ($movement) use (&$balance) {
-            $movement['balance'] = $balance;
-            $balance -= ($movement['quantity_in'] - $movement['quantity_out']);
-            return $movement;
-        });
-
-        // Sort back to ascending to display chronologically
-        $kardex = $kardex->sortBy('date')->values();
+        // Fetch and paginate Product Exit Items
+        $exitKardex = \App\Models\ProductExitItem::where('product_id', $product->id)
+            ->with('productExit:id,date,reason')
+            ->latest('created_at') // Order by creation date descending
+            ->paginate($perPage, ['*'], 'exitPage', $request->input('exitPage'))
+            ->through(function ($item) {
+                return [
+                    'date' => $item->productExit->date,
+                    'type' => 'Ajuste Salida',
+                    'details' => $item->productExit->reason,
+                    'quantity_in' => 0,
+                    'quantity_out' => $item->quantity,
+                    'url' => route('product-exits.show', $item->productExit->id),
+                ];
+            });
 
         return Inertia::render('Products/Kardex', [
             'product' => $product,
-            'kardex' => $kardex,
+            'entryKardex' => $entryKardex,
+            'saleKardex' => $saleKardex,
+            'exitKardex' => $exitKardex,
         ]);
     }
 }

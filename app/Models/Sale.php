@@ -49,6 +49,11 @@ class Sale extends Model
         return $this->belongsTo(PaymentMethod::class);
     }
 
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
     protected static function booted()
     {
         static::deleting(function ($sale) {

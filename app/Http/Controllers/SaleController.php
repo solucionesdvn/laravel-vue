@@ -19,26 +19,31 @@ class SaleController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index()
+    public function index(Request $request)
     {
         $companyId = auth()->user()->company_id;
 
-        // Get today's date
-        $today = Carbon::now();
-        // Get the start of the current week (Monday)
-        $startOfWeek = $today->startOfWeek(Carbon::MONDAY)->format('Y-m-d H:i:s');
-        // Get the end of the current day
-        $endOfDay = $today->endOfDay()->format('Y-m-d H:i:s');
+        $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
 
-        $sales = \App\Models\Sale::where('company_id', $companyId)
-            ->whereBetween('created_at', [$startOfWeek, $endOfDay]) // Filter for current week
+        $query = \App\Models\Sale::where('company_id', $companyId)
             ->with(['client', 'user'])
             ->withTrashed()
-            ->latest()
-            ->paginate(10);
+            ->latest();
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $startDate = Carbon::parse($request->start_date)->startOfDay();
+            $endDate = Carbon::parse($request->end_date)->endOfDay();
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        $sales = $query->paginate(10)->withQueryString();
 
         return inertia('Sales/Index', [
             'sales' => $sales,
+            'filters' => $request->only(['start_date', 'end_date']),
         ]);
     }
 
@@ -170,7 +175,7 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return redirect()->route('dashboard')->with('success', 'Venta registrada correctamente.');
+            return redirect()->route('dashboard')->with('success', 'Venta registrada correctamente.')->with('new_sale_id', $sale->id);
         } catch (\Throwable $e) {
             DB::rollBack();
 
@@ -257,5 +262,18 @@ class SaleController extends Controller
         ->get();
 
         return response()->json($productsSold);
+    }
+
+    public function printReceipt(Sale $sale)
+    {
+        // Security check
+        if ($sale->company_id !== auth()->user()->company_id) {
+            abort(403);
+        }
+
+        // Eager load all necessary relationships
+        $sale->load(['client', 'user', 'paymentMethod', 'items.product', 'company']);
+
+        return view('sales.receipt', ['sale' => $sale]);
     }
 }

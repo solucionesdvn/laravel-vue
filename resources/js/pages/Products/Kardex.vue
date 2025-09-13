@@ -6,16 +6,40 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 
+import { Link, router } from '@inertiajs/vue3';
+
 const props = defineProps<{
   product: Product;
-  kardex: Array<{
-    date: string;
-    type: string;
-    details: string;
-    quantity_in: number;
-    quantity_out: number;
-    balance: number;
-  }>;
+  entryKardex: {
+    data: Array<{
+        date: string;
+        type: string;
+        details: string;
+        quantity_in: number;
+        quantity_out: number;
+    }>;
+    links: Array<any>;
+  };
+  saleKardex: {
+    data: Array<{
+        date: string;
+        type: string;
+        details: string;
+        quantity_in: number;
+        quantity_out: number;
+    }>;
+    links: Array<any>;
+  };
+  exitKardex: {
+    data: Array<{
+        date: string;
+        type: string;
+        details: string;
+        quantity_in: number;
+        quantity_out: number;
+    }>;
+    links: Array<any>;
+  };
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -25,6 +49,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const formatDate = (dateString: string) => {
+    if (!dateString) {
+        return 'N/A'; // Or some other placeholder
+    }
     return format(new Date(dateString), 'dd/MM/yyyy HH:mm');
 };
 </script>
@@ -34,56 +61,164 @@ const formatDate = (dateString: string) => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-4 sm:p-6 space-y-6">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Kardex de Inventario: {{ product.name }}</h2>
+
+            <!-- Entradas -->
             <Card>
                 <CardHeader>
-                    <CardTitle>Kardex de Inventario: {{ product.name }}</CardTitle>
+                    <CardTitle>Movimientos de Entrada</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Fecha</TableHead>
-                                <TableHead>Tipo</TableHead>
                                 <TableHead>Detalles</TableHead>
-                                <TableHead class="text-center">Entrada</TableHead>
-                                <TableHead class="text-center">Salida</TableHead>
-                                <TableHead class="text-center">Saldo</TableHead>
+                                <TableHead class="text-center">Cantidad</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            <TableRow v-if="kardex.length === 0">
-                                <TableCell :colspan="6" class="text-center">
-                                    No hay movimientos para este producto.
+                            <TableRow v-if="entryKardex.data.length === 0">
+                                <TableCell :colspan="3" class="text-center">
+                                    No hay movimientos de entrada para este producto.
                                 </TableCell>
                             </TableRow>
-                            <TableRow v-for="(item, index) in kardex" :key="index">
+                            <TableRow v-for="(item, index) in entryKardex.data" :key="index">
                                 <TableCell>{{ formatDate(item.date) }}</TableCell>
                                 <TableCell>
-                                    <Link
-                                        :href="item.url"
-                                        class="px-2 py-1 text-xs font-medium rounded-full inline-flex items-center justify-center w-28"
-                                        :class="{
-                                            'bg-green-100 text-green-800 hover:bg-green-200': item.type === 'Entrada',
-                                            'bg-red-100 text-red-800 hover:bg-red-200': item.type === 'Venta',
-                                            'bg-yellow-100 text-yellow-800 hover:bg-yellow-200': item.type === 'Ajuste Salida',
-                                        }"
-                                    >
-                                        {{ item.type }}
+                                    <Link :href="item.url" class="text-blue-600 hover:underline">
+                                        {{ item.details }}
                                     </Link>
                                 </TableCell>
-                                <TableCell>{{ item.details }}</TableCell>
                                 <TableCell class="text-center font-mono text-green-600">
-                                    {{ item.quantity_in > 0 ? `+${item.quantity_in}` : '' }}
-                                </TableCell>
-                                <TableCell class="text-center font-mono text-red-600">
-                                    {{ item.quantity_out > 0 ? `-${item.quantity_out}` : '' }}
-                                </TableCell>
-                                <TableCell class="text-center font-bold font-mono">
-                                    {{ item.balance }}
+                                    +{{ item.quantity_in }}
                                 </TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
+
+                    <!-- Paginación Entradas -->
+                    <div class="mt-4 flex justify-center space-x-2">
+                        <template v-for="(link, index) in entryKardex.links" :key="index">
+                            <button
+                                v-if="link.url"
+                                v-html="link.label"
+                                :class="[
+                                    'px-3 py-1 rounded text-sm',
+                                    link.active
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                ]"
+                                @click="router.visit(link.url, { preserveScroll: true })"
+                            ></button>
+                        </template>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <!-- Ventas -->
+            <Card>
+                <CardHeader>
+                    <CardTitle>Movimientos de Venta</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Fecha</TableHead>
+                                <TableHead>Detalles</TableHead>
+                                <TableHead class="text-center">Cantidad</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-if="saleKardex.data.length === 0">
+                                <TableCell :colspan="3" class="text-center">
+                                    No hay movimientos de venta para este producto.
+                                </TableCell>
+                            </TableRow>
+                            <TableRow v-for="(item, index) in saleKardex.data" :key="index">
+                                <TableCell>{{ formatDate(item.date) }}</TableCell>
+                                <TableCell>
+                                    <Link :href="item.url" class="text-blue-600 hover:underline">
+                                        {{ item.details }}
+                                    </Link>
+                                </TableCell>
+                                <TableCell class="text-center font-mono text-red-600">
+                                    -{{ item.quantity_out }}
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+
+                    <!-- Paginación Ventas -->
+                    <div class="mt-4 flex justify-center space-x-2">
+                        <template v-for="(link, index) in saleKardex.links" :key="index">
+                            <button
+                                v-if="link.url"
+                                v-html="link.label"
+                                :class="[
+                                    'px-3 py-1 rounded text-sm',
+                                    link.active
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                ]"
+                                @click="router.visit(link.url, { preserveScroll: true })"
+                            ></button>
+                        </template>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <!-- Salidas (Ajustes) -->
+            <Card>
+                <CardHeader>
+                    <CardTitle>Movimientos de Salida (Ajustes)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Fecha</TableHead>
+                                <TableHead>Detalles</TableHead>
+                                <TableHead class="text-center">Cantidad</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-if="exitKardex.data.length === 0">
+                                <TableCell :colspan="3" class="text-center">
+                                    No hay movimientos de salida para este producto.
+                                </TableCell>
+                            </TableRow>
+                            <TableRow v-for="(item, index) in exitKardex.data" :key="index">
+                                <TableCell>{{ formatDate(item.date) }}</TableCell>
+                                <TableCell>
+                                    <Link :href="item.url" class="text-blue-600 hover:underline">
+                                        {{ item.details }}
+                                    </Link>
+                                </TableCell>
+                                <TableCell class="text-center font-mono text-red-600">
+                                    -{{ item.quantity_out }}
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+
+                    <!-- Paginación Salidas -->
+                    <div class="mt-4 flex justify-center space-x-2">
+                        <template v-for="(link, index) in exitKardex.links" :key="index">
+                            <button
+                                v-if="link.url"
+                                v-html="link.label"
+                                :class="[
+                                    'px-3 py-1 rounded text-sm',
+                                    link.active
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                ]"
+                                @click="router.visit(link.url, { preserveScroll: true })"
+                            ></button>
+                        </template>
+                    </div>
                 </CardContent>
             </Card>
         </div>

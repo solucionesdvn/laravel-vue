@@ -281,6 +281,8 @@ Route::resource("sales", SaleController::class)
 
 Route::get('/sales/report/products-sold', [SaleController::class, 'getProductsSoldReport'])->name('sales.report.products-sold')->middleware('auth');
 
+Route::get('/sales/{sale}/receipt', [SaleController::class, 'printReceipt'])->name('sales.receipt')->middleware('auth');
+
 //Clientes -
 Route::post('/clients/api-store', [ClientController::class, 'apiStore'])->name('clients.api.store')->middleware(['auth', 'permission:clients.create']);
 Route::resource("clients", ClientController::class);
