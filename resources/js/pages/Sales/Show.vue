@@ -42,13 +42,13 @@ const formatDate = (value: string) => {
 </script>
 
 <template>
-  <Head :title="`Venta #${sale.id}`" />
+  <Head title="Detalle de Venta" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-6 space-y-6">
       <!-- Header y botón de volver -->
       <div class="flex items-center justify-between flex-wrap gap-4">
-        <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Detalle de Venta #{{ sale.id }}</h1>
+        <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Detalle de Venta</h1>
         <div>
           <Button as-child size="sm" variant="outline">
             <Link :href="route('sales.index')">

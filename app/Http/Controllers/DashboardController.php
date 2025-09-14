@@ -65,25 +65,12 @@ class DashboardController extends Controller
             $query->where('company_id', $companyId)
                   ->where('created_at', '>=', now()->subDays(30));
         })
-        ->with(['product' => function ($query) {
-            $query->withTrashed()->with('category');
-        }])
-        ->get()
-        ->mapToGroups(function ($item) {
-            // Handle cases where product or category might be null
-            if (!$item->product || !$item->product->category) {
-                return ['Sin Categoría' => $item->subtotal];
-            }
-            return [$item->product->category->name => $item->subtotal];
-        })
-        ->map(function ($items, $categoryName) {
-            return [
-                'category_name' => $categoryName,
-                'total_sales' => $items->sum(),
-            ];
-        })
-        ->sortByDesc('total_sales')
-        ->values();
+        ->join('products', 'sale_items.product_id', '=', 'products.id')
+        ->join('categories', 'products.category_id', '=', 'categories.id')
+        ->select('categories.name as category_name', DB::raw('SUM(sale_items.subtotal) as total_sales'))
+        ->groupBy('categories.name')
+        ->orderByDesc('total_sales')
+        ->get();
 
         // Ventas de los últimos 7 días
         $salesData = collect(DB::select("

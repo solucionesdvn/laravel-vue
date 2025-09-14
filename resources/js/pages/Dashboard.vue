@@ -286,7 +286,6 @@ const weeklySalesChartOptions = computed(() => ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID Venta</TableHead>
                   <TableHead>Cliente</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Fecha</TableHead>
@@ -294,10 +293,9 @@ const weeklySalesChartOptions = computed(() => ({
               </TableHeader>
               <TableBody>
                 <TableRow v-if="props.recentSales.length === 0">
-                  <TableCell colspan="4" class="text-center text-muted-foreground">No hay ventas recientes.</TableCell>
+                  <TableCell colspan="3" class="text-center text-muted-foreground">No hay ventas recientes.</TableCell>
                 </TableRow>
                 <TableRow v-for="sale in props.recentSales" :key="sale.id">
-                  <TableCell>{{ sale.id }}</TableCell>
                   <TableCell>{{ sale.client?.name || 'N/A' }}</TableCell>
                   <TableCell>{{ formatCurrency(sale.total) }}</TableCell>
                   <TableCell>{{ formatDate(sale.date) }}</TableCell>
@@ -315,7 +313,6 @@ const weeklySalesChartOptions = computed(() => ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID Caja</TableHead>
                   <TableHead>Abierta por</TableHead>
                   <TableHead>Monto Inicial</TableHead>
                   <TableHead>Hora Apertura</TableHead>
@@ -323,10 +320,9 @@ const weeklySalesChartOptions = computed(() => ({
               </TableHeader>
               <TableBody>
                 <TableRow v-if="props.openCashRegisters.length === 0">
-                  <TableCell colspan="4" class="text-center text-muted-foreground">No hay cajas abiertas.</TableCell>
+                  <TableCell colspan="3" class="text-center text-muted-foreground">No hay cajas abiertas.</TableCell>
                 </TableRow>
                 <TableRow v-for="register in props.openCashRegisters" :key="register.id">
-                  <TableCell>{{ register.id }}</TableCell>
                   <TableCell>{{ register.user?.name || 'N/A' }}</TableCell>
                   <TableCell>{{ formatCurrency(register.opening_amount) }}</TableCell>
                   <TableCell>{{ formatDate(register.opened_at) }}</TableCell>

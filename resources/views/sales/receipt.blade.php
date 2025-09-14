@@ -9,12 +9,16 @@
             font-family: 'monospace', sans-serif;
             color: #000;
             margin: 0;
-            padding: 10px;
-            background-color: #fff;
+            padding: 0;
+            background-color: #f4f4f4;
         }
         .receipt {
             width: 80mm;
-            margin: 0 auto;
+            margin: 20px auto;
+            padding: 15px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            font-size: 15px; /* Base font size Increased */
         }
         .header {
             text-align: center;
@@ -25,28 +29,31 @@
             max-height: 60px;
         }
         .header h1 {
-            font-size: 1.2em;
+            font-size: 1.3em;
             margin: 5px 0;
         }
         .header p {
-            font-size: 0.8em;
+            font-size: 0.9em;
             margin: 2px 0;
         }
         .info, .items, .totals, .footer {
             margin-bottom: 10px;
         }
         .info p, .footer p {
-            font-size: 0.8em;
-            margin: 2px 0;
+            font-size: 0.9em;
+            margin: 3px 0;
         }
         .items table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.8em;
+            font-size: 0.9em;
         }
         .items th, .items td {
-            padding: 4px;
+            padding: 5px;
             border-bottom: 1px dashed #000;
+        }
+        .items thead th {
+            border-bottom: 1px dashed #000; /* Ensure header has a line */
         }
         .items th {
             text-align: left;
@@ -56,20 +63,24 @@
         }
         .totals table {
             width: 100%;
-            font-size: 0.9em;
+            font-size: 1em;
         }
         .totals td {
-            padding: 2px 4px;
+            padding: 3px 4px;
         }
         .totals .total {
             font-weight: bold;
-            font-size: 1.1em;
+            font-size: 1.2em;
         }
         .totals .text-right {
             text-align: right;
         }
         .footer {
             text-align: center;
+        }
+        .separator {
+            border-top: 1px dashed #000;
+            margin: 10px 0;
         }
         .print-button {
             width: 100%;
@@ -83,16 +94,34 @@
         }
 
         @media print {
-            body {
-                margin: 0;
-                padding: 0;
+            @page {
+                size: 80mm auto;
+                margin: 3mm 3mm 3mm 5mm; /* top, right, bottom, left */
+            }
+            body, html {
+                width: 80mm;
+                height: auto;
+                margin: 0 !important;
+                padding: 0 !important;
+                background-color: #fff;
             }
             .receipt {
-                margin: 0;
                 width: 100%;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+                border: none;
+                font-size: 12pt; /* Increased font size for print */
             }
             .print-button {
                 display: none;
+            }
+            /* Additions to prevent header repeating */
+            .items thead {
+                display: table-row-group;
+            }
+            .items tbody tr {
+                page-break-inside: avoid;
             }
         }
     </style>
@@ -101,23 +130,25 @@
     <div class="receipt">
         <div class="header">
             @if($sale->company->logo)
-                <!-- Assuming logo is a public path -->
                 <img src="{{ asset('storage/' . $sale->company->logo) }}" alt="Logo">
             @endif
             <h1>{{ $sale->company->name }}</h1>
+            <p>NIT: {{ $sale->company->nit ?? 'N/A' }}</p>
             <p>{{ $sale->company->address }}</p>
             <p>Tel: {{ $sale->company->phone }}</p>
-            <p>{{ $sale->company->email }}</p>
         </div>
 
+        <div class="separator"></div>
+
         <div class="info">
-            <p>--------------------------------</p>
-            <p>Comprobante: #{{ $sale->id }}</p>
+            
             <p>Fecha: {{ $sale->created_at->format('d/m/Y H:i') }}</p>
             <p>Cajero: {{ $sale->user->name }}</p>
             <p>Cliente: {{ $sale->client->name ?? 'Consumidor Final' }}</p>
-            <p>--------------------------------</p>
+            <p>Método de Pago: {{ $sale->paymentMethod->name ?? 'N/A' }}</p>
         </div>
+
+        <div class="separator"></div>
 
         <div class="items">
             <table>
@@ -144,16 +175,18 @@
             </table>
         </div>
 
+        <div class="separator"></div>
+
         <div class="totals">
-            <p>--------------------------------</p>
             <table>
                 <tr>
                     <td>TOTAL:</td>
                     <td class="text-right total">$ {{ number_format($sale->total, 2) }}</td>
                 </tr>
             </table>
-            <p>--------------------------------</p>
         </div>
+
+        <div class="separator"></div>
 
         <div class="footer">
             <p>¡Gracias por su compra!</p>
@@ -163,12 +196,9 @@
     </div>
 
     <script>
-        // Optional: Automatically trigger print dialog on load
         window.onload = function() {
             window.print();
         };
-
-        // Optional: Close window after printing
         window.onafterprint = function() {
             window.close();
         };

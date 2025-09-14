@@ -17,6 +17,7 @@ const props = defineProps<{
         details: string;
         quantity_in: number;
         quantity_out: number;
+        url: string; // Added url
     }>;
     links: Array<any>;
   };
@@ -27,6 +28,7 @@ const props = defineProps<{
         details: string;
         quantity_in: number;
         quantity_out: number;
+        url: string; // Added url
     }>;
     links: Array<any>;
   };
@@ -37,6 +39,7 @@ const props = defineProps<{
         details: string;
         quantity_in: number;
         quantity_out: number;
+        url: string; // Added url
     }>;
     links: Array<any>;
   };
@@ -83,10 +86,10 @@ const formatDate = (dateString: string) => {
                                     No hay movimientos de entrada para este producto.
                                 </TableCell>
                             </TableRow>
-                            <TableRow v-for="(item, index) in entryKardex.data" :key="index">
+                            <TableRow v-for="(item, index) in entryKardex.data" :key="`entry-${index}`">
                                 <TableCell>{{ formatDate(item.date) }}</TableCell>
                                 <TableCell>
-                                    <Link :href="item.url" class="text-blue-600 hover:underline">
+                                    <Link :href="item.url" class="text-indigo-600 hover:text-indigo-900 hover:underline">
                                         {{ item.details }}
                                     </Link>
                                 </TableCell>
@@ -136,10 +139,10 @@ const formatDate = (dateString: string) => {
                                     No hay movimientos de venta para este producto.
                                 </TableCell>
                             </TableRow>
-                            <TableRow v-for="(item, index) in saleKardex.data" :key="index">
+                            <TableRow v-for="(item, index) in saleKardex.data" :key="`sale-${index}`">
                                 <TableCell>{{ formatDate(item.date) }}</TableCell>
                                 <TableCell>
-                                    <Link :href="item.url" class="text-blue-600 hover:underline">
+                                    <Link :href="item.url" class="text-indigo-600 hover:text-indigo-900 hover:underline">
                                         {{ item.details }}
                                     </Link>
                                 </TableCell>
@@ -189,10 +192,10 @@ const formatDate = (dateString: string) => {
                                     No hay movimientos de salida para este producto.
                                 </TableCell>
                             </TableRow>
-                            <TableRow v-for="(item, index) in exitKardex.data" :key="index">
+                            <TableRow v-for="(item, index) in exitKardex.data" :key="`exit-${index}`">
                                 <TableCell>{{ formatDate(item.date) }}</TableCell>
                                 <TableCell>
-                                    <Link :href="item.url" class="text-blue-600 hover:underline">
+                                    <Link :href="item.url" class="text-indigo-600 hover:text-indigo-900 hover:underline">
                                         {{ item.details }}
                                     </Link>
                                 </TableCell>

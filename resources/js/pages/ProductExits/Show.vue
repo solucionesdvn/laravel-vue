@@ -26,7 +26,7 @@ const props = defineProps<{
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Salidas', href: route('product-exits.index') },
-  { title: `Salida #${props.productExit.id}`, href: null },
+  { title: 'Detalle de Salida', href: null },
 ];
 
 const formatDate = (dateString: string) => {
@@ -41,7 +41,7 @@ const formatCurrency = (value: number) => {
 </script>
 
 <template>
-  <Head :title="`Salida #${productExit.id}`" />
+  <Head title="Detalle de Salida" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-4 sm:p-6 w-full">
@@ -49,7 +49,7 @@ const formatCurrency = (value: number) => {
         <CardHeader>
           <div class="flex justify-between items-center">
             <CardTitle class="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
-              Detalles de la Salida #{{ productExit.id }}
+              Detalles de la Salida
             </CardTitle>
             <Button as-child variant="outline">
                 <Link :href="route('product-exits.index')">Volver al Listado</Link>
