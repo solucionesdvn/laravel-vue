@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\ForCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, ForCompany;
 
     protected $appends = ['image_url'];
 
@@ -22,7 +23,6 @@ class Product extends Model
         'price',
         'cost_price',
         'image',
-        'company_id',
     ];
     
     // Accesor para obtener la URL completa de la imagen

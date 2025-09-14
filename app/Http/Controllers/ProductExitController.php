@@ -13,10 +13,8 @@ class ProductExitController extends Controller
 {
     public function index(Request $request)
     {
-        $companyId = auth()->user()->company_id;
-
-        $query = ProductExit::with('user')
-            ->where('company_id', $companyId);
+        // The ForCompany trait automatically filters ProductExit queries.
+        $query = ProductExit::with('user');
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -37,11 +35,9 @@ class ProductExitController extends Controller
 
     public function create()
     {
-        $companyId = auth()->user()->company_id;
-
+        // The Product model is already refactored and uses the global scope.
         return Inertia::render('ProductExits/Create', [
-            'products' => Product::where('company_id', $companyId)
-                ->get(['id', 'name', 'stock', 'price']),
+            'products' => Product::get(['id', 'name', 'stock', 'price']),
         ]);
     }
 
@@ -58,12 +54,9 @@ class ProductExitController extends Controller
         DB::beginTransaction();
 
         try {
-            $companyId = auth()->user()->company_id;
-            $userId = auth()->id();
-
+            // The ForCompany trait on ProductExit model automatically sets company_id.
             $exit = ProductExit::create([
-                'company_id' => $companyId,
-                'user_id'    => $userId,
+                'user_id'    => auth()->id(),
                 'date'       => now(),
                 'reason'     => $request->reason,
                 'notes'      => $request->notes,
@@ -73,9 +66,8 @@ class ProductExitController extends Controller
             $totalValue = 0;
 
             foreach ($request->items as $item) {
-                $product = Product::where('id', $item['product_id'])
-                    ->where('company_id', $companyId)
-                    ->firstOrFail();
+                // The Product model is already refactored and uses the global scope.
+                $product = Product::findOrFail($item['product_id']);
 
                 if ($product->stock < $item['quantity']) {
                     throw new \Exception("Stock insuficiente para el producto {$product->name}.");
@@ -112,10 +104,7 @@ class ProductExitController extends Controller
 
     public function show(ProductExit $productExit)
     {
-        if ($productExit->company_id !== auth()->user()->company_id) {
-            abort(403);
-        }
-
+        // The ForCompany trait's global scope handles authorization.
         $productExit->load(['user', 'items.product']);
 
         return Inertia::render('ProductExits/Show', [

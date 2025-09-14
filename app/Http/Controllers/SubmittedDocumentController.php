@@ -24,26 +24,24 @@ class SubmittedDocumentController extends Controller
      */
     public function index(Request $request)
     {
-        $companyId = auth()->user()->company_id;
-
-        $submittedDocuments = SubmittedDocument::where('company_id', $companyId)
-            ->with(['template', 'submittedBy'])
+        // The ForCompany trait automatically filters these queries.
+        $submittedDocuments = SubmittedDocument::with(['template', 'submittedBy'])
             ->orderBy('id', 'desc')
             ->paginate(10)
             ->through(fn ($doc) => [
                 'id' => $doc->id,
                 'created_at' => $doc->created_at,
-                'document_template' => $doc->template, // Cargar explícitamente la relación
-                'submitted_by_user' => $doc->submittedBy, // Cargar explícitamente la relación
+                'document_template' => $doc->template,
+                'submitted_by_user' => $doc->submittedBy,
                 'token' => $doc->token,
             ])
             ->withQueryString();
 
-        $documentTemplates = DocumentTemplate::where('company_id', $companyId)->get(); // Fetch all document templates
+        $documentTemplates = DocumentTemplate::get();
 
         return Inertia::render('SubmittedDocuments/Index', [
             'submittedDocuments' => $submittedDocuments,
-            'documentTemplates' => $documentTemplates, // Pass document templates to the view
+            'documentTemplates' => $documentTemplates,
             'filters' => $request->only(['search']),
         ]);
     }
@@ -51,31 +49,27 @@ class SubmittedDocumentController extends Controller
     /**
      * Muestra el formulario para crear un documento a partir de una plantilla.
      */
-    public function create($id)
+    public function create(DocumentTemplate $documentTemplate)
     {
-        $template = DocumentTemplate::findOrFail($id);
-        $this->authorizeDocumentTemplate($template);
-
+        // Route-model binding on DocumentTemplate handles authorization via global scope.
         return Inertia::render('SubmittedDocuments/Create', [
-            'template' => $template,
+            'template' => $documentTemplate,
         ]);
     }
 
     /**
      * Guarda el documento rellenado.
      */
-    public function store(Request $request, $id)
+    public function store(Request $request, DocumentTemplate $documentTemplate)
     {
-        $template = DocumentTemplate::findOrFail($id);
-        $this->authorizeDocumentTemplate($template);
-
-        $rules = $this->getValidationRules($template);
+        // Route-model binding on DocumentTemplate handles authorization.
+        $rules = $this->getValidationRules($documentTemplate);
         $validated = $request->validate($rules);
 
+        // The boot method on SubmittedDocument handles company_id and token.
         $submitted = SubmittedDocument::create([
             'submitted_by_user_id' => auth()->id(),
-            'company_id'           => auth()->user()->company_id,
-            'document_template_id' => $template->id,
+            'document_template_id' => $documentTemplate->id,
             'data'                 => $validated['data'],
         ]);
 
@@ -87,16 +81,16 @@ class SubmittedDocumentController extends Controller
     /**
      * Muestra un documento ya generado.
      */
-    public function show($id)
+    public function show(SubmittedDocument $submittedDocument)
     {
-        $submitted = SubmittedDocument::with('template')->findOrFail($id);
-        $this->authorizeSubmittedDocument($submitted);
+        // Route-model binding on SubmittedDocument handles authorization.
+        $submittedDocument->load('template');
 
         return Inertia::render('SubmittedDocuments/Show', [
             'submittedDocument' => [
-                'id' => $submitted->id,
-                'data' => $submitted->data,
-                'document_template' => $submitted->template,
+                'id' => $submittedDocument->id,
+                'data' => $submittedDocument->data,
+                'document_template' => $submittedDocument->template,
             ],
         ]);
     }
@@ -104,10 +98,10 @@ class SubmittedDocumentController extends Controller
     /**
      * Muestra el formulario para editar un documento existente.
      */
-    public function edit($id)
+    public function edit(SubmittedDocument $submittedDocument)
     {
-        $submittedDocument = SubmittedDocument::with('template')->findOrFail($id);
-        $this->authorizeSubmittedDocument($submittedDocument);
+        // Route-model binding on SubmittedDocument handles authorization.
+        $submittedDocument->load('template');
 
         return Inertia::render('SubmittedDocuments/Edit', [
             'submittedDocument' => [
@@ -121,11 +115,9 @@ class SubmittedDocumentController extends Controller
     /**
      * Actualiza un documento existente.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, SubmittedDocument $submittedDocument)
     {
-        $submittedDocument = SubmittedDocument::findOrFail($id);
-        $this->authorizeSubmittedDocument($submittedDocument);
-
+        // Route-model binding on SubmittedDocument handles authorization.
         $template = $submittedDocument->template;
         $rules = $this->getValidationRules($template);
         $validated = $request->validate($rules);
@@ -140,11 +132,9 @@ class SubmittedDocumentController extends Controller
     /**
      * Regenera el token para un documento enviado.
      */
-    public function regenerateToken($id)
+    public function regenerateToken(SubmittedDocument $submittedDocument)
     {
-        $submittedDocument = SubmittedDocument::findOrFail($id);
-        $this->authorizeSubmittedDocument($submittedDocument);
-
+        // Route-model binding on SubmittedDocument handles authorization.
         $submittedDocument->update([
             'token' => Str::uuid(),
         ]);
@@ -153,22 +143,16 @@ class SubmittedDocumentController extends Controller
     }
 
     /**
-     * Obtiene las reglas de validación para una plantilla de documento.
+     * Exporta un documento a PDF.
      */
-    public function exportPdf($id)
+    public function exportPdf(SubmittedDocument $submittedDocument)
     {
-        $submittedDocument = SubmittedDocument::with('template')->findOrFail($id);
-        $this->authorizeSubmittedDocument($submittedDocument);
+        // Route-model binding on SubmittedDocument handles authorization.
+        $submittedDocument->load('template');
 
         $template = $submittedDocument->template;
         $content = $template->content;
         $data = $submittedDocument->data;
-
-        // --- TEMPORARY LOGGING START ---
-        \Log::info('PDF Export Debug: Document ID ' . $id);
-        \Log::info('PDF Export Debug: Template Content: ' . $content);
-        \Log::info('PDF Export Debug: Submitted Data: ' . json_encode($data));
-        // --- TEMPORARY LOGGING END ---
 
         // Reemplazar placeholders con los datos
         foreach ($data as $key => $value) {
@@ -178,22 +162,7 @@ class SubmittedDocumentController extends Controller
         // Limpiar placeholders que no fueron llenados
         $content = preg_replace('/{{(.*?)}}/', '', $content);
 
-        // Estructura HTML básica para el PDF
-        $html = <<<HTML
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>{$template->name}</title>
-    <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 14px; }
-    </style>
-</head>
-<body>
-    {$content}
-</body>
-</html>
-HTML;
+        $html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>' . $template->name . '</title><style>body { font-family: DejaVu Sans, sans-serif; font-size: 14px; }</style></head><body>' . $content . '</body></html>';
 
         $pdf = Pdf::loadHTML($html);
         return $pdf->stream('documento-' . $submittedDocument->id . '.pdf');
@@ -205,12 +174,8 @@ HTML;
     public function publicShow($token)
     {
         $submittedDocument = SubmittedDocument::where('token', $token)->firstOrFail();
-
-        // Ensure the template relationship is loaded
         $submittedDocument->load('template');
 
-        // If template is null, it means the related template was deleted.
-        // We should handle this gracefully, e.g., abort or redirect.
         if (is_null($submittedDocument->template)) {
             abort(404, 'Document template not found for this submitted document.');
         }
@@ -220,7 +185,7 @@ HTML;
                 'id' => $submittedDocument->id,
                 'token' => $submittedDocument->token,
                 'data' => $submittedDocument->data,
-                'document_template' => $submittedDocument->template, // Clave renombrada para consistencia
+                'document_template' => $submittedDocument->template,
             ],
         ]);
     }
@@ -231,41 +196,18 @@ HTML;
     public function publicPdf($token)
     {
         $submittedDocument = SubmittedDocument::where('token', $token)->firstOrFail();
-
+        $submittedDocument->load('template');
+        
         $template = $submittedDocument->template;
         $content = $template->content;
         $data = $submittedDocument->data;
 
-        // --- TEMPORARY LOGGING START ---
-        \Log::info('PDF Export Debug (Public): Token ' . $token);
-        \Log::info('PDF Export Debug (Public): Template Content: ' . $content);
-        \Log::info('PDF Export Debug (Public): Submitted Data: ' . json_encode($data));
-        // --- TEMPORARY LOGGING END ---
-
-        // Reemplazar placeholders con los datos
         foreach ($data as $key => $value) {
             $content = str_replace("{{ " . $key . " }}", htmlspecialchars((string)$value), $content);
         }
-
-        // Limpiar placeholders que no fueron llenados
         $content = preg_replace('/{{(.*?)}}/', '', $content);
 
-        // Estructura HTML básica para el PDF
-        $html = <<<HTML
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>{$template->name}</title>
-    <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 14px; }
-    </style>
-</head>
-<body>
-    {$content}
-</body>
-</html>
-HTML;
+        $html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>' . $template->name . '</title><style>body { font-family: DejaVu Sans, sans-serif; font-size: 14px; }</style></head><body>' . $content . '</body></html>';
 
         $pdf = Pdf::loadHTML($html);
         return $pdf->stream('documento-' . $submittedDocument->id . '.pdf');
@@ -284,16 +226,13 @@ HTML;
         }
 
         $rules = $this->getValidationRules($template);
-
-        // Se envuelven los datos del request en la clave 'data' para que coincida con las reglas de validación.
         $validated = validator(['data' => $request->all()], $rules)->validate();
 
         $submittedDocument->update([
             'data' => $validated['data'],
-            'token' => null, // Invalidar el token para que no se pueda volver a usar
+            'token' => null,
         ]);
 
-        // Redirigir a la página de éxito
         return redirect()->route('public.submitted-documents.success');
     }
 
@@ -324,25 +263,5 @@ HTML;
         }
 
         return $rules;
-    }
-
-    /**
-     * Verifica que la plantilla pertenezca a la empresa del usuario autenticado.
-     */
-    private function authorizeDocumentTemplate(DocumentTemplate $documentTemplate)
-    {
-        if ($documentTemplate->company_id !== auth()->user()->company_id) {
-            abort(403, 'No autorizado.');
-        }
-    }
-
-    /**
-     * Verifica que el documento pertenezca a la empresa del usuario autenticado.
-     */
-    private function authorizeSubmittedDocument(SubmittedDocument $submittedDocument)
-    {
-        if ($submittedDocument->company_id !== auth()->user()->company_id) {
-            abort(403, 'No autorizado.');
-        }
     }
 }

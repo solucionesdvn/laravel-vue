@@ -15,8 +15,8 @@ class ClientController extends Controller
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
-        $query = Client::where('company_id', $user->company_id);
+        // The ForCompany trait automatically filters by the user's company.
+        $query = Client::query();
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -47,9 +47,9 @@ class ClientController extends Controller
      */
     public function store(Request $request)
     {
-        $companyId = auth()->user()->company_id;
+        $companyId = auth()->user()->company_id; // Still needed for validation rule
 
-        $request->validate([
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'email' => [
                 'required',
@@ -67,14 +67,8 @@ class ClientController extends Controller
             ],
         ]);
 
-        Client::create([
-            'company_id' => $companyId,
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'identification' => $request->identification,
-        ]);
+        // The ForCompany trait automatically adds the company_id.
+        Client::create($validatedData);
 
         return Redirect::route('clients.index')->with('success', 'Cliente creado correctamente.');
     }
@@ -84,8 +78,7 @@ class ClientController extends Controller
      */
     public function edit(Client $client)
     {
-        $this->authorizeCompany($client);
-
+        // The ForCompany trait's global scope handles authorization.
         return Inertia::render('Clients/Edit', [
             'client' => $client,
         ]);
@@ -96,10 +89,10 @@ class ClientController extends Controller
      */
     public function update(Request $request, Client $client)
     {
-        $this->authorizeCompany($client);
-        $companyId = auth()->user()->company_id;
+        // The ForCompany trait's global scope handles authorization.
+        $companyId = auth()->user()->company_id; // Still needed for validation rule
 
-        $request->validate([
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'email' => [
                 'required',
@@ -117,7 +110,7 @@ class ClientController extends Controller
             ],
         ]);
 
-        $client->update($request->only(['name', 'email', 'phone', 'address', 'identification']));
+        $client->update($validatedData);
 
         return Redirect::route('clients.index')->with('success', 'Cliente actualizado correctamente.');
     }
@@ -127,25 +120,15 @@ class ClientController extends Controller
      */
     public function destroy(Client $client)
     {
-        $this->authorizeCompany($client);
+        // The ForCompany trait's global scope handles authorization.
         $client->delete();
 
         return Redirect::route('clients.index')->with('success', 'Cliente eliminado correctamente.');
     }
 
-    /**
-     * Verifica si el cliente pertenece a la empresa del usuario.
-     */
-    protected function authorizeCompany(Client $client)
-    {
-        if ($client->company_id !== auth()->user()->company_id) {
-            abort(403);
-        }
-    }
-
     public function apiStore(Request $request)
     {
-        $companyId = auth()->user()->company_id;
+        $companyId = auth()->user()->company_id; // Still needed for validation rule
 
         try {
             $validatedData = $request->validate([
@@ -166,14 +149,8 @@ class ClientController extends Controller
                 ],
             ]);
 
-            $client = Client::create([
-                'company_id' => $companyId,
-                'name' => $validatedData['name'],
-                'email' => $validatedData['email'] ?? null,
-                'phone' => $validatedData['phone'] ?? null,
-                'address' => $validatedData['address'] ?? null,
-                'identification' => $validatedData['identification'] ?? null,
-            ]);
+            // The ForCompany trait automatically adds the company_id.
+            $client = Client::create($validatedData);
 
             return response()->json($client, 201); // 201 Created
 

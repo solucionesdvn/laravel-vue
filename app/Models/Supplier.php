@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\ForCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,8 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Supplier extends Model
 {
-    use HasFactory;
-    use SoftDeletes;
+    use HasFactory, SoftDeletes, ForCompany;
 
     protected $fillable = [
         'name',
@@ -20,7 +20,6 @@ class Supplier extends Model
         'address',
         'nit',
         'notes',
-        'company_id',
     ];
 
     public function company(): BelongsTo

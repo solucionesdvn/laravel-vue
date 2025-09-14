@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Traits\ForCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Expense;
 
 class CashRegister extends Model
 {
-    use HasFactory;
+    use HasFactory, ForCompany;
 
     protected $fillable = [
         'user_id',
-        'company_id',
+        // 'company_id', // Handled by ForCompany trait
         'opened_at',
         'closed_at',
         'opening_amount',   // <- corregido: era "opening_balance"
@@ -51,5 +52,5 @@ class CashRegister extends Model
     public function expenses()
     {
         return $this->hasMany(Expense::class);
-    }    
+    }
 }

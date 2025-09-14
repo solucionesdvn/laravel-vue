@@ -376,29 +376,27 @@ Route::resource('document-templates', DocumentTemplateController::class)->parame
 ]);
 
 // --- Rutas para Documentos Enviados (Submitted Documents) ---
-// Ruta 'create' personalizada para aceptar el ID de la plantilla
-Route::get('submitted-documents/create/{id}', [SubmittedDocumentController::class, 'create'])
+// Create and store routes now use route-model binding for the template
+Route::get('submitted-documents/create/{documentTemplate}', [SubmittedDocumentController::class, 'create'])
     ->name('submitted-documents.create')
     ->middleware(['auth', 'permission:submitted-documents.create']);
 
-// Ruta 'store' personalizada para que también acepte el ID de la plantilla
-Route::post('submitted-documents/{id}', [SubmittedDocumentController::class, 'store'])
+Route::post('submitted-documents/{documentTemplate}', [SubmittedDocumentController::class, 'store'])
     ->name('submitted-documents.store')
     ->middleware(['auth', 'permission:submitted-documents.create']);
 
-// Resto de las rutas del recurso, con sus permisos específicos
+// The resource controller now uses 'submittedDocument' as its parameter name
 Route::resource('submitted-documents', SubmittedDocumentController::class)
     ->except(['create', 'store'])
-    ->parameters(['submitted-documents' => 'id'])
+    ->parameters(['submitted-documents' => 'submittedDocument'])
     ->middleware(['auth', 'permission:submitted-documents.view|submitted-documents.edit|submitted-documents.delete']);
 
-// Ruta para exportar un documento enviado a PDF
-Route::get('submitted-documents/{id}/export-pdf', [SubmittedDocumentController::class, 'exportPdf'])
+// Custom routes also use route-model binding
+Route::get('submitted-documents/{submittedDocument}/export-pdf', [SubmittedDocumentController::class, 'exportPdf'])
     ->name('submitted-documents.export.pdf')
     ->middleware(['auth', 'permission:submitted-documents.view']);
 
-// Ruta para regenerar el token de un documento enviado
-Route::post('submitted-documents/{id}/regenerate-token', [SubmittedDocumentController::class, 'regenerateToken'])
+Route::post('submitted-documents/{submittedDocument}/regenerate-token', [SubmittedDocumentController::class, 'regenerateToken'])
     ->name('submitted-documents.regenerate-token')
     ->middleware(['auth', 'permission:submitted-documents.edit']);
 

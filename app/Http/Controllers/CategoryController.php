@@ -17,14 +17,10 @@ class CategoryController extends Controller
 
     public function index(Request $request)
     {
-        $user = auth()->user();
-
-        // Filtro por búsqueda
+        // The ForCompany trait automatically filters by the user's company.
         $search = $request->input('search');
 
-        // Consulta con filtros y company_id
         $categories = Category::query()
-            ->where('company_id', $user->company_id)
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -63,11 +59,10 @@ class CategoryController extends Controller
             'color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'], // color hex válido
         ]);
 
-        $data['company_id'] = auth()->user()->company_id;
-
+        // The ForCompany trait automatically adds the company_id.
         Category::create($data);
 
-        return Redirect::route('categories.index')->with('success', 'Categoría creada correctamente.'); // Cambio aquí
+        return Redirect::route('categories.index')->with('success', 'Categoría creada correctamente.');
     }
 
     /**
@@ -83,7 +78,9 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        //$this->authorize('update', $category);
+        // The ForCompany trait's global scope automatically ensures
+        // that the category belongs to the user's company.
+        // If not, a 404 Not Found error is thrown.
 
         return Inertia::render('Categories/Edit', [
             'category' => [
@@ -100,6 +97,7 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
+        // The ForCompany trait's global scope ensures the category is from the correct company.
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
@@ -108,7 +106,7 @@ class CategoryController extends Controller
 
         $category->update($validated);
 
-        return Redirect::route('categories.index')->with('success', 'Categoría actualizada correctamente.'); // Cambio aquí
+        return Redirect::route('categories.index')->with('success', 'Categoría actualizada correctamente.');
     }
 
     /**
@@ -116,13 +114,9 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        if ($category->company_id !== auth()->user()->company_id) {
-            abort(403);
-        }
-
+        // The ForCompany trait's global scope ensures the category is from the correct company.
         $category->delete();
 
         return Redirect::route('categories.index')->with('success', 'Categoría eliminada correctamente.');
-        
     }
 }

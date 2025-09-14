@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Traits\ForCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ResignationForm extends Model
 {
-    use HasFactory;
+    use HasFactory, ForCompany;
 
     protected $fillable = [
-        'company_id',
+        // 'company_id', // Handled by ForCompany trait
         'full_name',
         'resignation_date',
         'reason',

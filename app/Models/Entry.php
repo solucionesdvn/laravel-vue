@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Traits\ForCompany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Entry extends Model
 {
+    use HasFactory, ForCompany;
+
     protected $fillable = [
-        'company_id',
+        // 'company_id', // Handled by ForCompany trait
         'supplier_id',
         'date',
         'total_cost',

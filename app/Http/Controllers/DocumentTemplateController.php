@@ -13,10 +13,8 @@ class DocumentTemplateController extends Controller
      */
     public function index(Request $request)
     {
-        $companyId = auth()->user()->company_id;
-
-        $templates = DocumentTemplate::where('company_id', $companyId)
-            ->when($request->search, function ($query, $search) {
+        // The ForCompany trait automatically filters DocumentTemplate queries.
+        $templates = DocumentTemplate::when($request->search, function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
             ->orderBy('id', 'desc')
@@ -42,8 +40,6 @@ class DocumentTemplateController extends Controller
      */
     public function store(Request $request)
     {
-        $companyId = auth()->user()->company_id;
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
@@ -51,13 +47,8 @@ class DocumentTemplateController extends Controller
             'fields' => 'nullable|array',
         ]);
 
-        DocumentTemplate::create([
-            'company_id' => $companyId,
-            'name' => $validated['name'],
-            'description' => $validated['description'] ?? null,
-            'content' => $validated['content'],
-            'fields' => $validated['fields'] ?? [],
-        ]);
+        // The ForCompany trait automatically adds the company_id.
+        DocumentTemplate::create($validated);
 
         return redirect()
             ->route('document-templates.index')
@@ -69,8 +60,7 @@ class DocumentTemplateController extends Controller
      */
     public function show(DocumentTemplate $documentTemplate)
     {
-        $this->authorizeTemplate($documentTemplate);
-
+        // The ForCompany trait's global scope handles authorization.
         return Inertia::render('DocumentTemplates/Show', [
             'template' => $documentTemplate,
         ]);
@@ -81,8 +71,7 @@ class DocumentTemplateController extends Controller
      */
     public function edit(DocumentTemplate $documentTemplate)
     {
-        $this->authorizeTemplate($documentTemplate);
-
+        // The ForCompany trait's global scope handles authorization.
         return Inertia::render('DocumentTemplates/Edit', [
             'template' => $documentTemplate,
         ]);
@@ -93,8 +82,7 @@ class DocumentTemplateController extends Controller
      */
     public function update(Request $request, DocumentTemplate $documentTemplate)
     {
-        $this->authorizeTemplate($documentTemplate);
-
+        // The ForCompany trait's global scope handles authorization.
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
@@ -102,12 +90,7 @@ class DocumentTemplateController extends Controller
             'fields' => 'nullable|array',
         ]);
 
-        $documentTemplate->update([
-            'name' => $validated['name'],
-            'description' => $validated['description'] ?? null,
-            'content' => $validated['content'],
-            'fields' => $validated['fields'] ?? [],
-        ]);
+        $documentTemplate->update($validated);
 
         return redirect()
             ->route('document-templates.index')
@@ -119,8 +102,7 @@ class DocumentTemplateController extends Controller
      */
     public function destroy(DocumentTemplate $documentTemplate)
     {
-        $this->authorizeTemplate($documentTemplate);
-
+        // The ForCompany trait's global scope handles authorization.
         $documentTemplate->delete();
 
         return redirect()
@@ -131,27 +113,15 @@ class DocumentTemplateController extends Controller
     /**
      * Duplicate the specified resource.
      */
-    public function duplicate(Request $request, $id)
+    public function duplicate(Request $request, DocumentTemplate $documentTemplate)
     {
-        $originalTemplate = DocumentTemplate::findOrFail($id);
-        $this->authorizeTemplate($originalTemplate);
-
-        $newTemplate = $originalTemplate->replicate();
-        $newTemplate->name = $originalTemplate->name . ' (Copia)';
-        $newTemplate->save();
+        // The ForCompany trait's global scope handles authorization for the original template.
+        $newTemplate = $documentTemplate->replicate();
+        $newTemplate->name = $documentTemplate->name . ' (Copia)';
+        $newTemplate->save(); // The creating event from ForCompany trait will set the correct company_id.
 
         return redirect()
             ->route('document-templates.index')
             ->with('success', 'Plantilla duplicada correctamente.');
-    }
-
-    /**
-     * Verifica que la plantilla pertenezca a la empresa del usuario autenticado.
-     */
-    private function authorizeTemplate(DocumentTemplate $documentTemplate)
-    {
-        if ($documentTemplate->company_id !== auth()->user()->company_id) {
-            abort(403, 'No autorizado.');
-        }
     }
 }

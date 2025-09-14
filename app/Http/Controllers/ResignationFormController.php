@@ -12,7 +12,8 @@ class ResignationFormController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ResignationForm::where('company_id', auth()->user()->company_id);
+        // The ForCompany trait automatically filters ResignationForm queries.
+        $query = ResignationForm::query();
 
         if ($request->filled('search')) {
             $query->where('full_name', 'like', '%' . $request->input('search') . '%');
@@ -42,22 +43,15 @@ class ResignationFormController extends Controller
             'signature' => 'nullable|string',
         ]);
 
-        ResignationForm::create([
-            'company_id' => auth()->user()->company_id,
-            'full_name' => $data['full_name'],
-            'resignation_date' => $data['resignation_date'],
-            'reason' => $data['reason'],
-            'signature' => $data['signature'] ?? null,
-            'token' => Str::uuid(),
-        ]);
+        // The ForCompany trait automatically adds the company_id.
+        ResignationForm::create($data);
 
         return redirect()->route('resignation-forms.index');
     }
 
     public function show(ResignationForm $resignationForm)
     {
-        $this->authorizeAccess($resignationForm);
-
+        // The ForCompany trait's global scope handles authorization.
         return Inertia::render('ResignationForms/Show', [
             'form' => $resignationForm,
         ]);
@@ -65,8 +59,7 @@ class ResignationFormController extends Controller
 
     public function edit(ResignationForm $resignationForm)
     {
-        $this->authorizeAccess($resignationForm);
-
+        // The ForCompany trait's global scope handles authorization.
         return Inertia::render('ResignationForms/Edit', [
             'form' => $resignationForm,
         ]);
@@ -74,17 +67,22 @@ class ResignationFormController extends Controller
 
     public function update(Request $request, ResignationForm $resignationForm)
     {
-        $this->authorizeAccess($resignationForm);
-
-        return Inertia::render('ResignationForms/Edit', [
-            'formData' => $resignationForm->only(['id', 'full_name', 'resignation_date', 'reason', 'signature']),
+        // The ForCompany trait's global scope handles authorization.
+        $data = $request->validate([
+            'full_name' => 'required|string|max:255',
+            'resignation_date' => 'required|date',
+            'reason' => 'required|string',
+            'signature' => 'nullable|string',
         ]);
+
+        $resignationForm->update($data);
+
+        return redirect()->route('resignation-forms.index'); // Assuming this should redirect to index after update
     }
 
     public function destroy(ResignationForm $resignationForm)
     {
-        $this->authorizeAccess($resignationForm);
-
+        // The ForCompany trait's global scope handles authorization.
         $resignationForm->delete();
 
         return redirect()->route('resignation-forms.index');
@@ -125,13 +123,6 @@ class ResignationFormController extends Controller
             'form' => $form,
         ]);
 
-        return $pdf->stream('carta-renuncia.pdf'); // También puedes usar ->download('carta.pdf')
-    }
-
-    private function authorizeAccess(ResignationForm $form)
-    {
-        if ($form->company_id !== auth()->user()->company_id) {
-            abort(403);
-        }
+        return $pdf->stream('carta-renuncia.pdf');
     }
 }

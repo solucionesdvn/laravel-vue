@@ -18,7 +18,7 @@ class SubmittedDocument extends Model
      */
     protected $fillable = [
         'document_template_id',
-        'company_id',
+        // 'company_id', // Handled by boot method
         'submitted_by_user_id',
         'data',
         'token',
@@ -40,7 +40,16 @@ class SubmittedDocument extends Model
     {
         parent::boot();
 
+        // Logic from ForCompany trait
+        static::addGlobalScope(new \App\Models\Scopes\CompanyScope());
+
         static::creating(function ($document) {
+            // From ForCompany trait
+            if (\Illuminate\Support\Facades\Auth::hasUser() && !$document->company_id) {
+                $document->company_id = \Illuminate\Support\Facades\Auth::user()->company_id;
+            }
+
+            // Existing logic
             if (empty($document->token)) {
                 $document->token = (string) Str::uuid();
             }

@@ -3,7 +3,13 @@ import { Head, Link } from '@inertiajs/vue3';
 </script>
 
 <template>
-  <Head title="Bienvenido" />
+  <Head>
+    <title>Bienvenido | Soluciones Empresariales</title>
+    <meta name="description" content="Sistema integral para la gestión de ventas, inventario, clientes, documentos, caja, gastos y más. Optimiza la administración de tu empresa con nuestras herramientas digitales." />
+    <meta name="keywords" content="ventas, inventario, clientes, documentos, caja, proveedores, categorías, gestión empresarial, punto de venta, gastos, productos, reportes" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://tudominio.com/" />
+  </Head>
 
   <div
     class="flex min-h-screen flex-col items-center justify-center bg-[#FDFDFC] p-6 text-[#1b1b18] dark:bg-[#0a0a0a] dark:text-[#EDEDEC]"
@@ -34,9 +40,9 @@ import { Head, Link } from '@inertiajs/vue3';
       <div
         class="flex-1 bg-white p-8 text-sm leading-6 text-[#1b1b18] dark:bg-[#161615] dark:text-[#EDEDEC] lg:p-16"
       >
-        <h1 class="mb-4 text-2xl font-semibold">Bienvenido a nuestro ERP</h1>
+        <h1 class="mb-4 text-2xl font-semibold">Bienvenido a Soluciones Empresariales</h1>
         <p class="mb-6 text-[#706f6c] dark:text-[#A1A09A]">
-          Simplifica y optimiza la gestión de tu empresa con nuestro sistema robusto. Explora ventas, inventario y más, todo desde un solo lugar.
+          Descubre una plataforma completa para gestionar ventas, inventario, clientes, documentos, caja, gastos y mucho más. Todas las herramientas que tu empresa necesita en un solo lugar.
         </p>
 
         <!-- Lista de funcionalidades -->
@@ -44,19 +50,73 @@ import { Head, Link } from '@inertiajs/vue3';
           <li class="flex items-center gap-3">
             <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#f53003] text-white font-bold">✓</span>
             <Link
-              href="/modulo-ventas"
+              href="/sales"
               class="font-medium text-[#f53003] underline underline-offset-2 hover:text-[#ff3b1f] dark:text-[#FF4433] dark:hover:text-[#ff1f0f]"
             >
-              Ventas y Punto de Venta
+              Gestión de Ventas y Punto de Venta
             </Link>
           </li>
           <li class="flex items-center gap-3">
             <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#f53003] text-white font-bold">✓</span>
             <Link
-              href="/modulo-inventario"
+              href="/products"
               class="font-medium text-[#f53003] underline underline-offset-2 hover:text-[#ff3b1f] dark:text-[#FF4433] dark:hover:text-[#ff1f0f]"
             >
-              Gestión de Inventario
+              Control de Inventario y Productos
+            </Link>
+          </li>
+          <li class="flex items-center gap-3">
+            <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#f53003] text-white font-bold">✓</span>
+            <Link
+              href="/clients"
+              class="font-medium text-[#f53003] underline underline-offset-2 hover:text-[#ff3b1f] dark:text-[#FF4433] dark:hover:text-[#ff1f0f]"
+            >
+              Gestión de Clientes
+            </Link>
+          </li>
+          <li class="flex items-center gap-3">
+            <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#f53003] text-white font-bold">✓</span>
+            <Link
+              href="/categories"
+              class="font-medium text-[#f53003] underline underline-offset-2 hover:text-[#ff3b1f] dark:text-[#FF4433] dark:hover:text-[#ff1f0f]"
+            >
+              Organización por Categorías
+            </Link>
+          </li>
+          <li class="flex items-center gap-3">
+            <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#f53003] text-white font-bold">✓</span>
+            <Link
+              href="/suppliers"
+              class="font-medium text-[#f53003] underline underline-offset-2 hover:text-[#ff3b1f] dark:text-[#FF4433] dark:hover:text-[#ff1f0f]"
+            >
+              Proveedores y Compras
+            </Link>
+          </li>
+          <li class="flex items-center gap-3">
+            <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#f53003] text-white font-bold">✓</span>
+            <Link
+              href="/cash-registers"
+              class="font-medium text-[#f53003] underline underline-offset-2 hover:text-[#ff3b1f] dark:text-[#FF4433] dark:hover:text-[#ff1f0f]"
+            >
+              Control de Caja y Movimientos
+            </Link>
+          </li>
+          <li class="flex items-center gap-3">
+            <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#f53003] text-white font-bold">✓</span>
+            <Link
+              href="/expenses"
+              class="font-medium text-[#f53003] underline underline-offset-2 hover:text-[#ff3b1f] dark:text-[#FF4433] dark:hover:text-[#ff1f0f]"
+            >
+              Registro de Gastos
+            </Link>
+          </li>
+          <li class="flex items-center gap-3">
+            <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#f53003] text-white font-bold">✓</span>
+            <Link
+              href="/document-templates"
+              class="font-medium text-[#f53003] underline underline-offset-2 hover:text-[#ff3b1f] dark:text-[#FF4433] dark:hover:text-[#ff1f0f]"
+            >
+              Documentos y Formatos Personalizados
             </Link>
           </li>
         </ul>
@@ -67,7 +127,7 @@ import { Head, Link } from '@inertiajs/vue3';
             href="/contacto"
             class="inline-block rounded-sm border border-black bg-[#1b1b18] px-6 py-2 text-white transition-transform hover:scale-105 hover:bg-black dark:border-[#eeeeec] dark:bg-[#eeeeec] dark:text-[#1C1C1A] dark:hover:bg-white dark:hover:text-[#1C1C1A]"
           >
-            Contacto
+            Contáctanos
           </Link>
         </div>
       </div>
@@ -85,7 +145,6 @@ import { Head, Link } from '@inertiajs/vue3';
         >
           <path d="M17.2 -3H0V102.2H49.5V86.7H17.2V-3Z" fill="currentColor"/>
           <path d="M438 -3H421.7V102.2H438V-3Z" fill="currentColor"/>
-          <!-- Puedes agregar más paths animados -->
         </svg>
       </div>
     </main>
@@ -93,12 +152,11 @@ import { Head, Link } from '@inertiajs/vue3';
 </template>
 
 <style>
-/* Animación suave de bounce para darle vida */
 @keyframes bounce-slow {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
 }
 .animate-bounce-slow {
-  animation: bounce-slow 2s infinite;
+  animation: bounce-slow
 }
 </style>

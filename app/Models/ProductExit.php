@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Traits\ForCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ProductExit extends Model
 {
-    use HasFactory;
+    use HasFactory, ForCompany;
 
     protected $fillable = [
-        'company_id',
+        // 'company_id', // Handled by ForCompany trait
         'user_id',
         'date',
         'reason',

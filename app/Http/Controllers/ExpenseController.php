@@ -15,13 +15,11 @@ class ExpenseController extends Controller
      */
     public function index(Request $request)
     {
-        $companyId = auth()->user()->company_id;
-
-        $expenses = Expense::where('company_id', $companyId)
-            ->with(['user', 'cashRegister'])
+        // The ForCompany trait automatically filters by the user's company.
+        $expenses = Expense::with(['user', 'cashRegister'])
             ->when($request->search, function ($query, $search) {
                 $query->where('description', 'like', "%{$search}%")
-                      ->orWhere('notes', 'like', "%{$search}%"); // Assuming 'notes' field will be added later
+                      ->orWhere('notes', 'like', "%{$search}%");
             })
             ->latest()
             ->paginate(10)
@@ -38,8 +36,8 @@ class ExpenseController extends Controller
      */
     public function create()
     {
-        $companyId = auth()->user()->company_id;
-        $cashRegisters = CashRegister::where('company_id', $companyId)
+        // Note: It's recommended to apply the ForCompany trait to CashRegister as well.
+        $cashRegisters = CashRegister::where('company_id', auth()->user()->company_id)
             ->whereNull('closed_at')
             ->get(['id', 'opened_at']);
 
@@ -60,26 +58,22 @@ class ExpenseController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        $user = auth()->user();
-        $companyId = $user->company_id;
-
-        // Ensure the cash register belongs to the user's company and is open
+        // Note: It's recommended to apply the ForCompany trait to CashRegister as well.
         $cashRegister = CashRegister::where('id', $request->cash_register_id)
-            ->where('company_id', $companyId)
+            ->where('company_id', auth()->user()->company_id)
             ->whereNull('closed_at')
             ->firstOrFail();
 
+        // The ForCompany trait on Expense model automatically sets company_id.
         $expense = Expense::create([
             'cash_register_id' => $cashRegister->id,
-            'user_id' => $user->id,
-            'company_id' => $companyId,
+            'user_id' => auth()->id(),
             'amount' => $request->amount,
             'description' => $request->description,
             'notes' => $request->notes,
-            'date' => now(), // Automatically set date
+            'date' => now(),
         ]);
 
-        // Update total_expenses on the cash register
         $cashRegister->increment('total_expenses', $expense->amount);
 
         return redirect()->route('expenses.index')->with('success', 'Gasto registrado correctamente.');
@@ -90,7 +84,7 @@ class ExpenseController extends Controller
      */
     public function show(Expense $expense)
     {
-        $this->authorizeCompany($expense);
+        // The ForCompany trait's global scope handles authorization.
         $expense->load(['user', 'cashRegister']);
 
         return Inertia::render('Expenses/Show', [
@@ -103,9 +97,10 @@ class ExpenseController extends Controller
      */
     public function edit(Expense $expense)
     {
-        $this->authorizeCompany($expense);
-        $companyId = auth()->user()->company_id;
-        $cashRegisters = CashRegister::where('company_id', $companyId)
+        // The ForCompany trait's global scope handles authorization for $expense.
+        
+        // Note: It's recommended to apply the ForCompany trait to CashRegister as well.
+        $cashRegisters = CashRegister::where('company_id', auth()->user()->company_id)
             ->whereNull('closed_at')
             ->orWhere('id', $expense->cash_register_id) // Include the current cash register even if closed
             ->get(['id', 'opened_at']);
@@ -121,8 +116,7 @@ class ExpenseController extends Controller
      */
     public function update(Request $request, Expense $expense)
     {
-        $this->authorizeCompany($expense);
-
+        // The ForCompany trait's global scope handles authorization.
         $request->validate([
             'cash_register_id' => 'required|exists:cash_registers,id',
             'amount' => 'required|numeric|min:0.01',
@@ -133,15 +127,10 @@ class ExpenseController extends Controller
         // Revert old amount from cash register
         $expense->cashRegister->decrement('total_expenses', $expense->amount);
 
-        $expense->update([
-            'cash_register_id' => $request->cash_register_id,
-            'amount' => $request->amount,
-            'description' => $request->description,
-            'notes' => $request->notes,
-        ]);
+        $expense->update($request->only(['cash_register_id', 'amount', 'description', 'notes']));
 
-        // Add new amount to cash register
-        $expense->cashRegister->increment('total_expenses', $expense->amount);
+        // Add new amount to the correct cash register
+        $expense->cashRegister()->find($request->cash_register_id)->increment('total_expenses', $request->amount);
 
         return redirect()->route('expenses.index')->with('success', 'Gasto actualizado correctamente.');
     }
@@ -151,22 +140,12 @@ class ExpenseController extends Controller
      */
     public function destroy(Expense $expense)
     {
-        $this->authorizeCompany($expense);
+        // The ForCompany trait's global scope handles authorization.
 
         // Revert amount from cash register before deleting
         $expense->cashRegister->decrement('total_expenses', $expense->amount);
         $expense->delete();
 
         return redirect()->route('expenses.index')->with('success', 'Gasto eliminado correctamente.');
-    }
-
-    /**
-     * Authorize that the expense belongs to the authenticated user's company.
-     */
-    protected function authorizeCompany(Expense $expense)
-    {
-        if ($expense->company_id !== auth()->user()->company_id) {
-            abort(403, 'No autorizado.');
-        }
     }
 }

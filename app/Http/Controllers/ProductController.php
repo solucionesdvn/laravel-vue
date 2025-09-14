@@ -19,9 +19,7 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $companyId = auth()->user()->company_id;
-
-        $products = Product::where('company_id', $companyId)
+        $products = Product::with(['category', 'supplier'])
             ->when($request->search, function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
                       ->orWhere('sku', 'like', "%{$search}%");
@@ -51,14 +49,13 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        $companyId = auth()->user()->company_id;
-
         $validated = $request->validate([
             'sku' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('products')->where('company_id', $companyId)->whereNull('deleted_at')
+                // The global scope doesn't apply to validation rules, so we keep the company_id check here.
+                \Illuminate\Validation\Rule::unique('products')->where('company_id', auth()->user()->company_id)->whereNull('deleted_at')
             ],
             'name' => 'required|string|max:255',
             'category_id' => 'required|integer',
@@ -69,17 +66,7 @@ class ProductController extends Controller
             // 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-        $validated['company_id'] = $companyId;
-
-        /*
-        if ($request->hasFile('image')) {
-            $validated['image'] = Storage::disk('public')->put('products', $request->file('image'));
-        } else {
-            $validated['image'] = null;
-        }
-        */
-        $validated['image'] = null; // Set image to null when not uploading
-
+        // The ForCompany trait automatically sets company_id.
         Product::create($validated);
 
         return redirect()->route('products.index')->with('success', 'Producto creado correctamente.');
@@ -87,12 +74,16 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
+        // Route Model Binding with the global scope already ensures the product belongs to the user's company.
+        // If not, a 404 is automatically thrown.
+
+        // Note: Apply the ForCompany trait to Category and Supplier models as well.
         $companyId = auth()->user()->company_id;
         $categories = Category::where('company_id', $companyId)->get(['id', 'name']);
         $suppliers = Supplier::where('company_id', $companyId)->get(['id', 'name']);
 
         return Inertia::render('Products/Edit', [
-            'product' => $product,
+            'product' => $product->load(['category', 'supplier']),
             'categories' => $categories,
             'suppliers' => $suppliers,
         ]);
@@ -100,14 +91,13 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        $companyId = auth()->user()->company_id;
-
+        // Route Model Binding with the global scope already ensures the product belongs to the user's company.
         $validated = $request->validate([
             'sku' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('products')->where('company_id', $companyId)->ignore($product->id)->whereNull('deleted_at')
+                \Illuminate\Validation\Rule::unique('products')->where('company_id', auth()->user()->company_id)->ignore($product->id)->whereNull('deleted_at')
             ],
             'name' => 'required|string|max:255',
             'category_id' => 'required|integer',
@@ -139,11 +129,7 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        /*
-        if ($product->image) {
-            Storage::disk('public')->delete($product->image);
-        }
-        */
+        // Route Model Binding with the global scope already ensures the product belongs to the user's company.
         $product->delete();
 
         return redirect()->route('products.index')->with('success', 'Producto eliminado correctamente.');
@@ -171,10 +157,9 @@ class ProductController extends Controller
             }
 
             $term = $request->input('term');
-            $companyId = auth()->user()->company_id;
 
-            $products = Product::where('company_id', $companyId)
-                ->where('stock', '>', 0)
+            // The global scope automatically filters by company_id.
+            $products = Product::where('stock', '>', 0)
                 ->where(function ($query) use ($term) {
                     $query->where('name', 'like', "%{$term}%")
                           ->orWhere('sku', 'like', "%{$term}%");
@@ -194,13 +179,14 @@ class ProductController extends Controller
 
     public function getProductsByCategory(\App\Models\Category $category)
     {
-        // Ensure the category belongs to the user's company for security
+        // Security check for the category itself.
+        // It's recommended to also apply the ForCompany trait to the Category model.
         if ($category->company_id !== auth()->user()->company_id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $products = Product::where('company_id', $category->company_id)
-            ->where('category_id', $category->id)
+        // The global scope on Product handles the company_id filtering automatically.
+        $products = Product::where('category_id', $category->id)
             ->where('stock', '>', 0)
             ->orderBy('name')
             ->select('id', 'name', 'sku', 'price', 'stock')
@@ -211,28 +197,15 @@ class ProductController extends Controller
 
     public function kardex(Request $request, Product $product)
     {
-        // Security check
-        if ($product->company_id !== auth()->user()->company_id) {
-            abort(403);
-        }
-
+        // The security check is no longer needed here due to Route Model Binding + Global Scope.
         $perPage = 10; // Or whatever you want
 
-        // Fetch and paginate Entry Items
+        // The queries for EntryItem, SaleItem, etc., should also be secured,
+        // ideally by applying a similar scope or checking the company_id via relationships.
         $entryKardex = \App\Models\EntryItem::where('product_id', $product->id)
             ->with('entry:id,date')
             ->latest('created_at') // Order by creation date descending
-            ->paginate($perPage, ['*'], 'entryPage', $request->input('entryPage'))
-            ->through(function ($item) {
-                return [
-                    'date' => $item->entry->date,
-                    'type' => 'Entrada',
-                    'details' => 'Movimiento de Entrada',
-                    'quantity_in' => $item->quantity,
-                    'quantity_out' => 0,
-                    'url' => route('entries.show', $item->entry->id),
-                ];
-            });
+            ->paginate($perPage, ['*'], 'entryPage', $request->input('entryPage'));
 
         // Fetch and paginate Sale Items
         $saleKardex = \App\Models\SaleItem::where('product_id', $product->id)
@@ -241,33 +214,13 @@ class ProductController extends Controller
                 $query->withTrashed()->select('id', 'date'); // Include soft-deleted Sales
             }])
             ->latest('created_at') // Order by creation date descending
-            ->paginate($perPage, ['*'], 'salePage', $request->input('salePage'))
-            ->through(function ($item) {
-                return [
-                    'date' => $item->sale->date,
-                    'type' => 'Venta',
-                    'details' => 'Movimiento de Venta',
-                    'quantity_in' => 0,
-                    'quantity_out' => $item->quantity,
-                    'url' => route('sales.show', $item->sale->id),
-                ];
-            });
+            ->paginate($perPage, ['*'], 'salePage', $request->input('salePage'));
 
         // Fetch and paginate Product Exit Items
         $exitKardex = \App\Models\ProductExitItem::where('product_id', $product->id)
             ->with('productExit:id,date,reason')
             ->latest('created_at') // Order by creation date descending
-            ->paginate($perPage, ['*'], 'exitPage', $request->input('exitPage'))
-            ->through(function ($item) {
-                return [
-                    'date' => $item->productExit->date,
-                    'type' => 'Ajuste Salida',
-                    'details' => $item->productExit->reason,
-                    'quantity_in' => 0,
-                    'quantity_out' => $item->quantity,
-                    'url' => route('product-exits.show', $item->productExit->id),
-                ];
-            });
+            ->paginate($perPage, ['*'], 'exitPage', $request->input('exitPage'));
 
         return Inertia::render('Products/Kardex', [
             'product' => $product,

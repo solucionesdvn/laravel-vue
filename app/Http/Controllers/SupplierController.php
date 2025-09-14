@@ -13,9 +13,8 @@ class SupplierController extends Controller
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
-
-        $query = Supplier::where('company_id', $user->company_id);
+        // The ForCompany trait automatically filters by the user's company.
+        $query = Supplier::query();
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -46,7 +45,7 @@ class SupplierController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'contact_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
@@ -56,16 +55,8 @@ class SupplierController extends Controller
             'notes' => 'nullable|string|max:255',
         ]);
 
-        Supplier::create([
-            'company_id' => auth()->user()->company_id,
-            'name' => $request->name,
-            'contact_name' => $request->contact_name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'nit' => $request->nit,
-            'notes' => $request->notes,
-        ]);
+        // The ForCompany trait automatically adds the company_id.
+        Supplier::create($validatedData);
 
         return redirect()->route('suppliers.index')->with('success', 'Proveedor creado correctamente.');
     }
@@ -75,9 +66,7 @@ class SupplierController extends Controller
      */
     public function show(Supplier $supplier)
     {
-        // Asegura que el proveedor pertenezca a la misma empresa del usuario
-        $this->authorizeCompany($supplier);
-
+        // The ForCompany trait's global scope handles authorization.
         return Inertia::render('Suppliers/Show', [
             'supplier' => $supplier,
         ]);
@@ -88,8 +77,7 @@ class SupplierController extends Controller
      */
     public function edit(Supplier $supplier)
     {
-        $this->authorizeCompany($supplier);
-
+        // The ForCompany trait's global scope handles authorization.
         return Inertia::render('Suppliers/Edit', [
             'supplier' => $supplier,
         ]);
@@ -100,9 +88,8 @@ class SupplierController extends Controller
      */
     public function update(Request $request, Supplier $supplier)
     {
-        $this->authorizeCompany($supplier);
-
-        $request->validate([
+        // The ForCompany trait's global scope handles authorization.
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'contact_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
@@ -112,9 +99,7 @@ class SupplierController extends Controller
             'notes' => 'nullable|string|max:255',
         ]);
 
-        $supplier->update($request->only([
-            'name', 'contact_name', 'email', 'phone', 'address', 'nit', 'notes'
-        ]));
+        $supplier->update($validatedData);
 
         return redirect()->route('suppliers.index')->with('success', 'Proveedor actualizado correctamente.');
     }
@@ -124,20 +109,9 @@ class SupplierController extends Controller
      */
     public function destroy(Supplier $supplier)
     {
-        $this->authorizeCompany($supplier);
-
+        // The ForCompany trait's global scope handles authorization.
         $supplier->delete();
 
         return redirect()->route('suppliers.index')->with('success', 'Proveedor eliminado correctamente.');
-    }
-
-    /**
-     * Verifica si el proveedor pertenece a la empresa del usuario.
-     */
-    protected function authorizeCompany(Supplier $supplier)
-    {
-        if ($supplier->company_id !== auth()->user()->company_id) {
-            abort(403);
-        }
     }
 }

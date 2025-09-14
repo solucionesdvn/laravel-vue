@@ -10,7 +10,7 @@ class Sale extends Model
 {
     use SoftDeletes;
     protected $fillable = [
-        'company_id',
+        // 'company_id', // Handled by booted method
         'user_id',
         'cash_register_id',
         'client_id',
@@ -56,6 +56,15 @@ class Sale extends Model
 
     protected static function booted()
     {
+        // Logic from ForCompany trait
+        static::addGlobalScope(new \App\Models\Scopes\CompanyScope());
+        static::creating(function ($model) {
+            if (\Illuminate\Support\Facades\Auth::hasUser()) {
+                $model->company_id = \Illuminate\Support\Facades\Auth::user()->company_id;
+            }
+        });
+
+        // Existing logic
         static::deleting(function ($sale) {
             if ($sale->isForceDeleting()) {
                 // Lógica para borrado permanente si es necesario

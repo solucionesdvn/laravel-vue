@@ -11,9 +11,8 @@ class PaymentMethodController extends Controller
 {
     public function index(Request $request)
     {
-        $companyId = auth()->user()->company_id;
-
-        $query = PaymentMethod::where('company_id', $companyId);
+        // The ForCompany trait automatically filters by the user's company.
+        $query = PaymentMethod::query();
 
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
@@ -34,7 +33,7 @@ class PaymentMethodController extends Controller
 
     public function store(Request $request)
     {
-        $companyId = auth()->user()->company_id;
+        $companyId = auth()->user()->company_id; // Still needed for validation rule
 
         $validated = $request->validate([
             'name' => [
@@ -45,15 +44,15 @@ class PaymentMethodController extends Controller
             ],
         ]);
 
-        PaymentMethod::create($validated + ['company_id' => $companyId]);
+        // The ForCompany trait automatically adds the company_id.
+        PaymentMethod::create($validated);
 
         return redirect()->route('payment-methods.index')->with('success', 'Método de pago creado.');
     }
 
     public function edit(PaymentMethod $paymentMethod)
     {
-        $this->authorizeCompany($paymentMethod);
-
+        // The ForCompany trait's global scope handles authorization.
         return Inertia::render('PaymentMethods/Edit', [
             'paymentMethod' => $paymentMethod,
         ]);
@@ -61,8 +60,8 @@ class PaymentMethodController extends Controller
 
     public function update(Request $request, PaymentMethod $paymentMethod)
     {
-        $this->authorizeCompany($paymentMethod);
-        $companyId = auth()->user()->company_id;
+        // The ForCompany trait's global scope handles authorization.
+        $companyId = auth()->user()->company_id; // Still needed for validation rule
 
         $validated = $request->validate([
             'name' => [
@@ -80,16 +79,9 @@ class PaymentMethodController extends Controller
 
     public function destroy(PaymentMethod $paymentMethod)
     {
-        $this->authorizeCompany($paymentMethod);
+        // The ForCompany trait's global scope handles authorization.
         $paymentMethod->delete();
 
         return redirect()->route('payment-methods.index')->with('success', 'Método de pago eliminado.');
-    }
-
-    protected function authorizeCompany(PaymentMethod $paymentMethod)
-    {
-        if ($paymentMethod->company_id !== auth()->user()->company_id) {
-            abort(403);
-        }
     }
 }

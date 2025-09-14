@@ -152,3 +152,11 @@ carta de renuncia que funciona similar, solo que tengo una plantilla html donde 
 no es viable hacerlo de esta manera, dicho modulo esta 100% funcional, entonces por el momento solo analiza: viabilidad, complejidad, y de no ser posible
 dime de una vez para optar por otros metodos
 
+
+Proximas versiones:
+
+
+Añadir a producto tallas
+Añadir a producto tipo de impuesto
+Añadir a todos los modulos Company Scope
+

@@ -12,11 +12,8 @@ class CashRegisterController extends Controller
 {
     public function index()
     {
-        $companyId = auth()->user()->company_id;
-
-        // Get the single currently open register
-        $openRegister = CashRegister::where('company_id', $companyId)
-            ->whereNull('closed_at')
+        // The ForCompany trait automatically filters CashRegister and PaymentMethod queries.
+        $openRegister = CashRegister::whereNull('closed_at')
             ->with('user')
             ->with(['sales' => function ($query) {
                 $query->select('cash_register_id', 'payment_method_id', \DB::raw('SUM(total) as total_sales_by_method'))
@@ -24,23 +21,20 @@ class CashRegisterController extends Controller
             }])
             ->withSum('sales', 'total')
             ->withCount('sales')
-            ->withSum('expenses', 'amount') // Add this line
+            ->withSum('expenses', 'amount')
             ->first();
 
-        // Get a paginated list of closed registers for history
-        $closedRegisters = CashRegister::where('company_id', $companyId)
-            ->whereNotNull('closed_at')
+        $closedRegisters = CashRegister::whereNotNull('closed_at')
             ->with('user')
             ->with(['sales' => function ($query) {
                 $query->select('cash_register_id', 'payment_method_id', \DB::raw('SUM(total) as total_sales_by_method'))
                       ->groupBy('cash_register_id', 'payment_method_id');
             }])
-            ->withSum('expenses', 'amount') // Add this line
+            ->withSum('expenses', 'amount')
             ->latest()
             ->paginate(10);
 
-        // Fetch payment method names for display
-        $paymentMethods = PaymentMethod::where('company_id', $companyId)->get(['id', 'name']);
+        $paymentMethods = PaymentMethod::get(['id', 'name']);
 
         return Inertia::render('CashRegisters/Index', [
             'openRegister' => $openRegister,
@@ -61,20 +55,16 @@ class CashRegisterController extends Controller
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $user = auth()->user();
-
-        // Validar que no exista caja abierta para esta empresa
-        $hasOpenRegister = CashRegister::where('company_id', $user->company_id)
-            ->whereNull('closed_at')
-            ->exists();
+        // The ForCompany trait automatically filters this query.
+        $hasOpenRegister = CashRegister::whereNull('closed_at')->exists();
 
         if ($hasOpenRegister) {
             return back()->withErrors(['opening_amount' => 'Ya existe una caja abierta.'])->withInput();
         }
 
+        // The ForCompany trait automatically adds company_id.
         CashRegister::create([
-            'user_id' => $user->id,
-            'company_id' => $user->company_id,
+            'user_id' => auth()->id(),
             'opened_at' => now(),
             'opening_amount' => $request->opening_amount,
             'notes' => $request->notes,
@@ -85,10 +75,8 @@ class CashRegisterController extends Controller
 
     public function show()
     {
-        $companyId = auth()->user()->company_id;
-
-        $current = CashRegister::where('company_id', $companyId)
-            ->whereNull('closed_at')
+        // The ForCompany trait automatically filters this query.
+        $current = CashRegister::whereNull('closed_at')
             ->with('user')
             ->first();
 
@@ -100,8 +88,7 @@ class CashRegisterController extends Controller
     // Formulario para cerrar
     public function close(CashRegister $cashRegister)
     {
-        $this->authorizeCompany($cashRegister);
-
+        // The ForCompany trait's global scope handles authorization.
         if ($cashRegister->closed_at) {
             return redirect()->route('cash-registers.index')->with('error', 'La caja ya fue cerrada.');
         }
@@ -114,8 +101,7 @@ class CashRegisterController extends Controller
     // Procesar cierre
     public function update(Request $request, CashRegister $cashRegister)
     {
-        $this->authorizeCompany($cashRegister);
-
+        // The ForCompany trait's global scope handles authorization.
         $request->validate([
             'closing_amount' => 'nullable|numeric|min:0',
         ]);
@@ -132,12 +118,5 @@ class CashRegisterController extends Controller
         ]);
 
         return redirect()->route('cash-registers.index')->with('success', 'Caja cerrada correctamente.');
-    }
-
-    protected function authorizeCompany(CashRegister $cashRegister)
-    {
-        if ($cashRegister->company_id !== auth()->user()->company_id) {
-            abort(403, 'No autorizado.');
-        }
     }
 }

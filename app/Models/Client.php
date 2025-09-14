@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\ForCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -9,8 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Client extends Model
 {
-    use HasFactory;
-    use SoftDeletes;
+    use HasFactory, SoftDeletes, ForCompany;
 
     protected $fillable = [
         'name',
@@ -18,7 +18,6 @@ class Client extends Model
         'phone',
         'identification',
         'address',
-        'company_id',
     ];
 
     public function company()

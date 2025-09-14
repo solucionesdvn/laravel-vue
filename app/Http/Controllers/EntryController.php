@@ -14,13 +14,12 @@ class EntryController extends Controller
 {
     public function index(Request $request)
     {
-        $companyId = auth()->user()->company_id;
-
-        $query = Entry::with(['supplier', 'user'])
-            ->where('company_id', $companyId);
+        // The ForCompany trait automatically filters Entry queries.
+        $query = Entry::with(['supplier', 'user']);
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
+                // Since Supplier model is already refactored, we can rely on its global scope.
                 $q->whereHas('supplier', fn ($s) => $s->where('name', 'like', "%{$request->search}%"))
                   ->orWhere('notes', 'like', "%{$request->search}%");
             });
@@ -38,11 +37,10 @@ class EntryController extends Controller
 
     public function create()
     {
-        $companyId = auth()->user()->company_id;
-
+        // Supplier and Product models are already refactored and use the global scope.
         return Inertia::render('Entries/Create', [
-            'suppliers' => Supplier::where('company_id', $companyId)->get(['id', 'name']),
-            'products' => Product::where('company_id', $companyId)->get(['id', 'name', 'supplier_id']),
+            'suppliers' => Supplier::get(['id', 'name']),
+            'products' => Product::get(['id', 'name', 'supplier_id']),
         ]);
     }
 
@@ -62,26 +60,22 @@ class EntryController extends Controller
         DB::beginTransaction();
 
         try {
-            $companyId = auth()->user()->company_id;
-            $userId = auth()->id();
-
             $totalCost = collect($request->items)->sum(fn ($item) =>
                 $item['quantity'] * $item['purchase_price']
             );
 
+            // The ForCompany trait on Entry model automatically sets company_id.
             $entry = Entry::create([
-                'company_id'  => $companyId,
                 'supplier_id' => $request->supplier_id,
                 'date'        => now(),
                 'notes'       => $request->notes,
-                'created_by'  => $userId,
+                'created_by'  => auth()->id(),
                 'total_cost'  => $totalCost,
             ]);
 
             foreach ($request->items as $item) {
-                $product = Product::where('id', $item['product_id'])
-                    ->where('company_id', $companyId)
-                    ->firstOrFail();
+                // Product model is already refactored and uses the global scope.
+                $product = Product::findOrFail($item['product_id']);
 
                 EntryItem::create([
                     'entry_id'    => $entry->id,
@@ -91,10 +85,8 @@ class EntryController extends Controller
                     'subtotal'    => $item['quantity'] * $item['purchase_price'],
                 ]);
 
-                // Actualizar stock
                 $product->stock += $item['quantity'];
 
-                // ✅ Actualizar precio de venta si se indicó
                 if (!empty($item['update_price']) && isset($item['margin'])) {
                     $margin = floatval($item['margin']);
                     $product->price = $item['purchase_price'] * (1 + $margin / 100);
@@ -114,10 +106,7 @@ class EntryController extends Controller
 
     public function show(Entry $entry)
     {
-        if ($entry->company_id !== auth()->user()->company_id) {
-            abort(403);
-        }
-
+        // The ForCompany trait's global scope handles authorization.
         $entry->load(['supplier', 'user', 'items.product']);
 
         return Inertia::render('Entries/Show', [

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\ForCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,11 +10,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Expense extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, ForCompany;
     protected $fillable = [
         'cash_register_id',
         'user_id',
-        'company_id',
+        // 'company_id', // Handled by ForCompany trait
         'amount',
         'description',
         'date',
