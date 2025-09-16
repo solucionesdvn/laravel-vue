@@ -5,15 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Supplier;
-use App\Models\EntryItem;
-use App\Models\SaleItem;
-use App\Models\ProductExitItem;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Exports\ProductsExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 
 class ProductController extends Controller
 {
@@ -54,8 +50,9 @@ class ProductController extends Controller
                 'required',
                 'string',
                 'max:255',
-                // The global scope doesn't apply to validation rules, so we keep the company_id check here.
-                \Illuminate\Validation\Rule::unique('products')->where('company_id', auth()->user()->company_id)->whereNull('deleted_at')
+                \Illuminate\Validation\Rule::unique('products')
+                    ->where('company_id', auth()->user()->company_id)
+                    ->whereNull('deleted_at')
             ],
             'name' => 'required|string|max:255',
             'category_id' => 'required|integer',
@@ -63,10 +60,8 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'cost_price' => 'required|numeric|min:0',
             'supplier_id' => 'nullable|integer',
-            // 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-        // The ForCompany trait automatically sets company_id.
         Product::create($validated);
 
         return redirect()->route('products.index')->with('success', 'Producto creado correctamente.');
@@ -74,10 +69,6 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        // Route Model Binding with the global scope already ensures the product belongs to the user's company.
-        // If not, a 404 is automatically thrown.
-
-        // Note: Apply the ForCompany trait to Category and Supplier models as well.
         $companyId = auth()->user()->company_id;
         $categories = Category::where('company_id', $companyId)->get(['id', 'name']);
         $suppliers = Supplier::where('company_id', $companyId)->get(['id', 'name']);
@@ -91,13 +82,15 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        // Route Model Binding with the global scope already ensures the product belongs to the user's company.
         $validated = $request->validate([
             'sku' => [
                 'required',
                 'string',
                 'max:255',
-                \Illuminate\Validation\Rule::unique('products')->where('company_id', auth()->user()->company_id)->ignore($product->id)->whereNull('deleted_at')
+                \Illuminate\Validation\Rule::unique('products')
+                    ->where('company_id', auth()->user()->company_id)
+                    ->ignore($product->id)
+                    ->whereNull('deleted_at')
             ],
             'name' => 'required|string|max:255',
             'category_id' => 'required|integer',
@@ -111,33 +104,13 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Producto actualizado correctamente.');
     }
 
-    // public function updateImage(Request $request, Product $product)
-    // {
-    //     $validated = $request->validate([
-    //         'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-    //     ]);
-
-    //     if ($product->image) {
-    //         Storage::disk('public')->delete($product->image);
-    //     }
-
-    //     $path = Storage::disk('public')->put('products', $request->file('image'));
-    //     $product->update(['image' => $path]);
-
-    //     return back()->with('success', 'Imagen actualizada correctamente.');
-    // }
-
     public function destroy(Product $product)
     {
-        // Route Model Binding with the global scope already ensures the product belongs to the user's company.
         $product->delete();
 
         return redirect()->route('products.index')->with('success', 'Producto eliminado correctamente.');
     }
 
-    /**
-     * Exportar productos filtrados por company_id
-     */
     public function export(Request $request)
     {
         $search = $request->query('search');
@@ -147,45 +120,30 @@ class ProductController extends Controller
 
     public function search(Request $request)
     {
-        try {
-            $request->validate([
-                'term' => 'required|string|min:2',
-            ]);
+        $request->validate([
+            'term' => 'required|string|min:2',
+        ]);
 
-            if (!auth()->check()) {
-                return response()->json(['message' => 'No autenticado.'], 401);
-            }
+        $term = $request->input('term');
 
-            $term = $request->input('term');
+        $products = Product::where('stock', '>', 0)
+            ->where(function ($query) use ($term) {
+                $query->where('name', 'like', "%{$term}%")
+                      ->orWhere('sku', 'like', "%{$term}%");
+            })
+            ->select('id', 'name', 'sku', 'price', 'stock')
+            ->limit(10)
+            ->get();
 
-            // The global scope automatically filters by company_id.
-            $products = Product::where('stock', '>', 0)
-                ->where(function ($query) use ($term) {
-                    $query->where('name', 'like', "%{$term}%")
-                          ->orWhere('sku', 'like', "%{$term}%");
-                })
-                ->select('id', 'name', 'sku', 'price', 'stock')
-                ->limit(10)
-                ->get();
-
-            return response()->json($products);
-
-        } catch (\Throwable $e) {
-            // En un entorno de producción, esto se registraría en un log.
-            // Para depuración, devolvemos el mensaje de error exacto.
-            return response()->json(['message' => $e->getMessage()], 500);
-        }
+        return response()->json($products);
     }
 
     public function getProductsByCategory(\App\Models\Category $category)
     {
-        // Security check for the category itself.
-        // It's recommended to also apply the ForCompany trait to the Category model.
         if ($category->company_id !== auth()->user()->company_id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        // The global scope on Product handles the company_id filtering automatically.
         $products = Product::where('category_id', $category->id)
             ->where('stock', '>', 0)
             ->orderBy('name')
@@ -197,36 +155,73 @@ class ProductController extends Controller
 
     public function kardex(Request $request, Product $product)
     {
-        // The security check is no longer needed here due to Route Model Binding + Global Scope.
-        $perPage = 10; // Or whatever you want
+        $perPage = 10;
+        $page = $request->input('page', 1);
 
-        // The queries for EntryItem, SaleItem, etc., should also be secured,
-        // ideally by applying a similar scope or checking the company_id via relationships.
-        $entryKardex = \App\Models\EntryItem::where('product_id', $product->id)
-            ->with('entry:id,date')
-            ->latest('created_at') // Order by creation date descending
-            ->paginate($perPage, ['*'], 'entryPage', $request->input('entryPage'));
+        // 1. Define the base UNION query for all transaction types
+        $entries = \Illuminate\Support\Facades\DB::table('entry_items')
+            ->join('entries', 'entry_items.entry_id', '=', 'entries.id')
+            ->where('entry_items.product_id', $product->id)
+            ->where('entries.company_id', $product->company_id)
+            ->select('entries.date as date', 'entries.id as reference_id', \Illuminate\Support\Facades\DB::raw("'Entrada' as type"), 'entry_items.quantity as quantity_in', \Illuminate\Support\Facades\DB::raw('NULL as quantity_out'));
 
-        // Fetch and paginate Sale Items
-        $saleKardex = \App\Models\SaleItem::where('product_id', $product->id)
-            ->withTrashed() // Include soft-deleted SaleItems
-            ->with(['sale' => function ($query) {
-                $query->withTrashed()->select('id', 'date'); // Include soft-deleted Sales
-            }])
-            ->latest('created_at') // Order by creation date descending
-            ->paginate($perPage, ['*'], 'salePage', $request->input('salePage'));
+        $exits = \Illuminate\Support\Facades\DB::table('product_exit_items')
+            ->join('product_exits', 'product_exit_items.product_exit_id', '=', 'product_exits.id')
+            ->where('product_exit_items.product_id', $product->id)
+            ->where('product_exits.company_id', $product->company_id)
+            ->select('product_exits.date as date', 'product_exits.id as reference_id', \Illuminate\Support\Facades\DB::raw("'Salida' as type"), \Illuminate\Support\Facades\DB::raw('NULL as quantity_in'), 'product_exit_items.quantity as quantity_out');
 
-        // Fetch and paginate Product Exit Items
-        $exitKardex = \App\Models\ProductExitItem::where('product_id', $product->id)
-            ->with('productExit:id,date,reason')
-            ->latest('created_at') // Order by creation date descending
-            ->paginate($perPage, ['*'], 'exitPage', $request->input('exitPage'));
+        $sales = \Illuminate\Support\Facades\DB::table('sale_items')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->where('sale_items.product_id', $product->id)
+            ->where('sales.company_id', $product->company_id)
+            ->select('sales.date as date', 'sales.id as reference_id', \Illuminate\Support\Facades\DB::raw("'Venta' as type"), \Illuminate\Support\Facades\DB::raw('NULL as quantity_in'), 'sale_items.quantity as quantity_out');
 
+        // 2. Create a query object from the UNION
+        $unionQuery = $entries->union($exits)->union($sales);
+        $transactionsQuery = \Illuminate\Support\Facades\DB::query()->fromSub($unionQuery, 'transactions');
+
+        // 3. Calculate the true initial stock (before any recorded movements)
+        $allMovements = (clone $transactionsQuery)->get();
+        $totalIn = $allMovements->sum('quantity_in');
+        $totalOut = $allMovements->sum('quantity_out');
+        $initialStock = $product->stock - ($totalIn - $totalOut);
+
+        // 4. Calculate the starting balance for the current page
+        $itemsToSkip = ($page - 1) * $perPage;
+        $previousMovementsQuery = (clone $transactionsQuery)
+            ->orderBy('date', 'asc')
+            ->orderBy('reference_id', 'asc')
+            ->limit($itemsToSkip);
+
+        $netChangeOnPreviousPages = \Illuminate\Support\Facades\DB::query()
+            ->fromSub($previousMovementsQuery, 'prev')
+            ->selectRaw('SUM(quantity_in) - SUM(quantity_out) as net_change')
+            ->value('net_change');
+
+        $balance = $initialStock + $netChangeOnPreviousPages;
+
+        // 5. Get the paginated items for the current page, ordered ASC for calculation
+        $paginatedTransactions = (clone $transactionsQuery)
+            ->orderBy('date', 'asc')
+            ->orderBy('reference_id', 'asc')
+            ->paginate($perPage);
+
+        // 6. Add the running balance to each item on the current page
+        $paginatedTransactions->getCollection()->transform(function ($tx) use (&$balance) {
+            $balance += ($tx->quantity_in ?? 0) - ($tx->quantity_out ?? 0);
+            $tx->balance = $balance;
+            return $tx;
+        });
+
+        // 7. Reverse the collection for display (newest first)
+        $paginatedTransactions->setCollection($paginatedTransactions->getCollection()->reverse());
+
+        // 8. Send the data to the view
         return Inertia::render('Products/Kardex', [
             'product' => $product,
-            'entryKardex' => $entryKardex,
-            'saleKardex' => $saleKardex,
-            'exitKardex' => $exitKardex,
+            'transactions' => $paginatedTransactions,
+            'initialStock' => $initialStock,
         ]);
     }
 }
